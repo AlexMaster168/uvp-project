@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ task.title }}{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4>{{ task.title }}</h4>
+                    <div>
+                        <span class="badge bg-{{ task.status|yesno:'success,secondary' }}">{{ task.get_status_display }}</span>
+                        <a href="{% url 'tasks:task_edit' pk=task.id %}" class="btn btn-sm btn-outline-primary ms-2">Изменить</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p><strong>Проект:</strong> <a
+                            href="{% url 'projects:project_detail' pk=task.project.id %}">{{ task.project.name }}</a>
+                    </p>
+                    <p><strong>Описание:</strong></p>
+                    <div class="p-3 bg-light rounded mb-3">{{ task.description|linebreaks }}</div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Оценка времени:</strong> {{ task.estimated_time }} ч</p>
+                            <p><strong>Затрачено:</strong> {{ task.actual_time }} ч</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Исполнители:</strong></p>
+                            {% for u in task.u_users.all %}
+                                <span class="badge bg-info text-dark">{{ u.username }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'projects:project_detail' pk=task.project.id %}" class="btn btn-secondary">Назад к
+                        проекту</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

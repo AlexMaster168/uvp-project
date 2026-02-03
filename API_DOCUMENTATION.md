@@ -174,7 +174,7 @@ POST /api/projects/{id}/structure/
   "nodes": [
     {
       "id": "task_1",
-      "type": "task",
+      "type": "tasks",
       "title": "Design mockups",
       "status": "in_progress",
       "x": 100,

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Медиафайлы{% endblock %}
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Все медиафайлы</h2>
+        <a href="{% url 'media_files:media_create' %}" class="btn btn-primary">Загрузить файл</a>
+    </div>
+
+    {% if media_files %}
+        <div class="row g-4">
+            {% for media in media_files %}
+                <div class="col-md-3">
+                    <div class="card h-100">
+                        <div class="card-body text-center d-flex flex-column justify-content-center">
+                            <i class="bi bi-file-earmark fs-1 text-primary mb-2"></i>
+                            <h6 class="card-title text-truncate">{{ media.filename }}</h6>
+                            <small class="text-muted">{{ media.project.name }}</small>
+                            <small class="text-muted">{{ media.uploaded_at|date:"d.m.Y" }}</small>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0 text-center">
+                            <a href="{{ media.file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">Скачать</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <p class="lead text-muted">Нет загруженных файлов</p>
+        </div>
+    {% endif %}
+{% endblock %}

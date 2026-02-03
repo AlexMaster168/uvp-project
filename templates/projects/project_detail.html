@@ -3,143 +3,141 @@
 {% block title %}{{ project.name }} - УВП{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-auto">
-                        {% if project.logo %}
-                        <img src="{{ project.logo.url }}" class="project-logo rounded" alt="Logo">
-                        {% else %}
-                        <div class="project-logo rounded bg-secondary d-flex align-items-center justify-content-center text-white">
-                            <i class="bi bi-folder fs-1"></i>
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="col">
-                        <h2>{{ project.name }} <small class="text-muted">#{{ project.id }}</small></h2>
-                        <p class="text-muted mb-2">{{ project.description }}</p>
-                        <div class="mb-2">
-                            <strong>Сроки:</strong> 
-                            {% if project.start_date and project.end_date %}
-                            {{ project.start_date }} - {{ project.end_date }} ({{ project.duration_days }} дней)
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-auto">
+                            {% if project.logo %}
+                                <img src="{{ project.logo.url }}" class="project-logo rounded" alt="Logo">
                             {% else %}
-                            Не указаны
+                                <div class="project-logo rounded bg-secondary d-flex align-items-center justify-content-center text-white">
+                                    <i class="bi bi-folder fs-1"></i>
+                                </div>
                             {% endif %}
                         </div>
-                        <div class="mb-2">
-                            <strong>Статус:</strong>
-                            {% if project.status == 'in_progress' %}
-                            <span class="badge bg-success">В работе</span>
-                            {% elif project.status == 'planned' %}
-                            <span class="badge bg-info">Запланирован</span>
-                            {% elif project.status == 'idle' %}
-                            <span class="badge bg-warning">Простой</span>
-                            {% elif project.status == 'sleep' %}
-                            <span class="badge bg-secondary">Заморожен</span>
-                            {% endif %}
+                        <div class="col">
+                            <h2>{{ project.name }} <small class="text-muted">#{{ project.id }}</small></h2>
+                            <p class="text-muted mb-2">{{ project.description }}</p>
+                            <div class="mb-2">
+                                <strong>Сроки:</strong>
+                                {% if project.start_date and project.end_date %}
+                                    {{ project.start_date }} - {{ project.end_date }} ({{ project.duration_days }} дней)
+                                {% else %}
+                                    Не указаны
+                                {% endif %}
+                            </div>
+                            <div class="mb-2">
+                                <strong>Статус:</strong>
+                                {% if project.status == 'in_progress' %}
+                                    <span class="badge bg-success">В работе</span>
+                                {% elif project.status == 'planned' %}
+                                    <span class="badge bg-info">Запланирован</span>
+                                {% elif project.status == 'idle' %}
+                                    <span class="badge bg-warning">Простой</span>
+                                {% elif project.status == 'sleep' %}
+                                    <span class="badge bg-secondary">Заморожен</span>
+                                {% endif %}
+                            </div>
+                            <div class="mb-2">
+                                <strong>Создатель:</strong> {{ project.u_creator.username }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>Владельцы:</strong>
+                                {% for owner in project.get_owners() %}
+                                    <span class="badge bg-primary">{{ owner.user.username }}</span>
+                                {% endfor %}
+                            </div>
+                            <div>
+                                <strong>Теги:</strong>
+                                {% for tag in project.u_tags.all() %}
+                                    <span class="badge bg-secondary">{{ tag.name }}</span>
+                                {% endfor %}
+                            </div>
                         </div>
-                        <div class="mb-2">
-                            <strong>Создатель:</strong> {{ project.u_creator.username }}
+                        <div class="col-auto">
+                            <a href="{{ url('projects:project_edit', pk=project.id) }}" class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Редактировать
+                            </a>
                         </div>
-                        <div class="mb-2">
-                            <strong>Владельцы:</strong>
-                            {% for owner in project.get_owners() %}
-                            <span class="badge bg-primary">{{ owner.user.username }}</span>
-                            {% endfor %}
-                        </div>
-                        <div>
-                            <strong>Теги:</strong>
-                            {% for tag in project.u_tags.all() %}
-                            <span class="badge bg-secondary">{{ tag.name }}</span>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <a href="{{ url('projects:project_edit', pk=project.id) }}" class="btn btn-primary">
-                            <i class="bi bi-pencil"></i> Редактировать
-                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Tabs -->
-<ul class="nav nav-tabs mb-3" id="projectTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button">
-            <i class="bi bi-info-circle"></i> Обзор
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks" type="button">
-            <i class="bi bi-check2-square"></i> Задачи ({{ project.tasks.count() }})
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="billing-tab" data-bs-toggle="tab" data-bs-target="#billing" type="button">
-            <i class="bi bi-currency-dollar"></i> Финансы
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="access-tab" data-bs-toggle="tab" data-bs-target="#access" type="button">
-            <i class="bi bi-key"></i> Доступы
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="media-tab" data-bs-toggle="tab" data-bs-target="#media" type="button">
-            <i class="bi bi-images"></i> Медиа
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <a class="nav-link" href="/projects/structure/{{ project.id }}/">
-            <i class="bi bi-diagram-3"></i> Структура (Rete.js)
-        </a>
-    </li>
-</ul>
+    <ul class="nav nav-tabs mb-3" id="projectTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview"
+                    type="button">
+                <i class="bi bi-info-circle"></i> Обзор
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks" type="button">
+                <i class="bi bi-check2-square"></i> Задачи ({{ project.tasks.count() }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="billing-tab" data-bs-toggle="tab" data-bs-target="#billing" type="button">
+                <i class="bi bi-currency-dollar"></i> Финансы
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="access-tab" data-bs-toggle="tab" data-bs-target="#access" type="button">
+                <i class="bi bi-key"></i> Доступы
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="media-tab" data-bs-toggle="tab" data-bs-target="#media" type="button">
+                <i class="bi bi-images"></i> Медиа
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" href="/projects/structure/{{ project.id }}/">
+                <i class="bi bi-diagram-3"></i> Структура (Rete.js)
+            </a>
+        </li>
+    </ul>
 
-<div class="tab-content" id="projectTabsContent">
-    <!-- Overview Tab -->
-    <div class="tab-pane fade show active" id="overview" role="tabpanel">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Информация о проекте</h5>
-                <p>{{ project.description or "Описание не указано" }}</p>
-                
-                <h6 class="mt-4">Команда</h6>
-                <table class="table table-sm">
-                    <thead>
+    <div class="tab-content" id="projectTabsContent">
+        <div class="tab-pane fade show active" id="overview" role="tabpanel">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Информация о проекте</h5>
+                    <p>{{ project.description or "Описание не указано" }}</p>
+
+                    <h6 class="mt-4">Команда</h6>
+                    <table class="table table-sm">
+                        <thead>
                         <tr>
                             <th>Участник</th>
                             <th>Роль</th>
                         </tr>
-                    </thead>
-                    <tbody>
+                        </thead>
+                        <tbody>
                         {% for member in project.members.all() %}
-                        <tr>
-                            <td>{{ member.user.username }}</td>
-                            <td><span class="badge bg-info">{{ member.get_role_display() }}</span></td>
-                        </tr>
+                            <tr>
+                                <td>{{ member.user.username }}</td>
+                                <td><span class="badge bg-info">{{ member.get_role_display() }}</span></td>
+                            </tr>
                         {% endfor %}
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Tasks Tab -->
-    <div class="tab-pane fade" id="tasks" role="tabpanel">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between">
-                <span>Задачи проекта</span>
-                <button class="btn btn-sm btn-primary">+ Добавить задачу</button>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
+
+        <div class="tab-pane fade" id="tasks" role="tabpanel">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <span>Задачи проекта</span>
+                    <button class="btn btn-sm btn-primary">+ Добавить задачу</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
                         <tr>
                             <th>Статус</th>
                             <th>Название</th>
@@ -147,115 +145,113 @@
                             <th>Время (План/Факт)</th>
                             <th>Действия</th>
                         </tr>
-                    </thead>
-                    <tbody>
+                        </thead>
+                        <tbody>
                         {% for task in project.tasks.all() %}
-                        <tr>
-                            <td>
-                                {% if task.status == 'done' %}
-                                <span class="badge bg-success">Готово</span>
-                                {% elif task.status == 'in_progress' %}
-                                <span class="badge bg-warning">В работе</span>
-                                {% else %}
-                                <span class="badge bg-secondary">К выполнению</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <a href="{{ url('tasks:task_detail', pk=task.id) }}">{{ task.title }}</a>
-                            </td>
-                            <td>
-                                {% for user in task.u_users.all() %}
-                                <span class="badge bg-secondary">{{ user.username }}</span>
-                                {% endfor %}
-                            </td>
-                            <td>{{ task.estimated_time }} / {{ task.actual_time }}</td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></button>
-                            </td>
-                        </tr>
+                            <tr>
+                                <td>
+                                    {% if task.status == 'done' %}
+                                        <span class="badge bg-success">Готово</span>
+                                    {% elif task.status == 'in_progress' %}
+                                        <span class="badge bg-warning">В работе</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">К выполнению</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url('tasks:task_detail', pk=task.id) }}">{{ task.title }}</a>
+                                </td>
+                                <td>
+                                    {% for user in task.u_users.all() %}
+                                        <span class="badge bg-secondary">{{ user.username }}</span>
+                                    {% endfor %}
+                                </td>
+                                <td>{{ task.estimated_time }} / {{ task.actual_time }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></button>
+                                </td>
+                            </tr>
                         {% endfor %}
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Billing Tab -->
-    <div class="tab-pane fade" id="billing" role="tabpanel">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between">
-                <span>Финансы</span>
-                <button class="btn btn-sm btn-primary">+ Добавить операцию</button>
-            </div>
-            <div class="card-body">
-                {% set fin = project.get_financial_summary() %}
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <div class="card bg-success text-white">
-                            <div class="card-body">
-                                <h6>Доход</h6>
-                                <h4>${{ fin.income }}</h4>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card bg-danger text-white">
-                            <div class="card-body">
-                                <h6>Расход</h6>
-                                <h4>${{ fin.expense }}</h4>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card bg-primary text-white">
-                            <div class="card-body">
-                                <h6>Баланс</h6>
-                                <h4>${{ fin.balance }}</h4>
-                            </div>
-                        </div>
-                    </div>
+
+        <div class="tab-pane fade" id="billing" role="tabpanel">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <span>Финансы</span>
+                    <button class="btn btn-sm btn-primary">+ Добавить операцию</button>
                 </div>
-                
-                <table class="table">
-                    <thead>
+                <div class="card-body">
+                    {% set fin = project.get_financial_summary() %}
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <h6>Доход</h6>
+                                    <h4>${{ fin.income }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-danger text-white">
+                                <div class="card-body">
+                                    <h6>Расход</h6>
+                                    <h4>${{ fin.expense }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <h6>Баланс</h6>
+                                    <h4>${{ fin.balance }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <table class="table">
+                        <thead>
                         <tr>
                             <th>Дата</th>
                             <th>Сумма</th>
                             <th>Тип</th>
                             <th>Описание</th>
                         </tr>
-                    </thead>
-                    <tbody>
+                        </thead>
+                        <tbody>
                         {% for billing in project.billings.all() %}
-                        <tr>
-                            <td>{{ billing.date }}</td>
-                            <td>
-                                {% if billing.operation == 'income' %}
-                                <span class="text-success">+${{ billing.amount }}</span>
-                                {% else %}
-                                <span class="text-danger">-${{ billing.amount }}</span>
-                                {% endif %}
-                            </td>
-                            <td><span class="badge bg-secondary">{{ billing.get_tag_display() }}</span></td>
-                            <td>{{ billing.description }}</td>
-                        </tr>
+                            <tr>
+                                <td>{{ billing.date }}</td>
+                                <td>
+                                    {% if billing.operation == 'income' %}
+                                        <span class="text-success">+${{ billing.amount }}</span>
+                                    {% else %}
+                                        <span class="text-danger">-${{ billing.amount }}</span>
+                                    {% endif %}
+                                </td>
+                                <td><span class="badge bg-secondary">{{ billing.get_tag_display() }}</span></td>
+                                <td>{{ billing.description }}</td>
+                            </tr>
                         {% endfor %}
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Access Tab -->
-    <div class="tab-pane fade" id="access" role="tabpanel">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between">
-                <span>Доступы</span>
-                <button class="btn btn-sm btn-primary">+ Добавить доступ</button>
-            </div>
-            <div class="table-responsive">
-                <table class="table mb-0">
-                    <thead class="table-light">
+
+        <div class="tab-pane fade" id="access" role="tabpanel">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <span>Доступы</span>
+                    <button class="btn btn-sm btn-primary">+ Добавить доступ</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead class="table-light">
                         <tr>
                             <th>Сервис/URL</th>
                             <th>Логин</th>
@@ -264,81 +260,81 @@
                             <th>Теги</th>
                             <th>Действия</th>
                         </tr>
-                    </thead>
-                    <tbody>
+                        </thead>
+                        <tbody>
                         {% for access in project.accesses.all() %}
-                        <tr>
-                            <td><a href="{{ access.url }}" target="_blank">{{ access.url or 'N/A' }}</a></td>
-                            <td>{{ access.login }}</td>
-                            <td>
+                            <tr>
+                                <td><a href="{{ access.url }}" target="_blank">{{ access.url or 'N/A' }}</a></td>
+                                <td>{{ access.login }}</td>
+                                <td>
                                 <span class="masked-password" data-password="{{ access.password }}">
                                     ••••••••
                                 </span>
-                                <i class="bi bi-eye"></i>
-                            </td>
-                            <td>{{ access.amount or '-' }}</td>
-                            <td>
-                                {% for tag in access.tags %}
-                                <span class="badge bg-secondary">{{ tag }}</span>
-                                {% endfor %}
-                            </td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></button>
-                            </td>
-                        </tr>
+                                    <i class="bi bi-eye"></i>
+                                </td>
+                                <td>{{ access.amount or '-' }}</td>
+                                <td>
+                                    {% for tag in access.tags %}
+                                        <span class="badge bg-secondary">{{ tag }}</span>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></button>
+                                </td>
+                            </tr>
                         {% endfor %}
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Media Tab -->
-    <div class="tab-pane fade" id="media" role="tabpanel">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between">
-                <span>Медиафайлы</span>
-                <button class="btn btn-sm btn-primary">+ Загрузить файл</button>
-            </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    {% for media in project.media_files.all() %}
-                    <div class="col-md-3">
-                        <div class="card">
-                            <div class="card-body text-center">
-                                {% if media.is_image %}
-                                <img src="{{ media.file.url }}" class="img-fluid mb-2" alt="{{ media.filename }}">
-                                {% else %}
-                                <i class="bi bi-file-earmark fs-1"></i>
-                                <p class="mt-2">{{ media.filename }}</p>
-                                {% endif %}
-                                <small class="text-muted">{{ media.uploaded_at|date:"Y-m-d H:i" }}</small>
+
+        <div class="tab-pane fade" id="media" role="tabpanel">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <span>Медиафайлы</span>
+                    <button class="btn btn-sm btn-primary">+ Загрузить файл</button>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for media in project.media_files.all() %}
+                            <div class="col-md-3">
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        {% if media.is_image %}
+                                            <img src="{{ media.file.url }}" class="img-fluid mb-2"
+                                                 alt="{{ media.filename }}">
+                                        {% else %}
+                                            <i class="bi bi-file-earmark fs-1"></i>
+                                            <p class="mt-2">{{ media.filename }}</p>
+                                        {% endif %}
+                                        <small class="text-muted">
+                                            {{ media.uploaded_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
             </div>
         </div>
     </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
-<script>
-// Password masking toggle
-document.querySelectorAll('.masked-password').forEach(el => {
-    el.nextElementSibling.addEventListener('click', function() {
-        const passwordSpan = this.previousElementSibling;
-        const password = passwordSpan.dataset.password;
-        if (passwordSpan.textContent === '••••••••') {
-            passwordSpan.textContent = password;
-            this.className = 'bi bi-eye-slash';
-        } else {
-            passwordSpan.textContent = '••••••••';
-            this.className = 'bi bi-eye';
-        }
-    });
-});
-</script>
+    <script>
+        document.querySelectorAll('.masked-password').forEach(el => {
+            el.nextElementSibling.addEventListener('click', function () {
+                const passwordSpan = this.previousElementSibling;
+                const password = passwordSpan.dataset.password;
+                if (passwordSpan.textContent === '••••••••') {
+                    passwordSpan.textContent = password;
+                    this.className = 'bi bi-eye-slash';
+                } else {
+                    passwordSpan.textContent = '••••••••';
+                    this.className = 'bi bi-eye';
+                }
+            });
+        });
+    </script>
 {% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Редактирование профиля{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Редактировать профиль</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label>Имя</label>
+                            <input type="text" name="first_name" value="{{ form.first_name.value|default:'' }}"
+                                   class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label>Фамилия</label>
+                            <input type="text" name="last_name" value="{{ form.last_name.value|default:'' }}"
+                                   class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label>Email</label>
+                            <input type="email" name="email" value="{{ form.email.value|default:'' }}"
+                                   class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label>Telegram ID</label>
+                            <input type="text" name="telegram_id" value="{{ form.telegram_id.value|default:'' }}"
+                                   class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label>Аватар</label>
+                            <input type="file" name="avatar" class="form-control">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Сохранить</button>
+                        <a href="{% url 'users:user_detail' pk=user.id %}" class="btn btn-secondary">Отмена</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

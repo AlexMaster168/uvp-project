@@ -14,7 +14,7 @@ class TaskListView(LoginRequiredMixin, ListView):
 class TaskDetailView(LoginRequiredMixin, DetailView):
     model = Task
     template_name = 'tasks/task_detail.html'
-    context_object_name = 'task'
+    context_object_name = 'tasks'
 
 # API ViewSet
 class TaskViewSet(viewsets.ModelViewSet):

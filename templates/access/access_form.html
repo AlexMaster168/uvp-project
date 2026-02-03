@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Доступ{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h4>{% if object %}Редактировать{% else %}Новый{% endif %} доступ</h4>
+                    <form method="post">{% csrf_token %}
+                        <div class="mb-3">
+                            <label>Проект</label>
+                            <select name="project" class="form-select">
+                                {% for p in view.model.project.field.related_model.objects.all() %}
+                                    <option value="{{ p.id }}"
+                                            {% if request.GET.project|add:"0" == p.id %}selected{% endif %}>{{ p.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3"><label>Login</label><input type="text" name="login" class="form-control"
+                                                                     value="{{ object.login|default:'' }}" required>
+                        </div>
+                        <div class="mb-3"><label>Password</label><input type="text" name="password" class="form-control"
+                                                                        value="{{ object.password|default:'' }}"
+                                                                        required></div>
+                        <div class="mb-3"><label>URL</label><input type="url" name="url" class="form-control"
+                                                                   value="{{ object.url|default:'' }}"></div>
+                        <div class="mb-3"><label>URL Drive</label><input type="url" name="url_drive"
+                                                                         class="form-control"
+                                                                         value="{{ object.url_drive|default:'' }}">
+                        </div>
+                        <div class="mb-3"><label>Описание</label><textarea name="description"
+                                                                           class="form-control">{{ object.description|default:'' }}</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Сохранить</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
