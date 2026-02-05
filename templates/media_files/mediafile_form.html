@@ -1,26 +1,28 @@
 {% extends "base.html" %}
-{% block title %}Файл{% endblock %}
 {% block content %}
-    <div class="row">
-        <div class="col-md-6 offset-md-3">
-            <div class="card">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0">Загрузка файла</h4>
+                </div>
                 <div class="card-body">
-                    <h4>Загрузить файл</h4>
-                    <form method="post" enctype="multipart/form-data">{% csrf_token %}
+                    <form method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                        <div class="d-none">{{ form.project }}</div>
+
                         <div class="mb-3">
-                            <label>Проект</label>
-                            <select name="project" class="form-select">
-                                {% for p in view.model.project.field.related_model.objects.all() %}
-                                    <option value="{{ p.id }}"
-                                            {% if request.GET.project|add:"0" == p.id %}selected{% endif %}>{{ p.name }}</option>
-                                {% endfor %}
-                            </select>
+                            <label class="form-label">Файл</label>
+                            {{ form.file }}
                         </div>
-                        <div class="mb-3"><label>Файл</label><input type="file" name="file" class="form-control"
-                                                                    required></div>
-                        <div class="mb-3"><label>Описание</label><textarea name="description"
-                                                                           class="form-control"></textarea></div>
-                        <button type="submit" class="btn btn-primary">Загрузить</button>
+                        <div class="mb-3">
+                            <label class="form-label">Описание</label>
+                            {{ form.description }}
+                        </div>
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-secondary" onclick="history.back()">Назад</button>
+                            <button type="submit" class="btn btn-primary px-4">Загрузить</button>
+                        </div>
                     </form>
                 </div>
             </div>

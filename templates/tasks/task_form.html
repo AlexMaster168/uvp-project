@@ -1,65 +1,49 @@
 {% extends "base.html" %}
-{% block title %}{% if object %}Редактировать задачу{% else %}Новая задача{% endif %} - УВП{% endblock %}
 {% block content %}
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <div class="card">
-                <div class="card-header">
-                    <h4>{% if object %}Редактировать задачу{% else %}Создать задачу{% endif %}</h4>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0">{% if object %}Задача #{{ object.id }}{% else %}Новая задача{% endif %}</h4>
                 </div>
                 <div class="card-body">
                     <form method="post">
-                        {{ csrf_input }}
-                        <div class="mb-3">
-                            <label for="id_title" class="form-label">Название</label>
-                            <input type="text" class="form-control" id="id_title" name="title"
-                                   value="{{ object.title if object else '' }}" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="id_status" class="form-label">Статус</label>
-                            <select class="form-select" id="id_status" name="status">
-                                {% for code, label in view.model.STATUS_CHOICES %}
-                                    <option value="{{ code }}"
-                                            {% if object and object.status == code %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="id_estimated_time" class="form-label">План (ч)</label>
-                                <input type="number" step="0.1" class="form-control" id="id_estimated_time"
-                                       name="estimated_time" value="{{ object.estimated_time if object else '0' }}">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="id_actual_time" class="form-label">Факт (ч)</label>
-                                <input type="number" step="0.1" class="form-control" id="id_actual_time"
-                                       name="actual_time" value="{{ object.actual_time if object else '0' }}">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="id_project" class="form-label">Проект</label>
-                            <select class="form-select" id="id_project" name="project" required>
-                                {% for project in view.model.project.field.related_model.objects.all() %}
-                                    <option value="{{ project.id }}"
-                                            {% if (object and object.project.id == project.id) or (request.GET.project|int == project.id) %}selected{% endif %}>{{ project.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="id_u_users" class="form-label">Исполнители</label>
-                            <select class="form-select" id="id_u_users" name="u_users" multiple>
-                                {% for user in view.model.u_users.field.related_model.objects.all() %}
-                                    <option value="{{ user.id }}"
-                                            {% if object and user in object.u_users.all() %}selected{% endif %}>{{ user.username }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <a href="
+                        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                        <div class="d-none">{{ form.project }}</div>
 
-                                    {% if object %}{{ url('projects:project_detail', pk=object.project.id) }}{% elif request.GET.project %}{{ url('projects:project_detail', pk=request.GET.project) }}{% else %}{{ url('tasks:task_list') }}{% endif %}"
-                               class="btn btn-secondary">Отмена</a>
-                            <button type="submit" class="btn btn-primary">Сохранить</button>
+                        <div class="mb-3">
+                            <label class="form-label">Название задачи</label>
+                            {{ form.title }}
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Статус</label>
+                                {{ form.status }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">План (ч)</label>
+                                {{ form.estimated_time }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Факт (ч)</label>
+                                {{ form.actual_time }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Исполнители</label>
+                            {{ form.u_users }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Теги</label>
+                            {{ form.u_tags }}
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-secondary" onclick="history.back()">Назад</button>
+                            <button type="submit" class="btn btn-primary px-4">Сохранить</button>
                         </div>
                     </form>
                 </div>

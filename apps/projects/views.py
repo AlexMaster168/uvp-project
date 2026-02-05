@@ -1,13 +1,17 @@
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
+import json
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
-from rest_framework import viewsets, filters
+from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
+
+from .forms import ProjectForm
 from .models import Tag, Project, ProjectMembership
 from .serializers import *
-from .permissions import IsProjectMember, IsProjectOwnerOrManager
+from apps.tasks.models import Task
+
 
 class ProjectListView(LoginRequiredMixin, ListView):
     model = Project
@@ -15,43 +19,55 @@ class ProjectListView(LoginRequiredMixin, ListView):
     context_object_name = 'projects'
     paginate_by = 20
 
+
 class ProjectDetailView(LoginRequiredMixin, DetailView):
     model = Project
     template_name = 'projects/project_detail.html'
     context_object_name = 'project'
 
+
+class ProjectStructureView(LoginRequiredMixin, DetailView):
+    model = Project
+    template_name = 'projects/structure.html'
+    context_object_name = 'project'
+
+
 class ProjectCreateView(LoginRequiredMixin, CreateView):
     model = Project
+    form_class = ProjectForm
     template_name = 'projects/project_form.html'
-    fields = ['name', 'description', 'start_date', 'end_date', 'status', 'logo', 'u_tags']
-    
+
     def form_valid(self, form):
         form.instance.u_creator = self.request.user
         response = super().form_valid(form)
-        ProjectMembership.objects.create(
-            project=self.object,
-            user=self.request.user,
-            role='owner'
-        )
+        ProjectMembership.objects.create(project=self.object, user=self.request.user, role='owner')
         return response
-    
+
     def get_success_url(self):
         return reverse_lazy('projects:project_detail', kwargs={'pk': self.object.pk})
+
 
 class ProjectUpdateView(LoginRequiredMixin, UpdateView):
     model = Project
+    form_class = ProjectForm
     template_name = 'projects/project_form.html'
-    fields = ['name', 'description', 'start_date', 'end_date', 'status', 'logo', 'u_tags']
-    
+
     def get_success_url(self):
         return reverse_lazy('projects:project_detail', kwargs={'pk': self.object.pk})
 
-# API ViewSets
+
+class ProjectDeleteView(LoginRequiredMixin, DeleteView):
+    model = Project
+    template_name = 'projects/project_confirm_delete.html'
+    success_url = reverse_lazy('projects:project_list')
+
+
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['name']
+
 
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
@@ -59,28 +75,47 @@ class ProjectViewSet(viewsets.ModelViewSet):
     filterset_fields = ['status', 'start_date', 'end_date']
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'start_date', 'created_at']
-    
+
     def get_serializer_class(self):
         if self.action == 'list':
             return ProjectListSerializer
         elif self.action in ['create', 'update', 'partial_update']:
             return ProjectCreateUpdateSerializer
         return ProjectDetailSerializer
-    
+
     def perform_create(self, serializer):
         project = serializer.save(u_creator=self.request.user)
-        ProjectMembership.objects.create(
-            project=project,
-            user=self.request.user,
-            role='owner'
-        )
-    
+        ProjectMembership.objects.create(project=project, user=self.request.user, role='owner')
+
     @action(detail=True, methods=['get', 'post'])
     def structure(self, request, pk=None):
         project = self.get_object()
         if request.method == 'GET':
             return Response(project.structure_data)
         elif request.method == 'POST':
-            project.structure_data = request.data
+            data = request.data
+            nodes = data.get('nodes', {})
+
+            for node_id, node_data in nodes.items():
+                if node_data.get('label') == 'Task' or node_data.get('name') == 'Task':
+                    task_title = node_data.get('data', {}).get('title', 'New Task')
+                    task_id = node_data.get('data', {}).get('db_id')
+
+                    if task_id:
+                        try:
+                            task = Task.objects.get(pk=task_id, project=project)
+                            task.title = task_title
+                            task.save()
+                        except Task.DoesNotExist:
+                            pass
+                    else:
+                        task = Task.objects.create(
+                            title=task_title,
+                            project=project,
+                            status='todo'
+                        )
+                        node_data['data']['db_id'] = task.id
+
+            project.structure_data = data
             project.save()
-            return Response({'status': 'saved'})
+            return Response(data)

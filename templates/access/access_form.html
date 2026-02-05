@@ -1,38 +1,63 @@
 {% extends "base.html" %}
-{% block title %}Доступ{% endblock %}
 {% block content %}
-    <div class="row">
-        <div class="col-md-6 offset-md-3">
-            <div class="card">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0">{% if object %}Редактировать{% else %}Добавить{% endif %} доступ</h4>
+                </div>
                 <div class="card-body">
-                    <h4>{% if object %}Редактировать{% else %}Новый{% endif %} доступ</h4>
-                    <form method="post">{% csrf_token %}
+                    <form method="post">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                        <div class="d-none">{{ form.project }}</div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">URL сервиса</label>
+                                {{ form.url }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Google Drive</label>
+                                {{ form.url_drive }}
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Логин</label>
+                                {{ form.login }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Пароль</label>
+                                {{ form.password }}
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Стоимость</label>
+                                {{ form.amount }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Теги</label>
+                                {{ form.tags }}
+                            </div>
+                        </div>
                         <div class="mb-3">
-                            <label>Проект</label>
-                            <select name="project" class="form-select">
-                                {% for p in view.model.project.field.related_model.objects.all() %}
-                                    <option value="{{ p.id }}"
-                                            {% if request.GET.project|add:"0" == p.id %}selected{% endif %}>{{ p.name }}</option>
-                                {% endfor %}
-                            </select>
+                            <label class="form-label">Описание</label>
+                            {{ form.description }}
                         </div>
-                        <div class="mb-3"><label>Login</label><input type="text" name="login" class="form-control"
-                                                                     value="{{ object.login|default:'' }}" required>
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-secondary" onclick="history.back()">Назад</button>
+                            <button type="submit" class="btn btn-primary px-4">Сохранить</button>
                         </div>
-                        <div class="mb-3"><label>Password</label><input type="text" name="password" class="form-control"
-                                                                        value="{{ object.password|default:'' }}"
-                                                                        required></div>
-                        <div class="mb-3"><label>URL</label><input type="url" name="url" class="form-control"
-                                                                   value="{{ object.url|default:'' }}"></div>
-                        <div class="mb-3"><label>URL Drive</label><input type="url" name="url_drive"
-                                                                         class="form-control"
-                                                                         value="{{ object.url_drive|default:'' }}">
-                        </div>
-                        <div class="mb-3"><label>Описание</label><textarea name="description"
-                                                                           class="form-control">{{ object.description|default:'' }}</textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Сохранить</button>
                     </form>
+                    {% if object %}
+                        <div class="text-end mt-3 border-top pt-3">
+                            <form action="{{ url('access:access_delete', pk=object.pk) }}" method="post">
+                                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                                <button type="submit" class="btn btn-outline-danger btn-sm">Удалить</button>
+                            </form>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
