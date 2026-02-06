@@ -166,7 +166,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
             nodes = structure.get('nodes', [])
             connections = structure.get('connections', [])
 
-            users_data = [{'id': u.id, 'username': u.username} for u in User.objects.all()]
+            project_users = User.objects.filter(
+                Q(project_memberships__project=project) |
+                Q(id=project.u_creator.id)
+            ).distinct()
+
+            users_data = [{'id': u.id, 'username': u.username} for u in project_users]
 
             db_tasks_map = {t.id: t for t in Task.objects.filter(project=project)}
             db_subtasks_map = {st.id: st for st in SubTask.objects.filter(task__project=project)}

@@ -1,42 +1,32 @@
 {% extends "base.html" %}
+
+{% block title %}
+    {% if form.instance.pk %}Редактировать проект{% else %}Создать проект{% endif %}
+{% endblock %}
+
 {% block content %}
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card shadow-sm">
                 <div class="card-header bg-white">
-                    <h4 class="mb-0">{% if object %}Редактировать проект{% else %}Новый проект{% endif %}</h4>
+                    <h4 class="mb-0">
+                        {% if form.instance.pk %}Редактировать проект{% else %}Создать проект{% endif %}
+                    </h4>
                 </div>
                 <div class="card-body">
                     <form method="post" enctype="multipart/form-data">
                         <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
 
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <label class="form-label">Название проекта</label>
-                                {{ form.name }}
+                        {% if form.errors %}
+                            <div class="alert alert-danger">
+                                Пожалуйста, исправьте ошибки ниже.
+                                {{ form.errors }}
                             </div>
-                        </div>
+                        {% endif %}
 
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Статус</label>
-                                {{ form.status }}
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Логотип</label>
-                                {{ form.logo }}
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Дата начала</label>
-                                {{ form.start_date }}
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Дата окончания</label>
-                                {{ form.end_date }}
-                            </div>
+                        <div class="mb-3">
+                            <label class="form-label">Название</label>
+                            {{ form.name }}
                         </div>
 
                         <div class="mb-3">
@@ -44,29 +34,51 @@
                             {{ form.description }}
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Теги</label>
-                            {{ form.u_tags }}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Дата начала</label>
+                                {{ form.start_date }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Дата окончания</label>
+                                {{ form.end_date }}
+                            </div>
                         </div>
 
-                        <div class="d-flex justify-content-between align-items-center mt-4">
-                            <a href="
-                                    {% if object %}{{ url('projects:project_detail', pk=object.pk) }}{% else %}{{ url('projects:project_list') }}{% endif %}"
-                               class="btn btn-secondary">Отмена</a>
-                            <button type="submit" class="btn btn-primary px-4">Сохранить</button>
+                        <div class="mb-3">
+                            <label class="form-label">Статус</label>
+                            {{ form.status }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Логотип</label>
+                            {{ form.logo }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Выберите существующие теги</label>
+                            {{ form.u_tags }}
+                            <div class="form-text">Зажмите Ctrl (или Cmd), чтобы выбрать несколько.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Добавить новые теги</label>
+                            {{ form.new_tags }}
+                            <div class="form-text">Введите названия новых тегов через запятую. Они будут созданы и
+                                добавлены к проекту.
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            {% if form.instance.pk %}
+                                <a href="{{ url('projects:project_detail', pk=form.instance.pk) }}"
+                                   class="btn btn-secondary">Отмена</a>
+                            {% else %}
+                                <a href="{{ url('projects:project_list') }}" class="btn btn-secondary">Отмена</a>
+                            {% endif %}
+                            <button type="submit" class="btn btn-primary">Сохранить</button>
                         </div>
                     </form>
-
-                    {% if object %}
-                        <hr class="my-4">
-                        <div class="text-end">
-                            <form action="{{ url('projects:project_delete', pk=object.pk) }}" method="post"
-                                  class="d-inline">
-                                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-                                <button type="submit" class="btn btn-outline-danger btn-sm">Удалить проект</button>
-                            </form>
-                        </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
