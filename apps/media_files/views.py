@@ -1,43 +1,61 @@
-from django.views.generic import ListView, CreateView, DeleteView
+from django.urls import reverse
+from django.views.generic import CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy
-from rest_framework import viewsets
-from django_filters.rest_framework import DjangoFilterBackend
+from django.shortcuts import get_object_or_404
+from rest_framework import viewsets, parsers
 
-from .form import MediaFileForm
 from .models import MediaFile
+from .forms import MediaFileForm
 from .serializers import MediaFileSerializer
-
-
-class MediaFileListView(LoginRequiredMixin, ListView):
-    model = MediaFile
-    template_name = 'media_files/mediafile_list.html'
-    context_object_name = 'media_files'
-    paginate_by = 20
-
-
-class MediaFileCreateView(LoginRequiredMixin, CreateView):
-    model = MediaFile
-    form_class = MediaFileForm
-    template_name = 'media_files/mediafile_form.html'
-
-    def get_initial(self):
-        return {'project': self.request.GET.get('project')}
-
-    def get_success_url(self):
-        return reverse_lazy('projects:project_detail', kwargs={'pk': self.object.project.pk})
-
-
-class MediaFileDeleteView(LoginRequiredMixin, DeleteView):
-    model = MediaFile
-    template_name = 'media_files/mediafile_confirm_delete.html'
-
-    def get_success_url(self):
-        return reverse_lazy('projects:project_detail', kwargs={'pk': self.object.project.pk})
+from apps.projects.models import Project
 
 
 class MediaFileViewSet(viewsets.ModelViewSet):
     queryset = MediaFile.objects.all()
     serializer_class = MediaFileSerializer
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['project']
+    parser_classes = (parsers.MultiPartParser, parsers.FormParser)
+
+
+class MediaCreateView(LoginRequiredMixin, CreateView):
+    model = MediaFile
+    form_class = MediaFileForm
+    template_name = 'media_files/mediafile_form.html'
+
+    def get_initial(self):
+        initial = super().get_initial()
+        project_id = self.request.GET.get('project')
+        if project_id:
+            initial['project'] = get_object_or_404(Project, pk=project_id)
+        return initial
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        project_id = self.request.GET.get('project')
+        if project_id:
+            context['project'] = get_object_or_404(Project, pk=project_id)
+        return context
+
+    def get_success_url(self):
+        return reverse('projects:project_detail', kwargs={'pk': self.object.project.pk}) + '#media'
+
+
+class MediaUpdateView(LoginRequiredMixin, UpdateView):
+    model = MediaFile
+    form_class = MediaFileForm
+    template_name = 'media_files/mediafile_form.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['project'] = self.object.project
+        return context
+
+    def get_success_url(self):
+        return reverse('projects:project_detail', kwargs={'pk': self.object.project.pk}) + '#media'
+
+
+class MediaDeleteView(LoginRequiredMixin, DeleteView):
+    model = MediaFile
+    template_name = 'media_files/mediafile_confirm_delete.html'
+
+    def get_success_url(self):
+        return reverse('projects:project_detail', kwargs={'pk': self.object.project.pk}) + '#media'

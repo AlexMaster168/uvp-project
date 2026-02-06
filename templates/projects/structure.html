@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Структура проекта - Rete.js</title>
+    <title>Структура проекта</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
@@ -34,169 +34,154 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: #fff;
+            background: #f0f2f5;
         }
 
         .node {
             background: white;
             border: 2px solid #ccc;
-            border-radius: 10px;
+            border-radius: 8px;
             cursor: pointer;
             position: absolute;
-            min-width: 180px;
+            min-width: 200px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            user-select: none;
+            transition: transform 0.1s;
+        }
+
+        .node:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
 
         .node-header {
             padding: 8px 12px;
-            border-radius: 8px 8px 0 0;
+            border-radius: 6px 6px 0 0;
             color: white;
             font-weight: bold;
+            display: flex;
+            justify-content: space-between;
         }
 
         .node-content {
-            padding: 10px;
+            padding: 12px;
+            font-size: 14px;
+        }
+
+        .node-actions {
+            border-top: 1px solid #eee;
+            padding: 6px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 5px;
         }
 
         .task-node {
-            border-color: #4682b4;
+            border-color: #3b82f6;
         }
 
         .task-node .node-header {
-            background: #4682b4;
+            background: #3b82f6;
         }
 
         .access-node {
-            border-color: #6f42c1;
+            border-color: #8b5cf6;
         }
 
         .access-node .node-header {
-            background: #6f42c1;
+            background: #8b5cf6;
         }
 
         .billing-node {
-            border-color: #198754;
+            border-color: #10b981;
         }
 
         .billing-node .node-header {
-            background: #198754;
+            background: #10b981;
+        }
+
+        .media-node {
+            border-color: #f59e0b;
+        }
+
+        .media-node .node-header {
+            background: #f59e0b;
         }
 
         .project-node {
-            border-color: #dc3545;
+            border-color: #ef4444;
         }
 
         .project-node .node-header {
-            background: #dc3545;
+            background: #ef4444;
         }
 
-        .node-status {
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 11px;
-            margin-top: 5px;
+        .badge-status {
+            padding: 3px 8px;
+            border-radius: 12px;
             color: white;
+            font-size: 11px;
         }
 
-        .status-todo {
-            background: #6c757d;
+        .bg-todo {
+            background: #6b7280;
         }
 
-        .status-in-progress {
-            background: #ffc107;
-            color: black;
+        .bg-in-progress {
+            background: #f59e0b;
         }
 
-        .status-done {
-            background: #198754;
+        .bg-done {
+            background: #10b981;
         }
 
-        .status-income {
-            background: #198754;
+        .bg-expense {
+            background: #ef4444;
         }
 
-        .status-expense {
-            background: #dc3545;
+        .bg-income {
+            background: #10b981;
         }
     </style>
 </head>
 <body>
 <div id="toolbar">
-    <div>
-        <a href="/projects/" class="btn btn-outline-secondary btn-sm me-2"><i class="bi bi-arrow-left"></i> Назад</a>
-        <button class="btn btn-primary btn-sm me-1" onclick="modal('taskModal')"><i class="bi bi-check-square"></i>
-            Задача
+    <div class="d-flex align-items-center gap-2">
+        <a href="{{ url('projects:project_detail', pk=project.id) }}" class="btn btn-outline-secondary btn-sm"><i
+                class="bi bi-arrow-left"></i> Назад</a>
+        <div class="vr"></div>
+        <button class="btn btn-primary btn-sm" onclick="viz.openModal('task')"><i class="bi bi-check-square"></i> Задача
         </button>
-        <button class="btn btn-purple btn-sm me-1" style="background-color: #6f42c1; color: white;"
-                onclick="modal('accessModal')"><i class="bi bi-key"></i> Доступ
+        <button class="btn btn-purple btn-sm" style="background:#8b5cf6; color:white;"
+                onclick="viz.openModal('access')"><i class="bi bi-key"></i> Доступ
         </button>
-        <button class="btn btn-success btn-sm me-2" onclick="modal('billingModal')"><i
-                class="bi bi-currency-dollar"></i> Финансы
+        <button class="btn btn-success btn-sm" onclick="viz.openModal('billing')"><i class="bi bi-currency-dollar"></i>
+            Финансы
         </button>
-        <button id="save-btn" class="btn btn-dark btn-sm"><i class="bi bi-save"></i> Сохранить</button>
+        <button class="btn btn-warning btn-sm text-white" onclick="viz.openModal('media')"><i
+                class="bi bi-file-earmark-plus"></i> Медиа
+        </button>
     </div>
-    <div>
-        <button id="auto-layout-btn" class="btn btn-outline-secondary btn-sm"><i class="bi bi-grid"></i></button>
+    <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-outline-dark btn-sm" onclick="viz.autoLayout()"><i class="bi bi-grid-3x3"></i> Авто
+        </button>
+        <button id="save-btn" class="btn btn-dark btn-sm"><i class="bi bi-cloud-upload"></i> Сохранить</button>
     </div>
 </div>
 
 <div id="rete-container"></div>
 
-<div class="modal fade" id="taskModal" tabindex="-1">
+<div class="modal fade" id="nodeModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title">Новая задача</h5>
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Редактирование</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <input type="text" class="form-control mb-2" id="task-title" placeholder="Название">
-                <select class="form-select" id="task-status">
-                    <option value="todo">К выполнению</option>
-                    <option value="in_progress">В работе</option>
-                    <option value="done">Готово</option>
-                </select>
+            <div class="modal-body" id="modalBody">
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="viz.createTask()">Создать</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="accessModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title">Новый доступ</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <input type="text" class="form-control mb-2" id="acc-url" placeholder="URL">
-                <input type="text" class="form-control mb-2" id="acc-login" placeholder="Логин">
-                <input type="password" class="form-control" id="acc-pass" placeholder="Пароль">
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="viz.createAccess()">Создать</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="billingModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title">Финансы</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <input type="number" class="form-control mb-2" id="bill-amount" placeholder="Сумма">
-                <select class="form-select" id="bill-op">
-                    <option value="expense">Расход</option>
-                    <option value="income">Доход</option>
-                </select>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="viz.createBilling()">Создать</button>
+                <button type="button" class="btn btn-primary" onclick="viz.saveNodeFromModal()">Сохранить</button>
             </div>
         </div>
     </div>
@@ -205,14 +190,14 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     const container = document.getElementById('rete-container');
-    const modal = (id) => new bootstrap.Modal(document.getElementById(id)).show();
+    const modalEl = document.getElementById('nodeModal');
+    const modalObj = new bootstrap.Modal(modalEl);
 
-    class SimpleVisualization {
+    class Visualization {
         constructor(projectId) {
             this.projectId = projectId;
             this.nodes = [];
-            this.connections = [];
-            this.zoom = 1;
+            this.currentNode = null;
             this.drag = {active: false, node: null, offX: 0, offY: 0};
             this.init();
         }
@@ -224,12 +209,15 @@
         }
 
         async loadData() {
-            const res = await fetch(`/api/projects/${this.projectId}/structure/`);
-            if (res.ok) {
-                const data = await res.json();
-                this.nodes = data.nodes || [];
-                this.connections = data.connections || [];
-                if (this.nodes.length === 0) this.addNode('project', 'project', 'Проект', 'in_progress', 50, 50, {});
+            try {
+                const res = await fetch(`/api/projects/${this.projectId}/structure/`);
+                if (res.ok) {
+                    const data = await res.json();
+                    this.nodes = data.nodes || [];
+                    if (this.nodes.length === 0) this.addNode('project', 'project', 'Проект', 'active', 50, 50, {});
+                }
+            } catch (e) {
+                console.error(e);
             }
         }
 
@@ -238,32 +226,136 @@
             this.render();
         }
 
-        createTask() {
-            const title = document.getElementById('task-title').value;
-            const status = document.getElementById('task-status').value;
-            if (title) {
-                this.addNode('temp_' + Date.now(), 'task', title, status, 100, 100, {title});
-                bootstrap.Modal.getInstance(document.getElementById('taskModal')).hide();
+        updateNode(id, newData) {
+            const node = this.nodes.find(n => n.id === id);
+            if (node) Object.assign(node, newData);
+            this.render();
+        }
+
+        deleteNode(id) {
+            if (confirm('Удалить элемент? Это действие применится после сохранения.')) {
+                this.nodes = this.nodes.filter(n => n.id !== id);
+                this.render();
             }
         }
 
-        createAccess() {
-            const url = document.getElementById('acc-url').value;
-            const login = document.getElementById('acc-login').value;
-            const pass = document.getElementById('acc-pass').value;
-            if (login) {
-                this.addNode('temp_' + Date.now(), 'access', login, 'active', 100, 100, {url, login, password: pass});
-                bootstrap.Modal.getInstance(document.getElementById('accessModal')).hide();
+        openModal(type, nodeId = null) {
+            this.currentNode = nodeId ? this.nodes.find(n => n.id === nodeId) : null;
+            const isEdit = !!this.currentNode;
+            const titleEl = document.getElementById('modalTitle');
+            const bodyEl = document.getElementById('modalBody');
+
+            titleEl.textContent = isEdit ? 'Редактировать' : 'Создать';
+
+            let html = '';
+            const data = isEdit ? this.currentNode.data : {};
+            const status = isEdit ? this.currentNode.status : '';
+
+            if (type === 'task') {
+                html = `
+                        <label>Название</label><input type="text" id="inp-title" class="form-control mb-2" value="${data.title || ''}">
+                        <label>Статус</label>
+                        <select id="inp-status" class="form-select">
+                            <option value="todo" ${status === 'todo' ? 'selected' : ''}>К выполнению</option>
+                            <option value="in_progress" ${status === 'in_progress' ? 'selected' : ''}>В работе</option>
+                            <option value="done" ${status === 'done' ? 'selected' : ''}>Готово</option>
+                        </select>`;
+            } else if (type === 'access') {
+                html = `
+                        <label>URL</label><input type="text" id="inp-url" class="form-control mb-2" value="${data.url || ''}">
+                        <label>Логин</label><input type="text" id="inp-login" class="form-control mb-2" value="${data.login || ''}">
+                        <label>Пароль</label><input type="text" id="inp-pass" class="form-control" value="${data.password || ''}">`;
+            } else if (type === 'billing') {
+                html = `
+                        <label>Сумма</label><input type="number" id="inp-amount" class="form-control mb-2" value="${data.amount || ''}">
+                        <label>Тип</label>
+                        <select id="inp-status" class="form-select">
+                            <option value="expense" ${status === 'expense' ? 'selected' : ''}>Расход</option>
+                            <option value="income" ${status === 'income' ? 'selected' : ''}>Доход</option>
+                        </select>`;
+            } else if (type === 'media') {
+                html = `<label>Описание / Название</label><input type="text" id="inp-title" class="form-control mb-2" value="${data.title || ''}">`;
+                if (!isEdit) {
+                    html += `<label>Файл</label><input type="file" id="inp-file" class="form-control">`;
+                }
             }
+
+            bodyEl.innerHTML = html;
+            bodyEl.dataset.type = type;
+            modalObj.show();
         }
 
-        createBilling() {
-            const amount = document.getElementById('bill-amount').value;
-            const op = document.getElementById('bill-op').value;
-            if (amount) {
-                this.addNode('temp_' + Date.now(), 'billing', amount, op, 100, 100, {amount});
-                bootstrap.Modal.getInstance(document.getElementById('billingModal')).hide();
+        async saveNodeFromModal() {
+            const bodyEl = document.getElementById('modalBody');
+            const type = bodyEl.dataset.type;
+            const isEdit = !!this.currentNode;
+
+            let title, status, data = {};
+
+            if (type === 'task') {
+                title = document.getElementById('inp-title').value;
+                status = document.getElementById('inp-status').value;
+                data = {title};
+            } else if (type === 'access') {
+                data = {
+                    url: document.getElementById('inp-url').value,
+                    login: document.getElementById('inp-login').value,
+                    password: document.getElementById('inp-pass').value
+                };
+                title = data.login;
+                status = 'active';
+            } else if (type === 'billing') {
+                data = {amount: document.getElementById('inp-amount').value};
+                status = document.getElementById('inp-status').value;
+                title = `${data.amount}`;
+            } else if (type === 'media') {
+                title = document.getElementById('inp-title').value;
+
+                if (!isEdit) {
+                    // Handle File Upload
+                    const fileInput = document.getElementById('inp-file');
+                    if (fileInput.files.length > 0) {
+                        const formData = new FormData();
+                        formData.append('file', fileInput.files[0]);
+                        formData.append('project', this.projectId);
+                        formData.append('description', title);
+
+                        try {
+                            const res = await fetch('/api/media_files/', {
+                                method: 'POST',
+                                headers: {'X-CSRFToken': this.getCookie('csrftoken')},
+                                body: formData
+                            });
+                            if (res.ok) {
+                                const mediaData = await res.json();
+                                this.addNode('media_' + mediaData.id, 'media', title || mediaData.file, 'active', 100, 100, {
+                                    db_id: mediaData.id,
+                                    title: title || mediaData.file
+                                });
+                                modalObj.hide();
+                                return; // Exit, async add handled
+                            } else {
+                                alert('Ошибка загрузки файла');
+                                return;
+                            }
+                        } catch (e) {
+                            console.error(e);
+                            alert('Ошибка сети при загрузке');
+                            return;
+                        }
+                    }
+                }
+                // Edit mode or no file selected (just title update)
+                data = {title};
+                status = 'active';
             }
+
+            if (isEdit) {
+                this.updateNode(this.currentNode.id, {title, status, data: {...this.currentNode.data, ...data}});
+            } else if (type !== 'media') {
+                this.addNode('temp_' + Date.now(), type, title, status, 100, 100, data);
+            }
+            modalObj.hide();
         }
 
         render() {
@@ -276,17 +368,37 @@
 
                 let icon = 'circle';
                 if (n.type === 'task') icon = 'check-square';
-                if (n.type === 'access') icon = 'key';
-                if (n.type === 'billing') icon = 'currency-dollar';
-                if (n.type === 'project') icon = 'folder';
+                else if (n.type === 'access') icon = 'key';
+                else if (n.type === 'billing') icon = 'currency-dollar';
+                else if (n.type === 'media') icon = 'file-earmark';
+                else if (n.type === 'project') icon = 'folder';
 
-                let statusBadge = '';
-                if (n.status) statusBadge = `<div class="node-status status-${n.status.replace('_', '-')}">${n.status}</div>`;
+                let badges = '';
+                if (n.status && n.type !== 'access' && n.type !== 'media') {
+                    let cl = 'bg-secondary';
+                    if (n.status === 'todo') cl = 'bg-todo';
+                    if (n.status === 'in_progress') cl = 'bg-in-progress';
+                    if (n.status === 'done' || n.status === 'income') cl = 'bg-done';
+                    if (n.status === 'expense') cl = 'bg-expense';
+                    badges = `<span class="badge-status ${cl}">${n.status}</span>`;
+                }
+
+                const canEdit = n.type !== 'project';
 
                 el.innerHTML = `
-                        <div class="node-header"><i class="bi bi-${icon}"></i> ${n.type.toUpperCase()}</div>
-                        <div class="node-content"><strong>${n.title}</strong><br>${statusBadge}</div>
+                        <div class="node-header">
+                            <span><i class="bi bi-${icon}"></i> ${n.type.toUpperCase()}</span>
+                        </div>
+                        <div class="node-content">
+                            <strong>${n.title}</strong><br>${badges}
+                        </div>
+                        ${canEdit ? `
+                        <div class="node-actions">
+                            <button class="btn btn-sm btn-light text-primary py-0 px-1" onclick="event.stopPropagation(); viz.openModal('${n.type}', '${n.id}')"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-light text-danger py-0 px-1" onclick="event.stopPropagation(); viz.deleteNode('${n.id}')"><i class="bi bi-trash"></i></button>
+                        </div>` : ''}
                     `;
+
                 el.onmousedown = (e) => {
                     this.drag = {active: true, node: n, offX: e.offsetX, offY: e.offsetY};
                 };
@@ -299,7 +411,7 @@
                 if (this.drag.active && this.drag.node) {
                     this.drag.node.x = e.clientX - this.drag.offX;
                     this.drag.node.y = e.clientY - 60 - this.drag.offY;
-                    this.render(); // Simple re-render, optimize for prod
+                    this.render();
                 }
             };
             document.onmouseup = () => {
@@ -308,24 +420,37 @@
             };
 
             document.getElementById('save-btn').onclick = async () => {
-                await fetch(`/api/projects/${this.projectId}/structure/`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json', 'X-CSRFToken': this.getCookie('csrftoken')},
-                    body: JSON.stringify({nodes: this.nodes, connections: this.connections})
-                });
-                alert('Сохранено!');
-                location.reload();
+                const btn = document.getElementById('save-btn');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="bi bi-hourglass"></i> ...';
+                try {
+                    const res = await fetch(`/api/projects/${this.projectId}/structure/`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json', 'X-CSRFToken': this.getCookie('csrftoken')},
+                        body: JSON.stringify({nodes: this.nodes})
+                    });
+                    if (!res.ok) throw new Error('Error saving');
+                    location.reload();
+                } catch (e) {
+                    alert('Ошибка сохранения или нет прав.');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-cloud-upload"></i> Сохранить';
+                }
             };
+        }
 
-            document.getElementById('auto-layout-btn').onclick = () => {
-                let y = 50;
-                this.nodes.forEach((n, i) => {
-                    n.x = 50 + (i % 4) * 250;
-                    n.y = y;
-                    if (i % 4 === 3) y += 150;
-                });
-                this.render();
-            }
+        autoLayout() {
+            let x = 50, y = 50;
+            this.nodes.forEach((n, i) => {
+                n.x = x;
+                n.y = y;
+                x += 250;
+                if ((i + 1) % 4 === 0) {
+                    x = 50;
+                    y += 180;
+                }
+            });
+            this.render();
         }
 
         getCookie(name) {
@@ -335,7 +460,7 @@
     }
 
     const projectId = window.location.pathname.split('/').filter(Boolean).pop();
-    const viz = new SimpleVisualization(projectId);
+    const viz = new Visualization(projectId);
 </script>
 </body>
 </html>

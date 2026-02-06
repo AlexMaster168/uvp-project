@@ -39,7 +39,7 @@ class Project(models.Model):
         ('in_progress', 'В работе'),
         ('idle', 'Простой'),
         ('sleep', 'Заморожен'),
-        ('my', 'Мой'),
+        ('finished', 'Завершен'),
     ]
     
     name = models.CharField(

@@ -1,10 +1,7 @@
-from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
 
 router = DefaultRouter()
-router.register(r'media', views.MediaFileViewSet, basename='media')
+router.register(r'media_files', views.MediaFileViewSet, basename='media_files')
 
-urlpatterns = [
-    path('', include(router.urls)),
-]
+urlpatterns = router.urls

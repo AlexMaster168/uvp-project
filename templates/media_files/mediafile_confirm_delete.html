@@ -1,14 +1,23 @@
 {% extends "base.html" %}
+
+{% block title %}Удалить файл{% endblock %}
+
 {% block content %}
-    <div class="row">
-        <div class="col-md-6 offset-md-3">
-            <div class="card">
-                <div class="card-body text-center">
-                    <h3>Удалить файл {{ object.filename }}?</h3>
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card mt-4 border-danger">
+                <div class="card-header bg-danger text-white">
+                    Подтверждение удаления
+                </div>
+                <div class="card-body">
+                    <p>Вы действительно хотите удалить файл <strong>{{ object.filename }}</strong>?</p>
                     <form method="post">
                         <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-                        <button type="submit" class="btn btn-danger">Удалить</button>
-                        <a href="{{ url('projects:project_detail', pk=object.project.pk) }}" class="btn btn-secondary">Отмена</a>
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{{ url('projects:project_detail', pk=object.project.pk) }}#media"
+                               class="btn btn-secondary">Отмена</a>
+                            <button type="submit" class="btn btn-danger">Удалить</button>
+                        </div>
                     </form>
                 </div>
             </div>
