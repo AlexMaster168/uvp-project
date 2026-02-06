@@ -1,4 +1,4 @@
-# Архитектура проекта УВП
+﻿# Архитектура проекта УВП
 
 ## Обзор
 
@@ -324,30 +324,6 @@ S3/MinIO (Media Storage)
 - Secure headers
 - Database credentials в environment variables
 - Регулярные backup'ы
-
-## Будущие улучшения
-
-1. **Кеширование**
-   - Redis для сессий
-   - Cache для часто запрашиваемых данных
-
-2. **Асинхронные задачи**
-   - Celery для тяжёлых операций
-   - Email notifications
-   - Отчёты
-
-3. **Real-time updates**
-   - WebSockets для обновлений структуры
-   - Notifications
-
-4. **Расширенная аналитика**
-   - Dashboard с графиками
-   - Экспорт отчётов
-
-5. **Интеграции**
-   - Calendar sync (Google Calendar, Outlook)
-   - Git integration
-   - Slack notifications
 
 ## Заключение
 
