@@ -4,12 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Структура проекта - Rete.js</title>
-    
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    
     <style>
         body, html {
             margin: 0;
@@ -17,7 +13,7 @@
             height: 100%;
             overflow: hidden;
         }
-        
+
         #toolbar {
             background: #f8f9fa;
             border-bottom: 1px solid #dee2e6;
@@ -31,7 +27,7 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
         #rete-container {
             position: absolute;
             top: 60px;
@@ -40,460 +36,306 @@
             bottom: 0;
             background: #fff;
         }
-        
+
         .node {
             background: white;
-            border: 2px solid #4682b4;
+            border: 2px solid #ccc;
             border-radius: 10px;
             cursor: pointer;
-            display: inline-block;
-            height: auto;
+            position: absolute;
             min-width: 180px;
-            padding: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        
+
         .node-header {
-            background: #4682b4;
-            color: white;
             padding: 8px 12px;
-            margin: -10px -10px 10px -10px;
             border-radius: 8px 8px 0 0;
+            color: white;
             font-weight: bold;
         }
-        
+
         .node-content {
-            padding: 8px 12px;
+            padding: 10px;
         }
-        
-        .node-status {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            margin-top: 5px;
-        }
-        
-        .status-todo { background: #6c757d; color: white; }
-        .status-in-progress { background: #ffc107; color: black; }
-        .status-done { background: #28a745; color: white; }
-        
-        .project-node {
-            border-color: #dc3545;
-        }
-        
-        .project-node .node-header {
-            background: #dc3545;
-        }
-        
+
         .task-node {
             border-color: #4682b4;
         }
-        
+
         .task-node .node-header {
             background: #4682b4;
+        }
+
+        .access-node {
+            border-color: #6f42c1;
+        }
+
+        .access-node .node-header {
+            background: #6f42c1;
+        }
+
+        .billing-node {
+            border-color: #198754;
+        }
+
+        .billing-node .node-header {
+            background: #198754;
+        }
+
+        .project-node {
+            border-color: #dc3545;
+        }
+
+        .project-node .node-header {
+            background: #dc3545;
+        }
+
+        .node-status {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-top: 5px;
+            color: white;
+        }
+
+        .status-todo {
+            background: #6c757d;
+        }
+
+        .status-in-progress {
+            background: #ffc107;
+            color: black;
+        }
+
+        .status-done {
+            background: #198754;
+        }
+
+        .status-income {
+            background: #198754;
+        }
+
+        .status-expense {
+            background: #dc3545;
         }
     </style>
 </head>
 <body>
-    <!-- Toolbar -->
-    <div id="toolbar">
-        <div>
-            <a href="/projects/" class="btn btn-outline-secondary btn-sm me-2">
-                <i class="bi bi-arrow-left"></i> Назад к проектам
-            </a>
-            <button id="add-task-btn" class="btn btn-primary btn-sm me-2">
-                <i class="bi bi-plus-circle"></i> Добавить задачу
-            </button>
-            <button id="auto-layout-btn" class="btn btn-secondary btn-sm me-2">
-                <i class="bi bi-diagram-3"></i> Авто-размещение
-            </button>
-            <button id="save-btn" class="btn btn-success btn-sm">
-                <i class="bi bi-save"></i> Сохранить
-            </button>
-        </div>
-        <div>
-            <span class="me-3">Zoom: <span id="zoom-level">100%</span></span>
-            <button id="zoom-in-btn" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-zoom-in"></i>
-            </button>
-            <button id="zoom-out-btn" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-zoom-out"></i>
-            </button>
-            <button id="zoom-reset-btn" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-clockwise"></i>
-            </button>
-        </div>
+<div id="toolbar">
+    <div>
+        <a href="/projects/" class="btn btn-outline-secondary btn-sm me-2"><i class="bi bi-arrow-left"></i> Назад</a>
+        <button class="btn btn-primary btn-sm me-1" onclick="modal('taskModal')"><i class="bi bi-check-square"></i>
+            Задача
+        </button>
+        <button class="btn btn-purple btn-sm me-1" style="background-color: #6f42c1; color: white;"
+                onclick="modal('accessModal')"><i class="bi bi-key"></i> Доступ
+        </button>
+        <button class="btn btn-success btn-sm me-2" onclick="modal('billingModal')"><i
+                class="bi bi-currency-dollar"></i> Финансы
+        </button>
+        <button id="save-btn" class="btn btn-dark btn-sm"><i class="bi bi-save"></i> Сохранить</button>
     </div>
-    
-    <!-- Rete.js Container -->
-    <div id="rete-container"></div>
-    
-    <!-- Modal for adding tasks -->
-    <div class="modal fade" id="taskModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Добавить задачу</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="task-form">
-                        <div class="mb-3">
-                            <label for="task-title" class="form-label">Название задачи</label>
-                            <input type="text" class="form-control" id="task-title" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="task-status" class="form-label">Статус</label>
-                            <select class="form-select" id="task-status">
-                                <option value="todo">К выполнению</option>
-                                <option value="in_progress">В процессе</option>
-                                <option value="done">Выполнено</option>
-                            </select>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                    <button type="button" class="btn btn-primary" id="save-task-btn">Сохранить</button>
-                </div>
+    <div>
+        <button id="auto-layout-btn" class="btn btn-outline-secondary btn-sm"><i class="bi bi-grid"></i></button>
+    </div>
+</div>
+
+<div id="rete-container"></div>
+
+<div class="modal fade" id="taskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Новая задача</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control mb-2" id="task-title" placeholder="Название">
+                <select class="form-select" id="task-status">
+                    <option value="todo">К выполнению</option>
+                    <option value="in_progress">В работе</option>
+                    <option value="done">Готово</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="viz.createTask()">Создать</button>
             </div>
         </div>
     </div>
-    
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Rete.js and dependencies -->
-    <script src="https://cdn.jsdelivr.net/npm/rete@2.0.1/build/rete.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/rete-area-plugin@2.0.1/build/area-plugin.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/rete-connection-plugin@2.0.1/build/connection-plugin.min.js"></script>
-    
-    <script>
-        // Initialize Rete.js editor
-        const container = document.getElementById('rete-container');
-        
-        // Simple node-based visualization
-        class SimpleVisualization {
-            constructor(projectId) {
-                this.projectId = projectId;
-                this.nodes = new Map();
-                this.connections = [];
-                this.zoom = 1;
-                this.offset = { x: 0, y: 0 };
-                this.dragging = null;
-                this.init();
-            }
-            
-            init() {
-                this.loadData();
-                this.setupEventListeners();
-                this.render();
-            }
-            
-            async loadData() {
-                try {
-                    // Load project and tasks from API
-                    const response = await fetch(`/api/projects/${this.projectId}/structure/`);
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.nodes) {
-                            data.nodes.forEach(node => {
-                                this.addNode(node.id, node.type, node.title, node.status, node.x, node.y);
-                            });
-                        }
-                        if (data.connections) {
-                            this.connections = data.connections;
-                        }
-                    }
-                    
-                    // If no structure data, create initial node
-                    if (this.nodes.size === 0) {
-                        this.addNode('project', 'project', 'Проект', 'in_progress', 100, 100);
-                    }
-                } catch (error) {
-                    console.error('Error loading structure:', error);
-                }
-                
-                this.render();
-            }
-            
-            addNode(id, type, title, status, x, y) {
-                const node = { id, type, title, status, x, y };
-                this.nodes.set(id, node);
-                return node;
-            }
-            
-            render() {
-                container.innerHTML = '';
-                
-                const canvas = document.createElement('div');
-                canvas.style.position = 'relative';
-                canvas.style.width = '100%';
-                canvas.style.height = '100%';
-                canvas.style.transform = `scale(${this.zoom})`;
-                canvas.style.transformOrigin = 'top left';
-                
-                // Render connections (lines between nodes)
-                this.connections.forEach(conn => {
-                    const from = this.nodes.get(conn.from);
-                    const to = this.nodes.get(conn.to);
-                    if (from && to) {
-                        const line = this.createConnectionLine(from, to);
-                        canvas.appendChild(line);
-                    }
-                });
-                
-                // Render nodes
-                this.nodes.forEach(node => {
-                    const nodeEl = this.createNodeElement(node);
-                    canvas.appendChild(nodeEl);
-                });
-                
-                container.appendChild(canvas);
-            }
-            
-            createNodeElement(node) {
-                const nodeEl = document.createElement('div');
-                nodeEl.className = `node ${node.type}-node`;
-                nodeEl.style.position = 'absolute';
-                nodeEl.style.left = `${node.x}px`;
-                nodeEl.style.top = `${node.y}px`;
-                nodeEl.dataset.id = node.id;
-                
-                const statusClass = `status-${node.status.replace('_', '-')}`;
-                
-                nodeEl.innerHTML = `
-                    <div class="node-header">
-                        ${node.type === 'project' ? '<i class="bi bi-folder"></i>' : '<i class="bi bi-check-square"></i>'}
-                        ${node.type.toUpperCase()}
-                    </div>
-                    <div class="node-content">
-                        <strong>${node.title}</strong>
-                        <div class="node-status ${statusClass}">${this.getStatusLabel(node.status)}</div>
-                    </div>
-                `;
-                
-                // Make draggable
-                nodeEl.addEventListener('mousedown', (e) => {
-                    this.dragging = {
-                        node: node,
-                        startX: e.clientX,
-                        startY: e.clientY,
-                        initialX: node.x,
-                        initialY: node.y
-                    };
-                });
-                
-                return nodeEl;
-            }
-            
-            createConnectionLine(from, to) {
-                const line = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                line.style.position = 'absolute';
-                line.style.pointerEvents = 'none';
-                line.style.overflow = 'visible';
-                
-                const x1 = from.x + 90;
-                const y1 = from.y + 50;
-                const x2 = to.x;
-                const y2 = to.y + 50;
-                
-                const minX = Math.min(x1, x2);
-                const minY = Math.min(y1, y2);
-                const width = Math.abs(x2 - x1) + 20;
-                const height = Math.abs(y2 - y1) + 20;
-                
-                line.setAttribute('width', width);
-                line.setAttribute('height', height);
-                line.style.left = `${minX - 10}px`;
-                line.style.top = `${minY - 10}px`;
-                
-                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                const adjustedX1 = x1 - minX + 10;
-                const adjustedY1 = y1 - minY + 10;
-                const adjustedX2 = x2 - minX + 10;
-                const adjustedY2 = y2 - minY + 10;
-                
-                path.setAttribute('d', `M ${adjustedX1} ${adjustedY1} L ${adjustedX2} ${adjustedY2}`);
-                path.setAttribute('stroke', '#4682b4');
-                path.setAttribute('stroke-width', '2');
-                path.setAttribute('fill', 'none');
-                path.setAttribute('marker-end', 'url(#arrow)');
-                
-                const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-                const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
-                marker.setAttribute('id', 'arrow');
-                marker.setAttribute('markerWidth', '10');
-                marker.setAttribute('markerHeight', '10');
-                marker.setAttribute('refX', '9');
-                marker.setAttribute('refY', '3');
-                marker.setAttribute('orient', 'auto');
-                marker.setAttribute('markerUnits', 'strokeWidth');
-                
-                const arrowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                arrowPath.setAttribute('d', 'M0,0 L0,6 L9,3 z');
-                arrowPath.setAttribute('fill', '#4682b4');
-                marker.appendChild(arrowPath);
-                defs.appendChild(marker);
-                
-                line.appendChild(defs);
-                line.appendChild(path);
-                
-                return line;
-            }
-            
-            getStatusLabel(status) {
-                const labels = {
-                    'todo': 'К выполнению',
-                    'in_progress': 'В процессе',
-                    'done': 'Выполнено'
-                };
-                return labels[status] || status;
-            }
-            
-            setupEventListeners() {
-                // Mouse move for dragging
-                document.addEventListener('mousemove', (e) => {
-                    if (this.dragging) {
-                        const dx = (e.clientX - this.dragging.startX) / this.zoom;
-                        const dy = (e.clientY - this.dragging.startY) / this.zoom;
-                        this.dragging.node.x = this.dragging.initialX + dx;
-                        this.dragging.node.y = this.dragging.initialY + dy;
-                        this.render();
-                    }
-                });
-                
-                document.addEventListener('mouseup', () => {
-                    this.dragging = null;
-                });
-                
-                // Zoom controls
-                document.getElementById('zoom-in-btn').addEventListener('click', () => {
-                    this.zoom = Math.min(this.zoom + 0.1, 2);
-                    this.updateZoom();
-                });
-                
-                document.getElementById('zoom-out-btn').addEventListener('click', () => {
-                    this.zoom = Math.max(this.zoom - 0.1, 0.5);
-                    this.updateZoom();
-                });
-                
-                document.getElementById('zoom-reset-btn').addEventListener('click', () => {
-                    this.zoom = 1;
-                    this.updateZoom();
-                });
-                
-                // Save button
-                document.getElementById('save-btn').addEventListener('click', () => {
-                    this.saveStructure();
-                });
-                
-                // Add task button
-                document.getElementById('add-task-btn').addEventListener('click', () => {
-                    const modal = new bootstrap.Modal(document.getElementById('taskModal'));
-                    modal.show();
-                });
-                
-                document.getElementById('save-task-btn').addEventListener('click', () => {
-                    const title = document.getElementById('task-title').value;
-                    const status = document.getElementById('task-status').value;
-                    
-                    if (title) {
-                        const id = 'task_' + Date.now();
-                        const x = 100 + this.nodes.size * 50;
-                        const y = 200 + (this.nodes.size % 3) * 100;
-                        this.addNode(id, 'task', title, status, x, y);
-                        this.render();
-                        
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('taskModal'));
-                        modal.hide();
-                        document.getElementById('task-form').reset();
-                    }
-                });
-                
-                // Auto-layout
-                document.getElementById('auto-layout-btn').addEventListener('click', () => {
-                    this.autoLayout();
-                });
-            }
-            
-            updateZoom() {
-                document.getElementById('zoom-level').textContent = Math.round(this.zoom * 100) + '%';
-                this.render();
-            }
-            
-            autoLayout() {
-                let x = 100;
-                let y = 100;
-                let col = 0;
-                
-                this.nodes.forEach(node => {
-                    node.x = x;
-                    node.y = y;
-                    
-                    y += 150;
-                    col++;
-                    
-                    if (col >= 3) {
-                        col = 0;
-                        x += 250;
-                        y = 100;
-                    }
-                });
-                
-                this.render();
-            }
-            
-            async saveStructure() {
-                const data = {
-                    nodes: Array.from(this.nodes.values()),
-                    connections: this.connections
-                };
-                
-                try {
-                    const response = await fetch(`/api/projects/${this.projectId}/structure/`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': this.getCookie('csrftoken')
-                        },
-                        body: JSON.stringify(data)
-                    });
-                    
-                    if (response.ok) {
-                        alert('Структура сохранена!');
-                    } else {
-                        alert('Ошибка сохранения');
-                    }
-                } catch (error) {
-                    console.error('Save error:', error);
-                    alert('Ошибка сохранения');
-                }
-            }
-            
-            getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
-                    }
-                }
-                return cookieValue;
+</div>
+
+<div class="modal fade" id="accessModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Новый доступ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control mb-2" id="acc-url" placeholder="URL">
+                <input type="text" class="form-control mb-2" id="acc-login" placeholder="Логин">
+                <input type="password" class="form-control" id="acc-pass" placeholder="Пароль">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="viz.createAccess()">Создать</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="billingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Финансы</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="number" class="form-control mb-2" id="bill-amount" placeholder="Сумма">
+                <select class="form-select" id="bill-op">
+                    <option value="expense">Расход</option>
+                    <option value="income">Доход</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="viz.createBilling()">Создать</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const container = document.getElementById('rete-container');
+    const modal = (id) => new bootstrap.Modal(document.getElementById(id)).show();
+
+    class SimpleVisualization {
+        constructor(projectId) {
+            this.projectId = projectId;
+            this.nodes = [];
+            this.connections = [];
+            this.zoom = 1;
+            this.drag = {active: false, node: null, offX: 0, offY: 0};
+            this.init();
+        }
+
+        async init() {
+            await this.loadData();
+            this.render();
+            this.events();
+        }
+
+        async loadData() {
+            const res = await fetch(`/api/projects/${this.projectId}/structure/`);
+            if (res.ok) {
+                const data = await res.json();
+                this.nodes = data.nodes || [];
+                this.connections = data.connections || [];
+                if (this.nodes.length === 0) this.addNode('project', 'project', 'Проект', 'in_progress', 50, 50, {});
             }
         }
-        
-        // Get project ID from URL
-        const pathParts = window.location.pathname.split('/');
-        const projectId = pathParts[pathParts.indexOf('structure') + 1].replace('/', '');
-        
-        // Initialize visualization
-        const viz = new SimpleVisualization(projectId);
-    </script>
+
+        addNode(id, type, title, status, x, y, data) {
+            this.nodes.push({id, type, title, status, x, y, data});
+            this.render();
+        }
+
+        createTask() {
+            const title = document.getElementById('task-title').value;
+            const status = document.getElementById('task-status').value;
+            if (title) {
+                this.addNode('temp_' + Date.now(), 'task', title, status, 100, 100, {title});
+                bootstrap.Modal.getInstance(document.getElementById('taskModal')).hide();
+            }
+        }
+
+        createAccess() {
+            const url = document.getElementById('acc-url').value;
+            const login = document.getElementById('acc-login').value;
+            const pass = document.getElementById('acc-pass').value;
+            if (login) {
+                this.addNode('temp_' + Date.now(), 'access', login, 'active', 100, 100, {url, login, password: pass});
+                bootstrap.Modal.getInstance(document.getElementById('accessModal')).hide();
+            }
+        }
+
+        createBilling() {
+            const amount = document.getElementById('bill-amount').value;
+            const op = document.getElementById('bill-op').value;
+            if (amount) {
+                this.addNode('temp_' + Date.now(), 'billing', amount, op, 100, 100, {amount});
+                bootstrap.Modal.getInstance(document.getElementById('billingModal')).hide();
+            }
+        }
+
+        render() {
+            container.innerHTML = '';
+            this.nodes.forEach(n => {
+                const el = document.createElement('div');
+                el.className = `node ${n.type}-node`;
+                el.style.left = n.x + 'px';
+                el.style.top = n.y + 'px';
+
+                let icon = 'circle';
+                if (n.type === 'task') icon = 'check-square';
+                if (n.type === 'access') icon = 'key';
+                if (n.type === 'billing') icon = 'currency-dollar';
+                if (n.type === 'project') icon = 'folder';
+
+                let statusBadge = '';
+                if (n.status) statusBadge = `<div class="node-status status-${n.status.replace('_', '-')}">${n.status}</div>`;
+
+                el.innerHTML = `
+                        <div class="node-header"><i class="bi bi-${icon}"></i> ${n.type.toUpperCase()}</div>
+                        <div class="node-content"><strong>${n.title}</strong><br>${statusBadge}</div>
+                    `;
+                el.onmousedown = (e) => {
+                    this.drag = {active: true, node: n, offX: e.offsetX, offY: e.offsetY};
+                };
+                container.appendChild(el);
+            });
+        }
+
+        events() {
+            document.onmousemove = (e) => {
+                if (this.drag.active && this.drag.node) {
+                    this.drag.node.x = e.clientX - this.drag.offX;
+                    this.drag.node.y = e.clientY - 60 - this.drag.offY;
+                    this.render(); // Simple re-render, optimize for prod
+                }
+            };
+            document.onmouseup = () => {
+                this.drag.active = false;
+                this.drag.node = null;
+            };
+
+            document.getElementById('save-btn').onclick = async () => {
+                await fetch(`/api/projects/${this.projectId}/structure/`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json', 'X-CSRFToken': this.getCookie('csrftoken')},
+                    body: JSON.stringify({nodes: this.nodes, connections: this.connections})
+                });
+                alert('Сохранено!');
+                location.reload();
+            };
+
+            document.getElementById('auto-layout-btn').onclick = () => {
+                let y = 50;
+                this.nodes.forEach((n, i) => {
+                    n.x = 50 + (i % 4) * 250;
+                    n.y = y;
+                    if (i % 4 === 3) y += 150;
+                });
+                this.render();
+            }
+        }
+
+        getCookie(name) {
+            let v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+            return v ? v[2] : null;
+        }
+    }
+
+    const projectId = window.location.pathname.split('/').filter(Boolean).pop();
+    const viz = new SimpleVisualization(projectId);
+</script>
 </body>
 </html>

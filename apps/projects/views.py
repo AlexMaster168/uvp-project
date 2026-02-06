@@ -1,4 +1,6 @@
 import json
+from django.db.models import Q
+from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
@@ -11,6 +13,8 @@ from .forms import ProjectForm
 from .models import Tag, Project, ProjectMembership
 from .serializers import *
 from apps.tasks.models import Task
+from apps.access.models import Access
+from apps.billing.models import Billing
 
 
 class ProjectListView(LoginRequiredMixin, ListView):
@@ -18,6 +22,23 @@ class ProjectListView(LoginRequiredMixin, ListView):
     template_name = 'projects/project_list.html'
     context_object_name = 'projects'
     paginate_by = 20
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        q = self.request.GET.get('q')
+        status_val = self.request.GET.get('status')
+
+        if q:
+            qs = qs.filter(
+                Q(name__icontains=q) |
+                Q(description__icontains=q) |
+                Q(u_tags__name__icontains=q)
+            ).distinct()
+
+        if status_val:
+            qs = qs.filter(status=status_val)
+
+        return qs
 
 
 class ProjectDetailView(LoginRequiredMixin, DetailView):
@@ -90,31 +111,115 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get', 'post'])
     def structure(self, request, pk=None):
         project = self.get_object()
+
         if request.method == 'GET':
-            return Response(project.structure_data)
+            structure = project.structure_data or {'nodes': [], 'connections': []}
+            if isinstance(structure, str):
+                structure = json.loads(structure)
+
+            nodes = structure.get('nodes', [])
+            connections = structure.get('connections', [])
+
+            existing_ids = {
+                (n.get('type'), n.get('data', {}).get('db_id')): n
+                for n in nodes
+                if n.get('data', {}).get('db_id')
+            }
+
+            db_tasks = Task.objects.filter(project=project)
+            for task in db_tasks:
+                if ('task', task.id) not in existing_ids:
+                    nodes.append({
+                        "id": f"task_{task.id}",
+                        "type": "task",
+                        "title": task.title,
+                        "status": task.status,
+                        "x": 100,
+                        "y": 100 + len(nodes) * 50,
+                        "data": {"db_id": task.id, "title": task.title}
+                    })
+                else:
+                    node = existing_ids[('task', task.id)]
+                    node['title'] = task.title
+                    node['status'] = task.status
+                    node['data']['title'] = task.title
+
+            db_accesses = Access.objects.filter(project=project)
+            for acc in db_accesses:
+                if ('access', acc.id) not in existing_ids:
+                    nodes.append({
+                        "id": f"access_{acc.id}",
+                        "type": "access",
+                        "title": acc.url or acc.description or "Access",
+                        "status": "active",
+                        "x": 400,
+                        "y": 100 + len(nodes) * 50,
+                        "data": {"db_id": acc.id, "login": acc.login}
+                    })
+
+            db_billings = Billing.objects.filter(project=project)
+            for bill in db_billings:
+                if ('billing', bill.id) not in existing_ids:
+                    nodes.append({
+                        "id": f"billing_{bill.id}",
+                        "type": "billing",
+                        "title": f"{bill.amount} ({bill.get_operation_display()})",
+                        "status": bill.operation,
+                        "x": 700,
+                        "y": 100 + len(nodes) * 50,
+                        "data": {"db_id": bill.id, "amount": str(bill.amount)}
+                    })
+
+            return Response({"nodes": nodes, "connections": connections})
+
         elif request.method == 'POST':
             data = request.data
-            nodes = data.get('nodes', {})
+            nodes = data.get('nodes', [])
 
-            for node_id, node_data in nodes.items():
-                if node_data.get('label') == 'Task' or node_data.get('name') == 'Task':
-                    task_title = node_data.get('data', {}).get('title', 'New Task')
-                    task_id = node_data.get('data', {}).get('db_id')
+            for node_data in nodes:
+                node_type = node_data.get('type')
+                db_id = node_data.get('data', {}).get('db_id')
 
-                    if task_id:
-                        try:
-                            task = Task.objects.get(pk=task_id, project=project)
-                            task.title = task_title
-                            task.save()
-                        except Task.DoesNotExist:
-                            pass
+                if node_type == 'task':
+                    title = node_data.get('data', {}).get('title', 'New Task')
+                    status_val = node_data.get('status', 'todo')
+
+                    if db_id:
+                        Task.objects.filter(pk=db_id, project=project).update(title=title, status=status_val)
                     else:
-                        task = Task.objects.create(
-                            title=task_title,
-                            project=project,
-                            status='todo'
-                        )
+                        task = Task.objects.create(project=project, title=title, status=status_val)
                         node_data['data']['db_id'] = task.id
+                        node_data['id'] = f"task_{task.id}"
+
+                elif node_type == 'access':
+                    url = node_data.get('data', {}).get('url', '')
+                    login = node_data.get('data', {}).get('login', '')
+                    password = node_data.get('data', {}).get('password', '')
+
+                    if not db_id and login:
+                        acc = Access.objects.create(
+                            project=project,
+                            url=url,
+                            login=login,
+                            password=password
+                        )
+                        node_data['data']['db_id'] = acc.id
+                        node_data['id'] = f"access_{acc.id}"
+
+                elif node_type == 'billing':
+                    amount = node_data.get('data', {}).get('amount')
+                    operation = node_data.get('status', 'expense')
+
+                    if not db_id and amount:
+                        bill = Billing.objects.create(
+                            project=project,
+                            amount=amount,
+                            operation=operation,
+                            date=timezone.now().date(),
+                            tag='planned_expense'
+                        )
+                        node_data['data']['db_id'] = bill.id
+                        node_data['id'] = f"billing_{bill.id}"
 
             project.structure_data = data
             project.save()

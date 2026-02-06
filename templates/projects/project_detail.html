@@ -49,7 +49,6 @@
                             </div>
                             <div class="mb-2">
                                 <strong>Участники:</strong>
-                                {# ИСПРАВЛЕНО: используем members вместо projectmembership_set #}
                                 {% for member in project.members.all() %}
                                     <span class="badge {% if member.role == 'owner' %}bg-primary{% else %}bg-info{% endif %}">
                                         {{ member.user.username }} ({{ member.role }})
@@ -124,7 +123,6 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {# ИСПРАВЛЕНО: используем members вместо projectmembership_set #}
                         {% for member in project.members.all() %}
                             <tr>
                                 <td>{{ member.user.username }}</td>
@@ -225,8 +223,6 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {# Предполагается, что в модели Billing установлен related_name='billings' #}
-                        {# Если ошибка повторится здесь, проверьте apps/billing/models.py #}
                         {% for billing in project.billings.all() %}
                             <tr>
                                 <td>{{ billing.date }}</td>
@@ -264,23 +260,22 @@
                         <thead class="table-light">
                         <tr>
                             <th>Сервис/URL</th>
+                            <th>Сервис Google Disk</th>
                             <th>Логин</th>
                             <th>Пароль</th>
-                            <th>Стоимость</th>
                             <th>Описание</th>
                         </tr>
                         </thead>
                         <tbody>
-                        {# Предполагается, что в модели Access установлен related_name='accesses' #}
                         {% for access in project.accesses.all() %}
                             <tr>
                                 <td><a href="{{ access.url }}" target="_blank">{{ access.url or 'Ссылка' }}</a></td>
+                                <td><a href="{{ access.url_drive }}" target="_blank">{{ access.url_disk or 'Ссылка' }}</a></td>
                                 <td>{{ access.login }}</td>
                                 <td>
                                     <span class="masked-password" data-password="{{ access.password }}">••••••••</span>
                                     <i class="bi bi-eye" style="cursor: pointer;"></i>
                                 </td>
-                                <td>{{ access.amount or '-' }}</td>
                                 <td>{{ access.description }}</td>
                             </tr>
                             {% else %}

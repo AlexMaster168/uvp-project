@@ -4,7 +4,7 @@ from .models import Access
 class AccessForm(forms.ModelForm):
     class Meta:
         model = Access
-        fields = ['project', 'url', 'url_drive', 'login', 'password', 'description', 'amount', 'tags']
+        fields = ['project', 'url', 'url_drive', 'login', 'password', 'description', 'tags']
         widgets = {
             'description': forms.Textarea(attrs={'rows': 2}),
         }

@@ -55,13 +55,6 @@ class Access(models.Model):
         blank=True,
         verbose_name='Комментарий к изменению'
     )
-    amount = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        null=True,
-        blank=True,
-        verbose_name='Стоимость'
-    )
     tags = models.JSONField(
         default=list,
         blank=True,
