@@ -35,6 +35,17 @@
             right: 0;
             bottom: 0;
             background: #f0f2f5;
+            overflow: hidden;
+        }
+
+        #connections-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
         }
 
         .node {
@@ -46,7 +57,8 @@
             min-width: 200px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             user-select: none;
-            transition: transform 0.1s;
+            transition: transform 0.1s, border-color 0.2s;
+            z-index: 1;
         }
 
         .node:hover {
@@ -82,6 +94,14 @@
 
         .task-node .node-header {
             background: #3b82f6;
+        }
+
+        .subtask-node {
+            border-color: #6366f1;
+        }
+
+        .subtask-node .node-header {
+            background: #6366f1;
         }
 
         .access-node {
@@ -142,6 +162,27 @@
         .bg-income {
             background: #10b981;
         }
+
+        .connection-line {
+            stroke: #9ca3af;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .connection-line:hover {
+            stroke: #3b82f6;
+            stroke-width: 3;
+            cursor: pointer;
+        }
+
+        .connecting-mode .node {
+            cursor: crosshair;
+        }
+
+        .node.selected-source {
+            border-color: #22c55e;
+            box-shadow: 0 0 10px #22c55e;
+        }
     </style>
 </head>
 <body>
@@ -151,6 +192,9 @@
                 class="bi bi-arrow-left"></i> Назад</a>
         <div class="vr"></div>
         <button class="btn btn-primary btn-sm" onclick="viz.openModal('task')"><i class="bi bi-check-square"></i> Задача
+        </button>
+        <button class="btn btn-indigo btn-sm text-white" style="background: #6366f1" onclick="viz.openModal('subtask')">
+            <i class="bi bi-list-task"></i> Подзадача
         </button>
         <button class="btn btn-purple btn-sm" style="background:#8b5cf6; color:white;"
                 onclick="viz.openModal('access')"><i class="bi bi-key"></i> Доступ
@@ -163,13 +207,19 @@
         </button>
     </div>
     <div class="d-flex align-items-center gap-2">
+        <button id="connect-btn" class="btn btn-outline-primary btn-sm" onclick="viz.toggleConnectMode()"><i
+                class="bi bi-share"></i> Связать
+        </button>
         <button class="btn btn-outline-dark btn-sm" onclick="viz.autoLayout()"><i class="bi bi-grid-3x3"></i> Авто
         </button>
         <button id="save-btn" class="btn btn-dark btn-sm"><i class="bi bi-cloud-upload"></i> Сохранить</button>
     </div>
 </div>
 
-<div id="rete-container"></div>
+<div id="rete-container">
+    <svg id="connections-layer"></svg>
+    <div id="nodes-layer"></div>
+</div>
 
 <div class="modal fade" id="nodeModal" tabindex="-1">
     <div class="modal-dialog">
@@ -190,6 +240,8 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     const container = document.getElementById('rete-container');
+    const nodesLayer = document.getElementById('nodes-layer');
+    const svgLayer = document.getElementById('connections-layer');
     const modalEl = document.getElementById('nodeModal');
     const modalObj = new bootstrap.Modal(modalEl);
 
@@ -197,8 +249,12 @@
         constructor(projectId) {
             this.projectId = projectId;
             this.nodes = [];
+            this.connections = [];
+            this.users = [];
             this.currentNode = null;
             this.drag = {active: false, node: null, offX: 0, offY: 0};
+            this.connectMode = false;
+            this.sourceNodeId = null;
             this.init();
         }
 
@@ -214,6 +270,8 @@
                 if (res.ok) {
                     const data = await res.json();
                     this.nodes = data.nodes || [];
+                    this.connections = data.connections || [];
+                    this.users = data.users || [];
                     if (this.nodes.length === 0) this.addNode('project', 'project', 'Проект', 'active', 50, 50, {});
                 }
             } catch (e) {
@@ -233,9 +291,42 @@
         }
 
         deleteNode(id) {
-            if (confirm('Удалить элемент? Это действие применится после сохранения.')) {
+            if (confirm('Удалить элемент?')) {
                 this.nodes = this.nodes.filter(n => n.id !== id);
+                this.connections = this.connections.filter(c => c.source !== id && c.target !== id);
                 this.render();
+            }
+        }
+
+        toggleConnectMode() {
+            this.connectMode = !this.connectMode;
+            this.sourceNodeId = null;
+            const btn = document.getElementById('connect-btn');
+            if (this.connectMode) {
+                btn.classList.replace('btn-outline-primary', 'btn-primary');
+                document.body.classList.add('connecting-mode');
+            } else {
+                btn.classList.replace('btn-primary', 'btn-outline-primary');
+                document.body.classList.remove('connecting-mode');
+                this.render();
+            }
+        }
+
+        handleNodeClick(nodeId) {
+            if (this.connectMode) {
+                if (!this.sourceNodeId) {
+                    this.sourceNodeId = nodeId;
+                    this.render();
+                } else {
+                    if (this.sourceNodeId !== nodeId) {
+                        const exists = this.connections.find(c => c.source === this.sourceNodeId && c.target === nodeId);
+                        if (!exists) {
+                            this.connections.push({source: this.sourceNodeId, target: nodeId});
+                        }
+                    }
+                    this.sourceNodeId = null;
+                    this.toggleConnectMode();
+                }
             }
         }
 
@@ -251,28 +342,39 @@
             const data = isEdit ? this.currentNode.data : {};
             const status = isEdit ? this.currentNode.status : '';
 
-            if (type === 'task') {
+            const userOptions = this.users.map(u =>
+                `<option value="${u.id}" ${data.assignee == u.id ? 'selected' : ''}>${u.username}</option>`
+            ).join('');
+            const usersSelect = `
+                <label>Исполнитель</label>
+                <select id="inp-assignee" class="form-select mb-2">
+                    <option value="">Не назначен</option>
+                    ${userOptions}
+                </select>`;
+
+            if (type === 'task' || type === 'subtask') {
                 html = `
-                        <label>Название</label><input type="text" id="inp-title" class="form-control mb-2" value="${data.title || ''}">
-                        <label>Статус</label>
-                        <select id="inp-status" class="form-select">
-                            <option value="todo" ${status === 'todo' ? 'selected' : ''}>К выполнению</option>
-                            <option value="in_progress" ${status === 'in_progress' ? 'selected' : ''}>В работе</option>
-                            <option value="done" ${status === 'done' ? 'selected' : ''}>Готово</option>
-                        </select>`;
+                    <label>Название</label><input type="text" id="inp-title" class="form-control mb-2" value="${data.title || ''}">
+                    <label>Статус</label>
+                    <select id="inp-status" class="form-select mb-2">
+                        <option value="todo" ${status === 'todo' ? 'selected' : ''}>К выполнению</option>
+                        <option value="in_progress" ${status === 'in_progress' ? 'selected' : ''}>В работе</option>
+                        <option value="done" ${status === 'done' ? 'selected' : ''}>Готово</option>
+                    </select>
+                    ${usersSelect}`;
             } else if (type === 'access') {
                 html = `
-                        <label>URL</label><input type="text" id="inp-url" class="form-control mb-2" value="${data.url || ''}">
-                        <label>Логин</label><input type="text" id="inp-login" class="form-control mb-2" value="${data.login || ''}">
-                        <label>Пароль</label><input type="text" id="inp-pass" class="form-control" value="${data.password || ''}">`;
+                    <label>URL</label><input type="text" id="inp-url" class="form-control mb-2" value="${data.url || ''}">
+                    <label>Логин</label><input type="text" id="inp-login" class="form-control mb-2" value="${data.login || ''}">
+                    <label>Пароль</label><input type="text" id="inp-pass" class="form-control" value="${data.password || ''}">`;
             } else if (type === 'billing') {
                 html = `
-                        <label>Сумма</label><input type="number" id="inp-amount" class="form-control mb-2" value="${data.amount || ''}">
-                        <label>Тип</label>
-                        <select id="inp-status" class="form-select">
-                            <option value="expense" ${status === 'expense' ? 'selected' : ''}>Расход</option>
-                            <option value="income" ${status === 'income' ? 'selected' : ''}>Доход</option>
-                        </select>`;
+                    <label>Сумма</label><input type="number" id="inp-amount" class="form-control mb-2" value="${data.amount || ''}">
+                    <label>Тип</label>
+                    <select id="inp-status" class="form-select">
+                        <option value="expense" ${status === 'expense' ? 'selected' : ''}>Расход</option>
+                        <option value="income" ${status === 'income' ? 'selected' : ''}>Доход</option>
+                    </select>`;
             } else if (type === 'media') {
                 html = `<label>Описание / Название</label><input type="text" id="inp-title" class="form-control mb-2" value="${data.title || ''}">`;
                 if (!isEdit) {
@@ -292,10 +394,11 @@
 
             let title, status, data = {};
 
-            if (type === 'task') {
+            if (type === 'task' || type === 'subtask') {
                 title = document.getElementById('inp-title').value;
                 status = document.getElementById('inp-status').value;
-                data = {title};
+                const assignee = document.getElementById('inp-assignee').value;
+                data = {title, assignee};
             } else if (type === 'access') {
                 data = {
                     url: document.getElementById('inp-url').value,
@@ -310,16 +413,13 @@
                 title = `${data.amount}`;
             } else if (type === 'media') {
                 title = document.getElementById('inp-title').value;
-
                 if (!isEdit) {
-                    // Handle File Upload
                     const fileInput = document.getElementById('inp-file');
                     if (fileInput.files.length > 0) {
                         const formData = new FormData();
                         formData.append('file', fileInput.files[0]);
                         formData.append('project', this.projectId);
                         formData.append('description', title);
-
                         try {
                             const res = await fetch('/api/media_files/', {
                                 method: 'POST',
@@ -333,19 +433,13 @@
                                     title: title || mediaData.file
                                 });
                                 modalObj.hide();
-                                return; // Exit, async add handled
-                            } else {
-                                alert('Ошибка загрузки файла');
                                 return;
                             }
                         } catch (e) {
                             console.error(e);
-                            alert('Ошибка сети при загрузке');
-                            return;
                         }
                     }
                 }
-                // Edit mode or no file selected (just title update)
                 data = {title};
                 status = 'active';
             }
@@ -359,15 +453,28 @@
         }
 
         render() {
-            container.innerHTML = '';
+            nodesLayer.innerHTML = '';
+            svgLayer.innerHTML = '';
+
+            this.connections.forEach(c => {
+                const source = this.nodes.find(n => n.id === c.source);
+                const target = this.nodes.find(n => n.id === c.target);
+                if (source && target) {
+                    this.drawArrow(source, target);
+                }
+            });
+
             this.nodes.forEach(n => {
                 const el = document.createElement('div');
                 el.className = `node ${n.type}-node`;
+                if (this.sourceNodeId === n.id) el.classList.add('selected-source');
+
                 el.style.left = n.x + 'px';
                 el.style.top = n.y + 'px';
 
                 let icon = 'circle';
                 if (n.type === 'task') icon = 'check-square';
+                else if (n.type === 'subtask') icon = 'list-task';
                 else if (n.type === 'access') icon = 'key';
                 else if (n.type === 'billing') icon = 'currency-dollar';
                 else if (n.type === 'media') icon = 'file-earmark';
@@ -383,27 +490,58 @@
                     badges = `<span class="badge-status ${cl}">${n.status}</span>`;
                 }
 
+                if (n.data.assignee) {
+                    const user = this.users.find(u => u.id == n.data.assignee);
+                    if (user) {
+                        badges += ` <span class="badge bg-info text-dark" style="font-size:10px;"><i class="bi bi-person"></i> ${user.username}</span>`;
+                    }
+                }
+
                 const canEdit = n.type !== 'project';
 
                 el.innerHTML = `
-                        <div class="node-header">
-                            <span><i class="bi bi-${icon}"></i> ${n.type.toUpperCase()}</span>
-                        </div>
-                        <div class="node-content">
-                            <strong>${n.title}</strong><br>${badges}
-                        </div>
-                        ${canEdit ? `
-                        <div class="node-actions">
-                            <button class="btn btn-sm btn-light text-primary py-0 px-1" onclick="event.stopPropagation(); viz.openModal('${n.type}', '${n.id}')"><i class="bi bi-pencil"></i></button>
-                            <button class="btn btn-sm btn-light text-danger py-0 px-1" onclick="event.stopPropagation(); viz.deleteNode('${n.id}')"><i class="bi bi-trash"></i></button>
-                        </div>` : ''}
-                    `;
+                    <div class="node-header">
+                        <span><i class="bi bi-${icon}"></i> ${n.type.toUpperCase()}</span>
+                    </div>
+                    <div class="node-content">
+                        <strong>${n.title}</strong><br>${badges}
+                    </div>
+                    ${canEdit ? `
+                    <div class="node-actions">
+                        <button class="btn btn-sm btn-light text-primary py-0 px-1" onclick="event.stopPropagation(); viz.openModal('${n.type}', '${n.id}')"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-light text-danger py-0 px-1" onclick="event.stopPropagation(); viz.deleteNode('${n.id}')"><i class="bi bi-trash"></i></button>
+                    </div>` : ''}
+                `;
 
                 el.onmousedown = (e) => {
+                    if (this.connectMode) return;
                     this.drag = {active: true, node: n, offX: e.offsetX, offY: e.offsetY};
                 };
-                container.appendChild(el);
+
+                el.onclick = (e) => {
+                    e.stopPropagation();
+                    this.handleNodeClick(n.id);
+                };
+
+                nodesLayer.appendChild(el);
             });
+        }
+
+        drawArrow(source, target) {
+            const sx = source.x + 100;
+            const sy = source.y + 50;
+            const tx = target.x + 100;
+            const ty = target.y + 50;
+
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", sx);
+            line.setAttribute("y1", sy);
+            line.setAttribute("x2", tx);
+            line.setAttribute("y2", ty);
+            line.setAttribute("class", "connection-line");
+            line.setAttribute("marker-end", "url(#arrowhead)");
+
+            svgLayer.appendChild(line);
         }
 
         events() {
@@ -419,6 +557,15 @@
                 this.drag.node = null;
             };
 
+            if (!document.getElementById('arrowhead')) {
+                const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+                defs.innerHTML = `
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="205" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#9ca3af" />
+                    </marker>`;
+                svgLayer.appendChild(defs);
+            }
+
             document.getElementById('save-btn').onclick = async () => {
                 const btn = document.getElementById('save-btn');
                 btn.disabled = true;
@@ -427,12 +574,12 @@
                     const res = await fetch(`/api/projects/${this.projectId}/structure/`, {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json', 'X-CSRFToken': this.getCookie('csrftoken')},
-                        body: JSON.stringify({nodes: this.nodes})
+                        body: JSON.stringify({nodes: this.nodes, connections: this.connections})
                     });
-                    if (!res.ok) throw new Error('Error saving');
+                    if (!res.ok) throw new Error('Error');
                     location.reload();
                 } catch (e) {
-                    alert('Ошибка сохранения или нет прав.');
+                    alert('Ошибка сохранения');
                     btn.disabled = false;
                     btn.innerHTML = '<i class="bi bi-cloud-upload"></i> Сохранить';
                 }

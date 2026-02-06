@@ -5,9 +5,11 @@
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Медиафайлы</h2>
-        <a href="{{ url('media_files:media_create') }}" class="btn btn-primary">
-            <i class="bi bi-cloud-upload"></i> Загрузить файл
-        </a>
+        {% if user.is_superuser %}
+            <a href="{{ url('media_files:media_create') }}" class="btn btn-primary">
+                <i class="bi bi-cloud-upload"></i> Загрузить файл
+            </a>
+        {% endif %}
     </div>
 
     <div class="row g-3">
@@ -28,17 +30,17 @@
                                 {{ media.file.name.split('/')[-1] }}
                             </a>
                             <small class="text-muted d-block mt-1">{{ media.description|truncate(20) }}</small>
-                             {% if user.is_superuser %}
-                            <div class="mt-2 btn-group">
-                                <a href="{{ url('media_files:media_edit', pk=media.id) }}"
-                                   class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <a href="{{ url('media_files:media_delete', pk=media.id) }}"
-                                   class="btn btn-sm btn-outline-danger">
-                                    <i class="bi bi-trash"></i>
-                                </a>
-                            </div>
+                            {% if user.is_superuser %}
+                                <div class="mt-2 btn-group">
+                                    <a href="{{ url('media_files:media_edit', pk=media.id) }}"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{{ url('media_files:media_delete', pk=media.id) }}"
+                                       class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
                             {% endif %}
                         </div>
                     </div>

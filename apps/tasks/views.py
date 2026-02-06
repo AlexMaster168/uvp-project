@@ -5,8 +5,8 @@ from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .forms import TaskForm
-from .models import Task
-from .serializers import TaskSerializer, TaskCreateUpdateSerializer
+from .models import Task, SubTask
+from .serializers import TaskSerializer, TaskCreateUpdateSerializer, SubTaskSerializer
 
 
 class TaskListView(LoginRequiredMixin, ListView):
@@ -66,3 +66,10 @@ class TaskViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']: return TaskCreateUpdateSerializer
         return TaskSerializer
+
+
+class SubTaskViewSet(viewsets.ModelViewSet):
+    queryset = SubTask.objects.all()
+    serializer_class = SubTaskSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['task']

@@ -7,16 +7,31 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4>{{ task.title }}</h4>
                     <div>
-                        <span class="badge bg-{{ task.status|yesno:'success,secondary' }}">{{ task.get_status_display }}</span>
-                        <a href="{% url 'tasks:task_edit' pk=task.id %}" class="btn btn-sm btn-outline-primary ms-2">Изменить</a>
+                        {% if task.status == 'done' %}
+                            <span class="badge bg-success">{{ task.get_status_display() }}</span>
+                        {% elif task.status == 'in_progress' %}
+                            <span class="badge bg-warning text-dark">{{ task.get_status_display() }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ task.get_status_display() }}</span>
+                        {% endif %}
+                        {% if user.is_superuser %}
+                            <a href="{{ url('tasks:task_edit', pk=task.id) }}"
+                               class="btn btn-sm btn-outline-primary ms-2">Изменить</a>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="card-body">
                     <p><strong>Проект:</strong> <a
-                            href="{% url 'projects:project_detail' pk=task.project.id %}">{{ task.project.name }}</a>
+                            href="{{ url('projects:project_detail', pk=task.project.id) }}">{{ task.project.name }}</a>
                     </p>
                     <p><strong>Описание:</strong></p>
-                    <div class="p-3 bg-light rounded mb-3">{{ task.description|linebreaks }}</div>
+                    <div class="p-3 bg-light rounded mb-3">
+                        {% if task.description %}
+                            {{ task.description|linebreaks }}
+                        {% else %}
+                            Нет описания
+                        {% endif %}
+                    </div>
 
                     <div class="row">
                         <div class="col-md-6">
@@ -25,14 +40,30 @@
                         </div>
                         <div class="col-md-6">
                             <p><strong>Исполнители:</strong></p>
-                            {% for u in task.u_users.all %}
+                            {% for u in task.u_users.all() %}
                                 <span class="badge bg-info text-dark">{{ u.username }}</span>
                             {% endfor %}
                         </div>
                     </div>
+
+                    {% if task.subtasks.all() %}
+                        <div class="mt-4">
+                            <h5>Подзадачи:</h5>
+                            <ul class="list-group">
+                                {% for sub in task.subtasks.all() %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        {{ sub.title }}
+                                        <span class="badge {% if sub.status == 'done' %}bg-success{% else %}bg-secondary{% endif %}">
+                                        {{ sub.get_status_display() }}
+                                    </span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
                 </div>
                 <div class="card-footer">
-                    <a href="{% url 'projects:project_detail' pk=task.project.id %}" class="btn btn-secondary">Назад к
+                    <a href="{{ url('projects:project_detail', pk=task.project.id) }}" class="btn btn-secondary">Назад к
                         проекту</a>
                 </div>
             </div>
