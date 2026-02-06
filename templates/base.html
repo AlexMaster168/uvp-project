@@ -76,30 +76,39 @@
                 <i class="bi bi-folder me-2"></i> Проекты
             </a>
         </li>
-        <li>
-            <a href="{{ url('tasks:task_list') }}"
-               class="nav-link {% if request.resolver_match.app_name == 'tasks' %}active{% endif %}">
-                <i class="bi bi-check2-square me-2"></i> Задачи
-            </a>
-        </li>
+
+        {% set is_customer = user.is_authenticated and user.project_memberships.filter(role='customer').exists() and not user.is_superuser %}
+
+        {% if not is_customer %}
+            <li>
+                <a href="{{ url('tasks:task_list') }}"
+                   class="nav-link {% if request.resolver_match.app_name == 'tasks' %}active{% endif %}">
+                    <i class="bi bi-check2-square me-2"></i> Задачи
+                </a>
+            </li>
+        {% endif %}
+
         <li>
             <a href="{{ url('billing:billing_list') }}"
                class="nav-link {% if request.resolver_match.app_name == 'billing' %}active{% endif %}">
                 <i class="bi bi-currency-dollar me-2"></i> Финансы
             </a>
         </li>
-        <li>
-            <a href="{{ url('access:access_list') }}"
-               class="nav-link {% if request.resolver_match.app_name == 'access' %}active{% endif %}">
-                <i class="bi bi-key me-2"></i> Доступы
-            </a>
-        </li>
-        <li>
-            <a href="{{ url('media_files:media_list') }}"
-               class="nav-link {% if request.resolver_match.app_name == 'media_files' %}active{% endif %}">
-                <i class="bi bi-images me-2"></i> Медиа
-            </a>
-        </li>
+
+        {% if not is_customer %}
+            <li>
+                <a href="{{ url('access:access_list') }}"
+                   class="nav-link {% if request.resolver_match.app_name == 'access' %}active{% endif %}">
+                    <i class="bi bi-key me-2"></i> Доступы
+                </a>
+            </li>
+            <li>
+                <a href="{{ url('media_files:media_list') }}"
+                   class="nav-link {% if request.resolver_match.app_name == 'media_files' %}active{% endif %}">
+                    <i class="bi bi-images me-2"></i> Медиа
+                </a>
+            </li>
+        {% endif %}
 
         {% if user.is_superuser %}
             <hr class="text-white-50">

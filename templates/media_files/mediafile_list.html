@@ -28,6 +28,7 @@
                                 {{ media.file.name.split('/')[-1] }}
                             </a>
                             <small class="text-muted d-block mt-1">{{ media.description|truncate(20) }}</small>
+                             {% if user.is_superuser %}
                             <div class="mt-2 btn-group">
                                 <a href="{{ url('media_files:media_edit', pk=media.id) }}"
                                    class="btn btn-sm btn-outline-primary">
@@ -38,6 +39,7 @@
                                     <i class="bi bi-trash"></i>
                                 </a>
                             </div>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="card-footer text-muted small text-center">
