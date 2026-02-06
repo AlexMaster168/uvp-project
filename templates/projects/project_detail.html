@@ -2,387 +2,491 @@
 
 {% block title %}{{ project.name }} - УВП{% endblock %}
 
+{% block extra_css %}
+    <style>
+        .nav-tabs .nav-link {
+            color: #495057 !important;
+            cursor: pointer;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: #000 !important;
+            font-weight: 600;
+            background-color: #fff;
+            border-color: #dee2e6 #dee2e6 #fff;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: #0d6efd !important;
+            border-color: #e9ecef #e9ecef #dee2e6;
+        }
+
+        .nav-tabs .nav-link i {
+            margin-right: 5px;
+        }
+    </style>
+{% endblock %}
+
 {% block content %}
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-auto">
-                            {% if project.logo %}
-                                <img src="{{ project.logo.url }}" class="project-logo rounded" alt="Logo"
-                                     style="max-width: 100px;">
-                            {% else %}
-                                <div class="project-logo rounded bg-secondary d-flex align-items-center justify-content-center text-white"
-                                     style="width: 100px; height: 100px;">
-                                    <i class="bi bi-folder fs-1"></i>
-                                </div>
-                            {% endif %}
-                        </div>
-                        <div class="col">
-                            <h2>{{ project.name }} <small class="text-muted">#{{ project.id }}</small></h2>
-                            <p class="text-muted mb-2">{{ project.description }}</p>
-                            <div class="mb-2">
-                                <strong>Сроки:</strong>
-                                {% if project.start_date and project.end_date %}
-                                    {{ project.start_date }} - {{ project.end_date }}
-                                {% else %}
-                                    Не указаны
-                                {% endif %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-auto">
+                        {% if project.logo %}
+                            <img src="{{ project.logo.url }}" class="project-logo rounded" alt="Logo"
+                                 style="width: 100px; height: 100px; object-fit: cover;">
+                        {% else %}
+                            <div class="rounded bg-secondary d-flex align-items-center justify-content-center text-white"
+                                 style="width: 100px; height: 100px;">
+                                <i class="bi bi-folder fs-1"></i>
                             </div>
-                            <div class="mb-2">
-                                <strong>Статус:</strong>
+                        {% endif %}
+                    </div>
+                    <div class="col">
+                        <h2>{{ project.name }} <small class="text-muted fs-6">#{{ project.id }}</small></h2>
+                        <p class="text-muted mb-2">{{ project.description }}</p>
+
+                        <div class="row g-2 mb-2">
+                            <div class="col-auto">
+                                <span class="fw-bold">Статус:</span>
                                 {% if project.status == 'in_progress' %}
                                     <span class="badge bg-success">В работе</span>
                                 {% elif project.status == 'planned' %}
-                                    <span class="badge bg-info">Запланирован</span>
+                                    <span class="badge bg-info text-dark">Запланирован</span>
                                 {% elif project.status == 'idle' %}
-                                    <span class="badge bg-warning">Простой</span>
+                                    <span class="badge bg-warning text-dark">Простой</span>
                                 {% elif project.status == 'sleep' %}
                                     <span class="badge bg-secondary">Заморожен</span>
+                                {% elif project.status == 'finished' %}
+                                    <span class="badge bg-success">Завершен</span>
                                 {% else %}
                                     <span class="badge bg-secondary">{{ project.get_status_display() }}</span>
                                 {% endif %}
                             </div>
-                            <div class="mb-2">
-                                <strong>Создатель:</strong> {{ project.u_creator.username }}
+                            <div class="col-auto">
+                                <span class="fw-bold">Сроки:</span>
+                                {% if project.start_date and project.end_date %}
+                                    {{ project.start_date }} - {{ project.end_date }}
+                                {% else %}
+                                    <span class="text-muted">Не указаны</span>
+                                {% endif %}
                             </div>
-                            <div class="mb-2">
-                                <strong>Участники:</strong>
-                                {% for member in project.members.all() %}
-                                    <span class="badge {% if member.role == 'owner' %}bg-primary{% else %}bg-info{% endif %}">
-                                        {{ member.user.username }} ({{ member.role }})
+                        </div>
+
+                        <div class="mb-2">
+                            <strong>Создатель:</strong> {{ project.u_creator.username }}
+                        </div>
+
+                        <div class="mb-2">
+                            <strong>Участники:</strong>
+                            {% for member in project.members.all() %}
+                                <span class="badge border text-dark {% if member.role == 'owner' %}bg-primary-subtle border-primary{% else %}bg-light{% endif %}">
+                                        {{ member.user.username }} ({{ member.get_role_display() }})
                                     </span>
-                                {% endfor %}
-                            </div>
+                            {% endfor %}
+                        </div>
+
+                        {% if project.u_tags.all() %}
                             <div>
                                 <strong>Теги:</strong>
                                 {% for tag in project.u_tags.all() %}
                                     <span class="badge bg-secondary">{{ tag.name }}</span>
                                 {% endfor %}
                             </div>
-                        </div>
-                        <div class="col-auto">
-                            {% if is_owner %}
-                                <a href="{{ url('projects:project_edit', pk=project.id) }}" class="btn btn-primary">
-                                    <i class="bi bi-pencil"></i> Редактировать
-                                </a>
-                                <a href="{{ url('projects:project_delete', pk=project.id) }}" class="btn btn-danger">
-                                    <i class="bi bi-trash"></i> Удалить
-                                </a>
-                            {% endif %}
-                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-auto d-flex flex-column gap-2">
+                        {% if is_owner %}
+                            <a href="{{ url('projects:project_edit', pk=project.id) }}"
+                               class="btn btn-outline-primary">
+                                <i class="bi bi-pencil"></i> Редактировать
+                            </a>
+                            <a href="{{ url('projects:project_delete', pk=project.id) }}"
+                               class="btn btn-outline-danger">
+                                <i class="bi bi-trash"></i> Удалить
+                            </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <ul class="nav nav-tabs mb-3" id="projectTabs" role="tablist">
+{% if current_membership and current_membership.role == 'customer' %}
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Прогресс выполнения проекта</h5>
+    </div>
+    <div class="card-body py-5">
+        <h2 class="text-center mb-4">{{ project.progress }}%</h2>
+        <div class="progress" style="height: 30px;">
+            <div class="progress-bar bg-success progress-bar-striped progress-bar-animated"
+                 role="progressbar"
+                 style="width: {{ project.progress }}%;"
+                 aria-valuenow="{{ project.progress }}"
+                 aria-valuemin="0"
+                 aria-valuemax="100">
+            </div>
+        </div>
+        <p class="text-center text-muted mt-3">
+            Выполнено задач: <strong>{{ project.tasks.filter(status='done').count() }}</strong> из <strong>
+            {{ project.tasks.count() }}</strong>
+        </p>
+
+        <div class="alert alert-light border mt-4 text-center">
+            <i class="bi bi-info-circle text-primary me-2"></i>
+            Как заказчик, вы видите общий статус выполнения проекта.
+            Для получения деталей обратитесь к менеджеру проекта.
+        </div>
+    </div>
+</div>
+
+{% else %}
+
+<ul class="nav nav-tabs mb-3" id="projectTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview"
+                type="button">
+            <i class="bi bi-info-circle"></i> Обзор
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks" type="button">
+            <i class="bi bi-check2-square"></i> Задачи <span
+                class="badge bg-secondary rounded-pill ms-1">{{ project.tasks.count() }}</span>
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="billing-tab" data-bs-toggle="tab" data-bs-target="#billing" type="button">
+            <i class="bi bi-currency-dollar"></i> Финансы
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="access-tab" data-bs-toggle="tab" data-bs-target="#access" type="button">
+            <i class="bi bi-key"></i> Доступы
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="media-tab" data-bs-toggle="tab" data-bs-target="#media" type="button">
+            <i class="bi bi-images"></i> Медиа
+        </button>
+    </li>
+    {% if is_owner %}
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview"
-                    type="button">
-                <i class="bi bi-info-circle"></i> Обзор
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks" type="button">
-                <i class="bi bi-check2-square"></i> Задачи ({{ project.tasks.count() }})
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="billing-tab" data-bs-toggle="tab" data-bs-target="#billing" type="button">
-                <i class="bi bi-currency-dollar"></i> Финансы
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="access-tab" data-bs-toggle="tab" data-bs-target="#access" type="button">
-                <i class="bi bi-key"></i> Доступы
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="media-tab" data-bs-toggle="tab" data-bs-target="#media" type="button">
-                <i class="bi bi-images"></i> Медиа
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <a class="nav-link" href="{{ url('projects:structure', pk=project.id) }}">
+            <a class="nav-link text-primary" href="{{ url('projects:structure', pk=project.id) }}">
                 <i class="bi bi-diagram-3"></i> Структура (Rete.js)
             </a>
         </li>
-    </ul>
+    {% endif %}
+</ul>
 
-    <div class="tab-content" id="projectTabsContent">
-        <div class="tab-pane fade show active" id="overview" role="tabpanel">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Информация о проекте</h5>
-                    <p>{{ project.description or "Описание не указано" }}</p>
+<div class="tab-content" id="projectTabsContent">
+    <div class="tab-pane fade show active" id="overview" role="tabpanel">
+        <div class="card border-top-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Описание</h5>
+                <p>{{ project.description or "Описание не указано" }}</p>
 
-                    <h6 class="mt-4">Команда</h6>
-                    <table class="table table-sm">
-                        <thead>
-                        <tr>
-                            <th>Участник</th>
-                            <th>Роль</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for member in project.members.all() %}
-                            <tr>
-                                <td>{{ member.user.username }}</td>
-                                <td>
-                                    {% if member.role == 'owner' %}
-                                        <span class="badge bg-primary">Владелец</span>
-                                    {% else %}
-                                        <span class="badge bg-secondary">{{ member.role }}</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
+                <h6 class="mt-4 border-bottom pb-2">Команда проекта</h6>
+                <table class="table table-hover mt-2">
+                    <thead>
+                    <tr>
+                        <th>Участник</th>
+                        <th>Роль</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for member in project.members.all() %}
+                    <tr>
+                        <td>{{ member.user.username }}</td>
+                        <td>
+                            {% if member.role == 'owner' %}
+                                <span class="badge bg-primary">Владелец</span>
                             {% else %}
-                            <tr>
-                                <td colspan="2">Нет участников</td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                                <span class="badge bg-secondary">{{ member.get_role_display() }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="2" class="text-muted">Нет участников</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
+    </div>
 
-        <div class="tab-pane fade" id="tasks" role="tabpanel">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>Задачи проекта</span>
-                    <a href="{{ url('tasks:task_create') }}?project={{ project.id }}" class="btn btn-sm btn-primary">
-                        + Добавить задачу
+    <div class="tab-pane fade" id="tasks" role="tabpanel">
+        <div class="card border-top-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Список задач</h6>
+                {% if is_owner %}
+                    <a href="{{ url('tasks:task_create') }}?project={{ project.id }}"
+                       class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-lg"></i> Задача
                     </a>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
+                {% endif %}
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Статус</th>
+                        <th>Название</th>
+                        <th>Исполнители</th>
+                        <th>Время (План/Факт)</th>
+                        <th style="width: 100px;"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for task in project.tasks.all() %}
                         <tr>
-                            <th>Статус</th>
-                            <th>Название</th>
-                            <th>Исполнители</th>
-                            <th>Время (План/Факт)</th>
-                            <th>Действия</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for task in project.tasks.all() %}
-                            <tr>
-                                <td>
-                                    {% if task.status == 'done' %}
-                                        <span class="badge bg-success">Готово</span>
-                                    {% elif task.status == 'in_progress' %}
-                                        <span class="badge bg-warning">В работе</span>
-                                    {% else %}
-                                        <span class="badge bg-secondary">{{ task.get_status_display() }}</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <a href="{{ url('tasks:task_detail', pk=task.id) }}">{{ task.title }}</a>
-                                </td>
-                                <td>
-                                    {% for user in task.u_users.all() %}
-                                        <span class="badge bg-secondary">{{ user.username }}</span>
-                                    {% endfor %}
-                                </td>
-                                <td>{{ task.estimated_time }} / {{ task.actual_time }}</td>
-                                <td>
-                                    {% if is_owner %}
+                            <td>
+                                {% if task.status == 'done' %}
+                                    <span class="badge bg-success">Готово</span>
+                                {% elif task.status == 'in_progress' %}
+                                    <span class="badge bg-warning text-dark">В работе</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ task.get_status_display() }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url('tasks:task_detail', pk=task.id) }}"
+                                   class="text-decoration-none fw-bold">{{ task.title }}</a>
+                            </td>
+                            <td>
+                                {% for user in task.u_users.all() %}
+                                    <span class="badge bg-light text-dark border">{{ user.username }}</span>
+                                {% endfor %}
+                            </td>
+                            <td class="small">{{ task.estimated_time }} / {{ task.actual_time }}</td>
+                            <td>
+                                {% if is_owner %}
+                                    <div class="btn-group">
                                         <a href="{{ url('tasks:task_edit', pk=task.id) }}"
-                                           class="btn btn-sm btn-outline-primary">
+                                           class="btn btn-sm btn-outline-secondary" title="Редактировать">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <a href="{{ url('tasks:task_delete', pk=task.id) }}"
-                                           class="btn btn-sm btn-outline-danger">
+                                           class="btn btn-sm btn-outline-danger" title="Удалить">
                                             <i class="bi bi-trash"></i>
                                         </a>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="5" class="text-center">Задач пока нет</td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                                    </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">Задач пока нет</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
+    </div>
 
-        <div class="tab-pane fade" id="billing" role="tabpanel">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>Финансы</span>
+    <div class="tab-pane fade" id="billing" role="tabpanel">
+        <div class="card border-top-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Финансовые операции</h6>
+                {% if is_owner %}
                     <a href="{{ url('billing:billing_create') }}?project={{ project.id }}"
                        class="btn btn-sm btn-primary">
-                        + Добавить операцию
+                        <i class="bi bi-plus-lg"></i> Операция
                     </a>
-                </div>
-                <div class="card-body">
-                    <table class="table">
-                        <thead>
+                {% endif %}
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Дата</th>
+                        <th>Сумма</th>
+                        <th>Тип</th>
+                        <th>Описание</th>
+                        <th style="width: 100px;"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for billing in project.billings.all() %}
                         <tr>
-                            <th>Дата</th>
-                            <th>Сумма</th>
-                            <th>Тип</th>
-                            <th>Описание</th>
-                            <th>Действия</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for billing in project.billings.all() %}
-                            <tr>
-                                <td>{{ billing.date }}</td>
-                                <td>
-                                    {% if billing.operation == 'income' %}
-                                        <span class="text-success">+${{ billing.amount }}</span>
-                                    {% else %}
-                                        <span class="text-danger">-${{ billing.amount }}</span>
-                                    {% endif %}
-                                </td>
-                                <td><span class="badge bg-secondary">{{ billing.get_tag_display() }}</span></td>
-                                <td>{{ billing.description }}</td>
-                                <td>
-                                    {% if is_owner %}
+                            <td>{{ billing.date }}</td>
+                            <td class="fw-bold">
+                                {% if billing.operation == 'income' %}
+                                    <span class="text-success">+{{ billing.amount }}</span>
+                                {% else %}
+                                    <span class="text-danger">-{{ billing.amount }}</span>
+                                {% endif %}
+                            </td>
+                            <td><span class="badge bg-secondary">{{ billing.get_tag_display() }}</span></td>
+                            <td>{{ billing.description }}</td>
+                            <td>
+                                {% if is_owner %}
+                                    <div class="btn-group">
                                         <a href="{{ url('billing:billing_edit', pk=billing.id) }}"
-                                           class="btn btn-sm btn-outline-primary">
+                                           class="btn btn-sm btn-outline-secondary">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <a href="{{ url('billing:billing_delete', pk=billing.id) }}"
                                            class="btn btn-sm btn-outline-danger">
                                             <i class="bi bi-trash"></i>
                                         </a>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="5" class="text-center">Финансовых операций нет</td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                                    </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">Операций нет</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
+    </div>
 
-        <div class="tab-pane fade" id="access" role="tabpanel">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>Доступы</span>
-                    <a href="{{ url('access:access_create') }}?project={{ project.id }}" class="btn btn-sm btn-primary">
-                        + Добавить доступ
+    <div class="tab-pane fade" id="access" role="tabpanel">
+        <div class="card border-top-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Учетные записи</h6>
+                {% if is_owner %}
+                    <a href="{{ url('access:access_create') }}?project={{ project.id }}"
+                       class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-lg"></i> Доступ
                     </a>
-                </div>
-                <div class="table-responsive">
-                    <table class="table mb-0">
-                        <thead class="table-light">
+                {% endif %}
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Сервис</th>
+                        <th>Drive</th>
+                        <th>Логин</th>
+                        <th>Пароль</th>
+                        <th>Описание</th>
+                        <th style="width: 100px;"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for access in project.accesses.all() %}
                         <tr>
-                            <th>Сервис/URL</th>
-                            <th>Сервис Google Disk</th>
-                            <th>Логин</th>
-                            <th>Пароль</th>
-                            <th>Описание</th>
-                            <th>Действия</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for access in project.accesses.all() %}
-                            <tr>
-                                <td><a href="{{ access.url }}" target="_blank">{{ access.url or 'Ссылка' }}</a></td>
-                                <td><a href="{{ access.url_drive }}" target="_blank">
-                                    {{ access.url_disk or 'Ссылка' }}</a></td>
-                                <td>{{ access.login }}</td>
-                                <td>
-                                    <span class="masked-password" data-password="{{ access.password }}">••••••••</span>
-                                    <i class="bi bi-eye" style="cursor: pointer;"></i>
-                                </td>
-                                <td>{{ access.description }}</td>
-                                <td>
-                                    {% if is_owner %}
+                            <td><a href="{{ access.url }}" target="_blank" class="text-truncate d-inline-block"
+                                   style="max-width: 150px;">{{ access.url or '-' }}</a></td>
+                            <td><a href="{{ access.url_drive }}" target="_blank"
+                                   class="text-truncate d-inline-block" style="max-width: 150px;">
+                                {{ access.url_disk or '-' }}</a></td>
+                            <td>{{ access.login }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <span class="masked-password me-2"
+                                          data-password="{{ access.password }}">••••••••</span>
+                                    <i class="bi bi-eye cursor-pointer text-muted" style="cursor: pointer;"></i>
+                                </div>
+                            </td>
+                            <td>{{ access.description }}</td>
+                            <td>
+                                {% if is_owner %}
+                                    <div class="btn-group">
                                         <a href="{{ url('access:access_edit', pk=access.id) }}"
-                                           class="btn btn-sm btn-outline-primary">
+                                           class="btn btn-sm btn-outline-secondary">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <a href="{{ url('access:access_delete', pk=access.id) }}"
                                            class="btn btn-sm btn-outline-danger">
                                             <i class="bi bi-trash"></i>
                                         </a>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="6" class="text-center">Доступов нет</td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                                    </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">Доступов нет</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
+    </div>
 
-        <div class="tab-pane fade" id="media" role="tabpanel">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>Медиафайлы</span>
+    <div class="tab-pane fade" id="media" role="tabpanel">
+        <div class="card border-top-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Файлы проекта</h6>
+                {% if is_owner %}
                     <a href="{{ url('media_files:media_create') }}?project={{ project.id }}"
                        class="btn btn-sm btn-primary">
-                        + Загрузить файл
+                        <i class="bi bi-cloud-upload"></i> Загрузить
                     </a>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        {% for media in project.media_files.all() %}
-                            <div class="col-md-3">
-                                <div class="card h-100">
-                                    <div class="card-body text-center d-flex flex-column justify-content-between">
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    {% for media in project.media_files.all() %}
+                        <div class="col-md-3 col-sm-6">
+                            <div class="card h-100 border hover-shadow transition">
+                                <div class="card-body text-center d-flex flex-column justify-content-between p-3">
+                                    <div class="mb-3 d-flex align-items-center justify-content-center"
+                                         style="height: 100px;">
                                         {% if media.file.url.endswith('.jpg') or media.file.url.endswith('.png') or media.file.url.endswith('.jpeg') %}
-                                            <img src="{{ media.file.url }}" class="img-fluid mb-2"
+                                            <img src="{{ media.file.url }}" class="img-fluid rounded"
                                                  alt="{{ media.description }}"
                                                  style="max-height: 100px; object-fit: contain;">
                                         {% else %}
-                                            <div class="mb-2"><i class="bi bi-file-earmark fs-1"></i></div>
+                                            <i class="bi bi-file-earmark-text text-secondary display-4"></i>
                                         {% endif %}
+                                    </div>
 
-                                        <div>
-                                            <a href="{{ media.file.url }}" target="_blank"
-                                               class="text-decoration-none text-truncate d-block"
-                                               style="max-width: 100%;">
-                                                {{ media.file.name.split('/')[-1] }}
-                                            </a>
-                                            <small class="text-muted d-block mt-1">
-                                                {{ media.description|truncate(20) }}
-                                            </small>
-                                            <div class="mt-2">
-                                                {% if is_owner %}
-                                                    <a href="{{ url('media_files:media_edit', pk=media.id) }}"
-                                                       class="btn btn-sm btn-outline-primary">
-                                                        <i class="bi bi-pencil"></i>
-                                                    </a>
-                                                    <a href="{{ url('media_files:media_delete', pk=media.id) }}"
-                                                       class="btn btn-sm btn-outline-danger">
-                                                        <i class="bi bi-trash"></i>
-                                                    </a>
-                                                {% endif %}
+                                    <div class="w-100">
+                                        <a href="{{ media.file.url }}" target="_blank"
+                                           class="text-decoration-none fw-bold text-dark text-truncate d-block mb-1"
+                                           title="{{ media.file.name }}">
+                                            {{ media.file.name.split('/')[-1] }}
+                                        </a>
+                                        <small class="text-muted d-block mb-2 text-truncate">
+                                            {{ media.description }}
+                                        </small>
+
+                                        {% if is_owner %}
+                                            <div class="btn-group w-100">
+                                                <a href="{{ url('media_files:media_edit', pk=media.id) }}"
+                                                   class="btn btn-sm btn-outline-secondary">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a href="{{ url('media_files:media_delete', pk=media.id) }}"
+                                                   class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
                                             </div>
-                                        </div>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
-                            {% else %}
-                            <div class="col-12 text-center">Файлов нет</div>
-                        {% endfor %}
-                    </div>
+                        </div>
+                        {% else %}
+                        <div class="col-12 text-center py-5 text-muted">
+                            <i class="bi bi-folder2-open display-4 mb-3 d-block"></i>
+                            Файлов нет
+                        </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
     </div>
+</div>
+
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}

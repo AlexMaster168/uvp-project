@@ -1,5 +1,5 @@
 from django.urls import reverse
-from django.views.generic import CreateView, UpdateView, DeleteView
+from django.views.generic import CreateView, UpdateView, DeleteView, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, parsers
@@ -14,6 +14,12 @@ class MediaFileViewSet(viewsets.ModelViewSet):
     queryset = MediaFile.objects.all()
     serializer_class = MediaFileSerializer
     parser_classes = (parsers.MultiPartParser, parsers.FormParser)
+
+
+class MediaListView(LoginRequiredMixin, ListView):
+    model = MediaFile
+    template_name = 'media_files/mediafile_list.html'
+    context_object_name = 'media_files'
 
 
 class MediaCreateView(LoginRequiredMixin, CreateView):

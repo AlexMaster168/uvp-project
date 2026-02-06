@@ -62,8 +62,10 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         project = self.object
-        context['is_owner'] = user.is_superuser or \
-                              ProjectMembership.objects.filter(project=project, user=user, role='owner').exists()
+
+        membership = ProjectMembership.objects.filter(project=project, user=user).first()
+        context['current_membership'] = membership
+        context['is_owner'] = user.is_superuser or (membership and membership.role == 'owner')
         return context
 
 

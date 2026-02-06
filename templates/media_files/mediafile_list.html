@@ -1,32 +1,53 @@
 {% extends "base.html" %}
+
 {% block title %}Медиафайлы{% endblock %}
+
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Все медиафайлы</h2>
-        <a href="{% url 'media_files:media_create' %}" class="btn btn-primary">Загрузить файл</a>
+        <h2>Медиафайлы</h2>
+        <a href="{{ url('media_files:media_create') }}" class="btn btn-primary">
+            <i class="bi bi-cloud-upload"></i> Загрузить файл
+        </a>
     </div>
 
-    {% if media_files %}
-        <div class="row g-4">
-            {% for media in media_files %}
-                <div class="col-md-3">
-                    <div class="card h-100">
-                        <div class="card-body text-center d-flex flex-column justify-content-center">
-                            <i class="bi bi-file-earmark fs-1 text-primary mb-2"></i>
-                            <h6 class="card-title text-truncate">{{ media.filename }}</h6>
-                            <small class="text-muted">{{ media.project.name }}</small>
-                            <small class="text-muted">{{ media.uploaded_at|date:"d.m.Y" }}</small>
-                        </div>
-                        <div class="card-footer bg-transparent border-top-0 text-center">
-                            <a href="{{ media.file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">Скачать</a>
+    <div class="row g-3">
+        {% for media in media_files %}
+            <div class="col-md-3">
+                <div class="card h-100">
+                    <div class="card-body text-center d-flex flex-column justify-content-between">
+                        {% if media.file.url.endswith('.jpg') or media.file.url.endswith('.png') or media.file.url.endswith('.jpeg') %}
+                            <img src="{{ media.file.url }}" class="img-fluid mb-2" alt="{{ media.description }}"
+                                 style="max-height: 100px; object-fit: contain;">
+                        {% else %}
+                            <div class="mb-2"><i class="bi bi-file-earmark fs-1"></i></div>
+                        {% endif %}
+
+                        <div>
+                            <a href="{{ media.file.url }}" target="_blank"
+                               class="text-decoration-none text-truncate d-block">
+                                {{ media.file.name.split('/')[-1] }}
+                            </a>
+                            <small class="text-muted d-block mt-1">{{ media.description|truncate(20) }}</small>
+                            <div class="mt-2 btn-group">
+                                <a href="{{ url('media_files:media_edit', pk=media.id) }}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{{ url('media_files:media_delete', pk=media.id) }}"
+                                   class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
                         </div>
                     </div>
+                    <div class="card-footer text-muted small text-center">
+                        Проект: <a href="
+                            {{ url('projects:project_detail', pk=media.project.id) }}">{{ media.project.name }}</a>
+                    </div>
                 </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="text-center py-5">
-            <p class="lead text-muted">Нет загруженных файлов</p>
-        </div>
-    {% endif %}
+            </div>
+            {% else %}
+            <div class="col-12 text-center text-muted">Нет файлов</div>
+        {% endfor %}
+    </div>
 {% endblock %}

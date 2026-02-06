@@ -1,15 +1,15 @@
-from django.contrib.staticfiles.storage import staticfiles_storage
 from django.urls import reverse
+from django.templatetags.static import static
 from jinja2 import Environment
+
+def url(viewname, *args, **kwargs):
+    return reverse(viewname, args=args, kwargs=kwargs)
 
 
 def environment(**options):
     env = Environment(**options)
-    def jinja_url(viewname, *args, **kwargs):
-        return reverse(viewname, args=args, kwargs=kwargs)
-
     env.globals.update({
-        'static': staticfiles_storage.url,
-        'url': jinja_url,
+        'static': static,
+        'url': url,
     })
     return env
