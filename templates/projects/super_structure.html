@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Общая структура проектов</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #toolbar {
+            background: #212529;
+            color: white;
+            border-bottom: 1px solid #444;
+            padding: 10px 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #rete-container {
+            position: absolute;
+            top: 60px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #343a40;
+            overflow: hidden;
+        }
+
+        #connections-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .node {
+            background: white;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            cursor: pointer;
+            position: absolute;
+            min-width: 220px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            user-select: none;
+            transition: transform 0.1s;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .node:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .node-header {
+            padding: 8px 12px;
+            border-radius: 6px 6px 0 0;
+            color: white;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .node-content {
+            padding: 12px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .node-actions {
+            border-top: 1px solid #eee;
+            padding: 6px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 5px;
+        }
+
+        .project-node {
+            border-color: #ef4444;
+            border-width: 3px;
+        }
+
+        .project-node .node-header {
+            background: #ef4444;
+            font-size: 1.1em;
+        }
+
+        .task-node {
+            border-color: #3b82f6;
+        }
+
+        .task-node .node-header {
+            background: #3b82f6;
+        }
+
+        .subtask-node {
+            border-color: #6366f1;
+        }
+
+        .subtask-node .node-header {
+            background: #6366f1;
+        }
+
+        .access-node {
+            border-color: #8b5cf6;
+        }
+
+        .access-node .node-header {
+            background: #8b5cf6;
+        }
+
+        .billing-node {
+            border-color: #10b981;
+        }
+
+        .billing-node .node-header {
+            background: #10b981;
+        }
+
+        .media-node {
+            border-color: #f59e0b;
+        }
+
+        .media-node .node-header {
+            background: #f59e0b;
+        }
+
+        .connection-line {
+            stroke: #6c757d;
+            stroke-width: 2;
+            fill: none;
+            opacity: 0.6;
+        }
+
+        .connection-line:hover {
+            stroke: #fff;
+            opacity: 1;
+            cursor: pointer;
+        }
+
+        .connecting-mode .node {
+            cursor: crosshair;
+        }
+
+        .node.selected-source {
+            border-color: #22c55e;
+            box-shadow: 0 0 15px #22c55e;
+        }
+
+        .socket-points {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            padding-top: 5px;
+            border-top: 1px dashed #eee;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .socket {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 1px solid #666;
+            background: #eee;
+        }
+    </style>
+</head>
+<body>
+<div id="toolbar">
+    <div class="d-flex align-items-center gap-2">
+        <a href="{{ url('projects:project_list') }}" class="btn btn-outline-light btn-sm"><i
+                class="bi bi-arrow-left"></i> Список проектов</a>
+        <div class="vr bg-secondary"></div>
+        <span class="fw-bold">ОБЩАЯ СТРУКТУРА</span>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <div class="btn-group">
+            <button id="connect-flow-btn" class="btn btn-outline-info btn-sm" onclick="viz.toggleConnectMode('flow')"><i
+                    class="bi bi-arrow-right"></i> Связь задач
+            </button>
+            <button id="connect-hier-btn" class="btn btn-outline-warning btn-sm"
+                    onclick="viz.toggleConnectMode('hierarchy')"><i class="bi bi-diagram-2"></i> Привязка
+            </button>
+        </div>
+        <button id="save-btn" class="btn btn-success btn-sm"><i class="bi bi-cloud-upload"></i> Сохранить все</button>
+    </div>
+</div>
+
+<div id="rete-container">
+    <svg id="connections-layer"></svg>
+    <div id="nodes-layer"></div>
+</div>
+
+<div class="modal fade" id="nodeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Элемент</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger me-auto" onclick="viz.deleteNode()">Удалить</button>
+                <button type="button" class="btn btn-primary" onclick="viz.saveNodeFromModal()">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const container = document.getElementById('rete-container');
+    const nodesLayer = document.getElementById('nodes-layer');
+    const svgLayer = document.getElementById('connections-layer');
+    const modalEl = document.getElementById('nodeModal');
+    const modalObj = new bootstrap.Modal(modalEl);
+
+    class SuperViz {
+        constructor() {
+            this.nodes = [];
+            this.connections = [];
+            this.users = [];
+            this.drag = {active: false, node: null, offX: 0, offY: 0};
+            this.connectMode = null;
+            this.sourceNodeId = null;
+            this.scale = 1;
+            this.panX = 0;
+            this.panY = 0;
+            this.init();
+        }
+
+        async init() {
+            await this.loadData();
+            this.render();
+            this.events();
+        }
+
+        async loadData() {
+            try {
+                // Corrected URL to point to the ViewSet Action
+                const res = await fetch(`/api/projects/projects/super-structure/`);
+                if (res.ok) {
+                    const data = await res.json();
+                    this.nodes = data.nodes || [];
+                    this.connections = data.connections || [];
+                    this.users = data.users || [];
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        updateNode(id, newData) {
+            const node = this.nodes.find(n => n.id === id);
+            if (node) Object.assign(node, newData);
+            this.render();
+        }
+
+        deleteNode() {
+            if (!this.currentNode) return;
+            if (confirm('Вы уверены? Удаление применится после сохранения.')) {
+                const id = this.currentNode.id;
+                this.nodes = this.nodes.filter(n => n.id !== id);
+                this.connections = this.connections.filter(c => c.source !== id && c.target !== id);
+                modalObj.hide();
+                this.render();
+            }
+        }
+
+        toggleConnectMode(mode) {
+            if (this.connectMode === mode) {
+                this.connectMode = null;
+                document.body.classList.remove('connecting-mode');
+            } else {
+                this.connectMode = mode;
+                document.body.classList.add('connecting-mode');
+            }
+            this.sourceNodeId = null;
+            this.render();
+        }
+
+        handleNodeClick(nodeId) {
+            if (this.connectMode) {
+                if (!this.sourceNodeId) {
+                    this.sourceNodeId = nodeId;
+                    this.render();
+                } else {
+                    if (this.sourceNodeId !== nodeId) {
+                        const exists = this.connections.find(c => c.source === this.sourceNodeId && c.target === nodeId);
+                        if (!exists) {
+                            const src = this.nodes.find(n => n.id === this.sourceNodeId);
+                            const tgt = this.nodes.find(n => n.id === nodeId);
+
+                            let allowed = false;
+                            if (this.connectMode === 'flow') {
+                                if (src.type === 'task' && tgt.type === 'task') allowed = true;
+                            } else {
+                                if (src.type === 'project' && ['task', 'access', 'billing', 'media'].includes(tgt.type)) allowed = true;
+                                if (src.type === 'task' && tgt.type === 'subtask') allowed = true;
+                            }
+
+                            if (allowed) this.connections.push({source: this.sourceNodeId, target: nodeId});
+                        }
+                    }
+                    this.sourceNodeId = null;
+                    this.toggleConnectMode(null);
+                }
+            }
+        }
+
+        openModal(type, nodeId) {
+            const node = this.nodes.find(n => n.id === nodeId);
+            if (!node) return;
+            this.currentNode = node;
+
+            const titleEl = document.getElementById('modalTitle');
+            const bodyEl = document.getElementById('modalBody');
+            titleEl.textContent = `Редактировать: ${node.type}`;
+
+            const data = node.data;
+            let html = '';
+
+            if (type === 'project') {
+                html = `<label>Название</label><input type="text" id="inp-title" class="form-control mb-2" value="${data.title || ''}">`;
+            } else if (type === 'task') {
+                const userOpts = this.users.map(u => `<option value="${u.id}" ${data.assignee == u.id ? 'selected' : ''}>${u.username}</option>`).join('');
+                html = `
+                    <label>Название</label><input type="text" id="inp-title" class="form-control mb-2" value="${data.title || ''}">
+                    <label>Исполнитель</label><select id="inp-assignee" class="form-select">${userOpts}</select>`;
+            } else {
+                html = `<label>Заголовок / Данные</label><input type="text" id="inp-title" class="form-control" value="${data.title || data.login || data.amount || ''}">`;
+            }
+
+            bodyEl.innerHTML = html;
+            bodyEl.dataset.type = type;
+            modalObj.show();
+        }
+
+        saveNodeFromModal() {
+            const type = document.getElementById('modalBody').dataset.type;
+            const title = document.getElementById('inp-title') ? document.getElementById('inp-title').value : '';
+            const assignee = document.getElementById('inp-assignee') ? document.getElementById('inp-assignee').value : null;
+
+            const newData = {...this.currentNode.data};
+            if (title) newData.title = title;
+            if (type === 'access') newData.login = title;
+            if (type === 'billing') newData.amount = title;
+            if (assignee) newData.assignee = assignee;
+
+            this.updateNode(this.currentNode.id, {title, data: newData});
+            modalObj.hide();
+        }
+
+        render() {
+            nodesLayer.innerHTML = '';
+            svgLayer.innerHTML = '';
+
+            const transform = `translate(${this.panX}px, ${this.panY}px) scale(${this.scale})`;
+            nodesLayer.style.transform = transform;
+
+            const svgGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            svgGroup.setAttribute("transform", `translate(${this.panX}, ${this.panY}) scale(${this.scale})`);
+            svgLayer.appendChild(svgGroup);
+
+            this.connections.forEach(c => {
+                const s = this.nodes.find(n => n.id === c.source);
+                const t = this.nodes.find(n => n.id === c.target);
+                if (s && t) this.drawArrow(s, t, svgGroup);
+            });
+
+            this.nodes.forEach(n => {
+                const el = document.createElement('div');
+                el.className = `node ${n.type}-node`;
+                if (this.sourceNodeId === n.id) el.classList.add('selected-source');
+                el.style.left = n.x + 'px';
+                el.style.top = n.y + 'px';
+
+                let info = n.title;
+                if (n.type === 'billing') info = `${n.data.amount} ${n.status}`;
+
+                el.innerHTML = `
+                    <div class="node-header"><span>${n.type.toUpperCase()}</span></div>
+                    <div class="node-content">${info}</div>
+                    <div class="node-actions">
+                        <button class="btn btn-sm btn-light py-0" onclick="event.stopPropagation(); viz.openModal('${n.type}', '${n.id}')">✎</button>
+                    </div>`;
+
+                el.onmousedown = (e) => {
+                    if (this.connectMode) return;
+                    e.stopPropagation();
+                    this.drag = {active: true, node: n, offX: e.offsetX, offY: e.offsetY};
+                };
+                el.onclick = (e) => {
+                    e.stopPropagation();
+                    this.handleNodeClick(n.id);
+                };
+                nodesLayer.appendChild(el);
+            });
+        }
+
+        drawArrow(s, t, container) {
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", s.x + 110);
+            line.setAttribute("y1", s.y + 40);
+            line.setAttribute("x2", t.x + 110);
+            line.setAttribute("y2", t.y + 40);
+            line.setAttribute("class", "connection-line");
+            line.setAttribute("marker-end", "url(#arrowhead)");
+            container.appendChild(line);
+        }
+
+        events() {
+            container.onmousedown = (e) => {
+                if (e.target === container || e.target === svgLayer) {
+                    this.isPanning = true;
+                    this.panStart = {x: e.clientX - this.panX, y: e.clientY - this.panY};
+                }
+            };
+
+            document.onmousemove = (e) => {
+                if (this.drag.active && this.drag.node) {
+                    this.drag.node.x = (e.clientX - container.getBoundingClientRect().left - this.panX) / this.scale - this.drag.offX;
+                    this.drag.node.y = (e.clientY - container.getBoundingClientRect().top - this.panY) / this.scale - this.drag.offY;
+                    this.render();
+                } else if (this.isPanning) {
+                    this.panX = e.clientX - this.panStart.x;
+                    this.panY = e.clientY - this.panStart.y;
+                    this.render();
+                }
+            };
+
+            document.onmouseup = () => {
+                this.drag.active = false;
+                this.isPanning = false;
+            };
+
+            container.onwheel = (e) => {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                this.scale *= delta;
+                this.render();
+            };
+
+            if (!document.getElementById('arrowhead')) {
+                const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+                defs.innerHTML = `<marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6c757d" /></marker>`;
+                svgLayer.appendChild(defs);
+            }
+
+            document.getElementById('save-btn').onclick = async () => {
+                try {
+                    const res = await fetch(`/api/projects/projects/super-structure/`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json', 'X-CSRFToken': this.getCookie('csrftoken')},
+                        body: JSON.stringify({nodes: this.nodes, connections: this.connections})
+                    });
+                    if (res.ok) alert('Сохранено!');
+                } catch (e) {
+                    alert('Ошибка');
+                }
+            };
+        }
+
+        getCookie(name) {
+            let v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+            return v ? v[2] : null;
+        }
+    }
+
+    const viz = new SuperViz();
+</script>
+</body>
+</html>

@@ -1,11 +1,11 @@
 import json
 from django.db.models import Q
 from django.utils import timezone
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
-from rest_framework import viewsets, filters, status
+from rest_framework import viewsets, filters, status, views
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
@@ -30,6 +30,10 @@ class OwnerAdminMixin(UserPassesTestMixin):
             project = obj.project
         return self.request.user.is_superuser or \
             ProjectMembership.objects.filter(project=project, user=self.request.user, role='owner').exists()
+
+
+class SuperStructureView(LoginRequiredMixin, TemplateView):
+    template_name = 'projects/super_structure.html'
 
 
 class ProjectListView(LoginRequiredMixin, ListView):
@@ -147,6 +151,286 @@ class ProjectViewSet(viewsets.ModelViewSet):
         project = serializer.save(u_creator=self.request.user)
         ProjectMembership.objects.create(project=project, user=self.request.user, role='owner')
 
+    @action(detail=False, methods=['get', 'post'], url_path='super-structure')
+    def super_structure(self, request):
+        if request.method == 'GET':
+            user = request.user
+            projects = Project.objects.filter(
+                Q(u_creator=user) | Q(members__user=user)
+            ).distinct()
+
+            nodes = []
+            connections = []
+            current_y = 50
+
+            for project in projects:
+                project_node_id = f"project_{project.id}"
+                nodes.append({
+                    "id": project_node_id,
+                    "type": "project",
+                    "title": project.name,
+                    "status": project.status,
+                    "x": 50,
+                    "y": current_y,
+                    "data": {"db_id": project.id, "title": project.name}
+                })
+
+                tasks = Task.objects.filter(project=project)
+                task_x = 350
+                task_y = current_y
+
+                for task in tasks:
+                    task_node_id = f"task_{task.id}"
+                    nodes.append({
+                        "id": task_node_id,
+                        "type": "task",
+                        "title": task.title,
+                        "status": task.status,
+                        "x": task_x,
+                        "y": task_y,
+                        "data": {
+                            "db_id": task.id,
+                            "title": task.title,
+                            "project_id": project.id,
+                            "assignee": task.u_users.first().id if task.u_users.exists() else ""
+                        }
+                    })
+                    connections.append({"source": project_node_id, "target": task_node_id})
+
+                    for next_task in task.next_tasks.all():
+                        connections.append({"source": task_node_id, "target": f"task_{next_task.id}"})
+
+                    subtasks = SubTask.objects.filter(task=task)
+                    sub_y = task_y
+                    for sub in subtasks:
+                        sub_node_id = f"subtask_{sub.id}"
+                        nodes.append({
+                            "id": sub_node_id,
+                            "type": "subtask",
+                            "title": sub.title,
+                            "status": sub.status,
+                            "x": task_x + 300,
+                            "y": sub_y,
+                            "data": {
+                                "db_id": sub.id,
+                                "title": sub.title,
+                                "project_id": project.id,
+                                "assignee": sub.u_users.first().id if sub.u_users.exists() else ""
+                            }
+                        })
+                        connections.append({"source": task_node_id, "target": sub_node_id})
+                        sub_y += 100
+
+                    task_y = max(task_y + 120, sub_y + 50)
+
+                accesses = Access.objects.filter(project=project)
+                acc_y = current_y + (len(tasks) * 50)
+                for acc in accesses:
+                    acc_node_id = f"access_{acc.id}"
+                    nodes.append({
+                        "id": acc_node_id,
+                        "type": "access",
+                        "title": acc.description or acc.login,
+                        "status": "active",
+                        "x": 350,
+                        "y": acc_y,
+                        "data": {"db_id": acc.id, "login": acc.login, "url": acc.url, "password": acc.password,
+                                 "project_id": project.id}
+                    })
+                    connections.append({"source": project_node_id, "target": acc_node_id})
+                    acc_y += 100
+
+                billings = Billing.objects.filter(project=project)
+                bill_y = acc_y
+                for bill in billings:
+                    bill_node_id = f"billing_{bill.id}"
+                    nodes.append({
+                        "id": bill_node_id,
+                        "type": "billing",
+                        "title": f"{bill.amount}",
+                        "status": bill.operation,
+                        "x": 350,
+                        "y": bill_y,
+                        "data": {"db_id": bill.id, "amount": str(bill.amount), "project_id": project.id}
+                    })
+                    connections.append({"source": project_node_id, "target": bill_node_id})
+                    bill_y += 100
+
+                medias = MediaFile.objects.filter(project=project)
+                media_y = bill_y
+                for media in medias:
+                    media_node_id = f"media_{media.id}"
+                    nodes.append({
+                        "id": media_node_id,
+                        "type": "media",
+                        "title": media.description or media.file.name,
+                        "status": "active",
+                        "x": 350,
+                        "y": media_y,
+                        "data": {"db_id": media.id, "title": media.description, "project_id": project.id}
+                    })
+                    connections.append({"source": project_node_id, "target": media_node_id})
+                    media_y += 100
+
+                current_y = max(task_y, media_y) + 200
+
+            users_data = [{'id': u.id, 'username': u.username} for u in User.objects.all()]
+
+            return Response({"nodes": nodes, "connections": connections, "users": users_data})
+
+        elif request.method == 'POST':
+            data = request.data
+            nodes = data.get('nodes', [])
+            connections = data.get('connections', [])
+            user = request.user
+
+            task_ids = []
+            subtask_ids = []
+            access_ids = []
+            billing_ids = []
+            media_ids = []
+
+            node_map = {}
+
+            for n in nodes:
+                if n['type'] == 'project':
+                    db_id = n.get('data', {}).get('db_id')
+                    if db_id:
+                        p = Project.objects.get(pk=db_id)
+                        p.name = n.get('data', {}).get('title', p.name)
+                        p.status = n.get('status', p.status)
+                        p.save()
+                        node_map[n['id']] = {'type': 'project', 'db_id': p.id, 'project_id': p.id}
+
+            for n in nodes:
+                if n['type'] == 'project': continue
+
+                client_id = n['id']
+                n_type = n['type']
+                db_id = n.get('data', {}).get('db_id')
+
+                project_id = n.get('data', {}).get('project_id')
+                if not project_id:
+                    for conn in connections:
+                        if conn['target'] == client_id:
+                            source_id = conn['source']
+                            if source_id in node_map and node_map[source_id]['type'] == 'project':
+                                project_id = node_map[source_id]['db_id']
+                                break
+
+                if n_type == 'task':
+                    title = n.get('data', {}).get('title', 'New Task')
+                    status_val = n.get('status', 'todo')
+                    assignee = n.get('data', {}).get('assignee')
+
+                    if db_id:
+                        t = Task.objects.get(pk=db_id)
+                        t.title = title
+                        t.status = status_val
+                        if assignee: t.u_users.set([assignee])
+                        t.save()
+                        node_map[client_id] = {'type': 'task', 'db_id': t.id, 'project_id': t.project_id}
+                        task_ids.append(t.id)
+                    elif project_id:
+                        t = Task.objects.create(project_id=project_id, title=title, status=status_val)
+                        if assignee: t.u_users.set([assignee])
+                        node_map[client_id] = {'type': 'task', 'db_id': t.id, 'project_id': project_id}
+                        task_ids.append(t.id)
+
+                elif n_type == 'subtask':
+                    title = n.get('data', {}).get('title', 'New Subtask')
+                    status_val = n.get('status', 'todo')
+                    assignee = n.get('data', {}).get('assignee')
+
+                    if db_id:
+                        st = SubTask.objects.get(pk=db_id)
+                        st.title = title
+                        st.status = status_val
+                        if assignee: st.u_users.set([assignee])
+                        st.save()
+                        node_map[client_id] = {'type': 'subtask', 'db_id': st.id}
+                        subtask_ids.append(st.id)
+                    else:
+                        st = SubTask.objects.create(title=title, status=status_val, task=None)
+                        if assignee: st.u_users.set([assignee])
+                        node_map[client_id] = {'type': 'subtask', 'db_id': st.id}
+                        subtask_ids.append(st.id)
+
+                elif n_type == 'access':
+                    login = n.get('data', {}).get('login', 'login')
+                    url = n.get('data', {}).get('url', '')
+                    pwd = n.get('data', {}).get('password', '')
+                    if db_id:
+                        Access.objects.filter(pk=db_id).update(login=login, url=url, password=pwd)
+                        node_map[client_id] = {'type': 'access', 'db_id': db_id}
+                        access_ids.append(db_id)
+                    elif project_id:
+                        a = Access.objects.create(project_id=project_id, login=login, url=url, password=pwd)
+                        node_map[client_id] = {'type': 'access', 'db_id': a.id}
+                        access_ids.append(a.id)
+
+                elif n_type == 'billing':
+                    amount = n.get('data', {}).get('amount', 0)
+                    op = n.get('status', 'expense')
+                    if db_id:
+                        Billing.objects.filter(pk=db_id).update(amount=amount, operation=op)
+                        node_map[client_id] = {'type': 'billing', 'db_id': db_id}
+                        billing_ids.append(db_id)
+                    elif project_id:
+                        b = Billing.objects.create(project_id=project_id, amount=amount, operation=op,
+                                                   date=timezone.now().date(), tag='planned')
+                        node_map[client_id] = {'type': 'billing', 'db_id': b.id}
+                        billing_ids.append(b.id)
+
+                elif n_type == 'media':
+                    title = n.get('data', {}).get('title', '')
+                    if db_id:
+                        MediaFile.objects.filter(pk=db_id).update(description=title)
+                        node_map[client_id] = {'type': 'media', 'db_id': db_id}
+                        media_ids.append(db_id)
+
+            user_projects = Project.objects.filter(Q(u_creator=user) | Q(members__user=user))
+
+            Task.objects.filter(project__in=user_projects).exclude(id__in=task_ids).delete()
+            SubTask.objects.filter(task__project__in=user_projects).exclude(id__in=subtask_ids).delete()
+            Access.objects.filter(project__in=user_projects).exclude(id__in=access_ids).delete()
+            Billing.objects.filter(project__in=user_projects).exclude(id__in=billing_ids).delete()
+            MediaFile.objects.filter(project__in=user_projects).exclude(id__in=media_ids).delete()
+
+            all_tasks = Task.objects.filter(project__in=user_projects)
+            for t in all_tasks:
+                t.previous_tasks.clear()
+
+            for conn in connections:
+                source = conn['source']
+                target = conn['target']
+
+                src_info = node_map.get(source)
+                tgt_info = node_map.get(target)
+
+                if src_info and tgt_info:
+                    if src_info['type'] == 'task' and tgt_info['type'] == 'subtask':
+                        SubTask.objects.filter(pk=tgt_info['db_id']).update(task_id=src_info['db_id'])
+
+                    elif src_info['type'] == 'task' and tgt_info['type'] == 'task':
+                        try:
+                            t = Task.objects.get(pk=tgt_info['db_id'])
+                            t.previous_tasks.add(src_info['db_id'])
+                        except:
+                            pass
+
+                    elif src_info['type'] == 'project':
+                        if tgt_info['type'] == 'task':
+                            Task.objects.filter(pk=tgt_info['db_id']).update(project_id=src_info['db_id'])
+                        elif tgt_info['type'] == 'access':
+                            Access.objects.filter(pk=tgt_info['db_id']).update(project_id=src_info['db_id'])
+                        elif tgt_info['type'] == 'billing':
+                            Billing.objects.filter(pk=tgt_info['db_id']).update(project_id=src_info['db_id'])
+                        elif tgt_info['type'] == 'media':
+                            MediaFile.objects.filter(pk=tgt_info['db_id']).update(project_id=src_info['db_id'])
+
+            return Response({"status": "ok"})
+
     @action(detail=True, methods=['get', 'post'])
     def structure(self, request, pk=None):
         project = self.get_object()
@@ -171,11 +455,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
             ).distinct()
             users_data = [{'id': u.id, 'username': u.username} for u in project_users]
 
-            db_tasks = Task.objects.filter(project=project)
-            db_subtasks = SubTask.objects.filter(task__project=project)
-            db_access = Access.objects.filter(project=project)
-            db_billing = Billing.objects.filter(project=project)
-            db_media = MediaFile.objects.filter(project=project)
+            db_tasks_map = {t.id: t for t in Task.objects.filter(project=project)}
+            db_subtasks_map = {st.id: st for st in SubTask.objects.filter(task__project=project)}
+            db_access_map = {a.id: a for a in Access.objects.filter(project=project)}
+            db_billing_map = {b.id: b for b in Billing.objects.filter(project=project)}
+            db_media_map = {m.id: m for m in MediaFile.objects.filter(project=project)}
 
             nodes = []
             connections = []
@@ -188,8 +472,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
             y_offset = 50
 
-            for task in db_tasks:
-                node_id = f"task_{task.id}"
+            for task in db_tasks_map.values():
+                task_node_id = f"task_{task.id}"
 
                 saved_node = saved_nodes_map.get(('task', task.id))
                 x = saved_node['x'] if saved_node else 100
@@ -197,7 +481,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 if not saved_node: y_offset += 150
 
                 nodes.append({
-                    "id": node_id,
+                    "id": task_node_id,
                     "type": "task",
                     "title": task.title,
                     "status": task.status,
@@ -212,12 +496,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
                 for next_task in task.next_tasks.all():
                     connections.append({
-                        "source": f"task_{task.id}",
+                        "source": task_node_id,
                         "target": f"task_{next_task.id}"
                     })
 
-            for sub in db_subtasks:
-                node_id = f"subtask_{sub.id}"
+            for sub in db_subtasks_map.values():
+                sub_node_id = f"subtask_{sub.id}"
 
                 saved_node = saved_nodes_map.get(('subtask', sub.id))
                 x = saved_node['x'] if saved_node else 400
@@ -225,7 +509,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 if not saved_node: y_offset += 150
 
                 nodes.append({
-                    "id": node_id,
+                    "id": sub_node_id,
                     "type": "subtask",
                     "title": sub.title,
                     "status": sub.status,
@@ -241,10 +525,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 if sub.task:
                     connections.append({
                         "source": f"task_{sub.task.id}",
-                        "target": node_id
+                        "target": sub_node_id
                     })
 
-            for acc in db_access:
+            for acc in db_access_map.values():
                 node_id = f"access_{acc.id}"
                 saved_node = saved_nodes_map.get(('access', acc.id))
 
@@ -258,7 +542,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     "data": {"db_id": acc.id, "login": acc.login, "url": acc.url, "password": acc.password}
                 })
 
-            for bill in db_billing:
+            for bill in db_billing_map.values():
                 node_id = f"billing_{bill.id}"
                 saved_node = saved_nodes_map.get(('billing', bill.id))
 
@@ -272,7 +556,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     "data": {"db_id": bill.id, "amount": str(bill.amount)}
                 })
 
-            for media in db_media:
+            for media in db_media_map.values():
                 node_id = f"media_{media.id}"
                 saved_node = saved_nodes_map.get(('media', media.id))
 
