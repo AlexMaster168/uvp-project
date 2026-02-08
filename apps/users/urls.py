@@ -13,4 +13,6 @@ urlpatterns = [
     path('<int:pk>/toggle_block/', views.UserToggleBlockView.as_view(), name='user_toggle_block'),
     path('<int:pk>/add_project/', views.AddUserToProjectView.as_view(), name='user_add_project'),
     path('<int:pk>/update_role/<int:membership_id>/', views.UpdateUserRoleView.as_view(), name='user_update_role'),
+    path('<int:pk>/remove_project/<int:membership_id>/', views.RemoveUserFromProjectView.as_view(),
+         name='user_remove_project'),
 ]

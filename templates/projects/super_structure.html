@@ -267,6 +267,14 @@
             <div class="modal-body">
                 <input type="hidden" id="edit-proj-id">
                 <div class="mb-3">
+                    <label>Владелец</label>
+                    <select id="edit-proj-owner" class="form-select">
+                        {% for su in superusers %}
+                            <option value="{{ su.id }}">{{ su.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
                     <label>Название</label>
                     <input type="text" id="edit-proj-name" class="form-control">
                 </div>
@@ -349,6 +357,7 @@
             document.getElementById('edit-proj-name').value = node.title;
             document.getElementById('edit-proj-desc').value = node.data.description || "";
             document.getElementById('edit-proj-status').value = node.data.status || 'planned';
+            document.getElementById('edit-proj-owner').value = node.data.owner_id;
 
             const logoImg = document.getElementById('edit-proj-current-logo');
             if (node.data.logo) {
@@ -579,12 +588,14 @@
         const name = document.getElementById('edit-proj-name').value;
         const desc = document.getElementById('edit-proj-desc').value;
         const status = document.getElementById('edit-proj-status').value;
+        const ownerId = document.getElementById('edit-proj-owner').value;
         const logo = document.getElementById('edit-proj-logo').files[0];
 
         const formData = new FormData();
         formData.append('name', name);
         formData.append('description', desc);
         formData.append('status', status);
+        formData.append('owner_id', ownerId);
         if (logo) {
             formData.append('logo', logo);
         }

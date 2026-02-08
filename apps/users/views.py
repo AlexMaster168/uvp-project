@@ -112,3 +112,12 @@ class UpdateUserRoleView(LoginRequiredMixin, SuperUserRequiredMixin, View):
         else:
             messages.error(request, "Некорректная роль.")
         return redirect('users:user_detail', pk=pk)
+
+
+class RemoveUserFromProjectView(LoginRequiredMixin, SuperUserRequiredMixin, View):
+    def post(self, request, pk, membership_id):
+        membership = get_object_or_404(ProjectMembership, id=membership_id, user_id=pk)
+        project_name = membership.project.name
+        membership.delete()
+        messages.success(request, f"Пользователь удален из проекта {project_name}.")
+        return redirect('users:user_detail', pk=pk)

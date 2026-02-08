@@ -78,10 +78,12 @@
                             {% for member in memberships %}
                                 <tr>
                                     <td><a href="
+
                                             {{ url('projects:project_detail', pk=member.project.id) }}">{{ member.project.name }}</a>
                                     </td>
                                     <td>
                                         <form action="
+
                                                 {{ url('users:user_update_role', pk=user_obj.id, membership_id=member.id) }}"
                                               method="post" class="d-flex gap-2">
                                             <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
@@ -99,7 +101,18 @@
                                             </select>
                                         </form>
                                     </td>
-                                    <td></td>
+                                    <td>
+                                        <form action="
+                                                {{ url('users:user_remove_project', pk=user_obj.id, membership_id=member.id) }}"
+                                              method="post"
+                                              onsubmit="return confirm('Вы уверены, что хотите исключить пользователя из проекта?');">
+                                            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                    title="Исключить">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
                                 </tr>
                             {% endfor %}
                             </tbody>

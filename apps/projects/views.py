@@ -173,6 +173,22 @@ class ProjectViewSet(viewsets.ModelViewSet):
         project = serializer.save(u_creator=target_user)
         ProjectMembership.objects.create(project=project, user=target_user, role='owner')
 
+    def perform_update(self, serializer):
+        project = serializer.save()
+        owner_id = self.request.data.get('owner_id')
+        if owner_id:
+            try:
+                user = User.objects.get(pk=owner_id)
+                project.u_creator = user
+                project.save()
+                ProjectMembership.objects.update_or_create(
+                    project=project,
+                    user=user,
+                    defaults={'role': 'owner'}
+                )
+            except User.DoesNotExist:
+                pass
+
     @action(detail=False, methods=['get', 'post'], url_path='super-structure')
     def super_structure(self, request):
         if request.method == 'GET':
@@ -180,46 +196,64 @@ class ProjectViewSet(viewsets.ModelViewSet):
             nodes = []
             connections = []
 
-            default_y = 50
+            unsaved_y = 50
 
             for owner in owners:
                 owner_id = f"owner_{owner.id}"
+
+                if owner.global_x != 0 or owner.global_y != 0:
+                    ox = owner.global_x
+                    oy = owner.global_y
+                else:
+                    ox = 500
+                    oy = unsaved_y
+                    unsaved_y += 400
+
                 nodes.append({
                     "id": owner_id,
                     "type": "owner",
                     "title": owner.username,
                     "status": "active",
-                    "x": owner.global_x if owner.global_x != 0 else 500,
-                    "y": owner.global_y if owner.global_y != 0 else default_y,
+                    "x": ox,
+                    "y": oy,
                     "data": {"db_id": owner.id}
                 })
 
                 owner_projects = Project.objects.filter(members__user=owner, members__role='owner')
-                proj_x_offset = -300
+                unsaved_proj_offset = -300
 
                 for proj in owner_projects:
                     proj_id = f"project_{proj.id}"
 
                     if not any(n['id'] == proj_id for n in nodes):
+                        if proj.global_x != 0 or proj.global_y != 0:
+                            px = proj.global_x
+                            py = proj.global_y
+                        else:
+                            px = ox + unsaved_proj_offset
+                            py = oy + 200
+                            unsaved_proj_offset += 280
+
                         nodes.append({
                             "id": proj_id,
                             "type": "project",
                             "title": proj.name,
                             "status": proj.status,
-                            "x": proj.global_x if proj.global_x != 0 else (
-                                                                              owner.global_x if owner.global_x != 0 else 500) + proj_x_offset,
-                            "y": proj.global_y if proj.global_y != 0 else (
-                                                                              owner.global_y if owner.global_y != 0 else default_y) + 200,
-                            "data": {"db_id": proj.id}
+                            "x": px,
+                            "y": py,
+                            "data": {
+                                "db_id": proj.id,
+                                "description": proj.description,
+                                "status": proj.status,
+                                "logo": proj.logo.url if proj.logo else '',
+                                "owner_id": proj.u_creator.id
+                            }
                         })
-                        proj_x_offset += 280
 
                     connections.append({
                         "source": owner_id,
                         "target": proj_id
                     })
-
-                default_y += 400
 
             return Response({"nodes": nodes, "connections": connections})
 
