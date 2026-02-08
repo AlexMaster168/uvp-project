@@ -58,15 +58,6 @@ pip install -r requirements.txt
 
 ### 2. Настройка БД и запуск
 
-Вы можете использовать скрипт автоматической установки (только для Linux/macOS):
-
-```bash
-chmod +x setup.sh && ./setup.sh
-
-```
-
-**Или вручную:**
-
 ```bash
 python manage.py migrate
 python manage.py createsuperuser

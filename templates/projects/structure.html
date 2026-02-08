@@ -54,11 +54,13 @@
             border-radius: 8px;
             cursor: pointer;
             position: absolute;
-            min-width: 200px;
+            min-width: 220px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             user-select: none;
             transition: transform 0.1s, border-color 0.2s;
             z-index: 1;
+            display: flex;
+            flex-direction: column;
         }
 
         .node:hover {
@@ -73,11 +75,13 @@
             font-weight: bold;
             display: flex;
             justify-content: space-between;
+            align-items: center;
         }
 
         .node-content {
             padding: 12px;
             font-size: 14px;
+            position: relative;
         }
 
         .node-actions {
@@ -128,14 +132,6 @@
             background: #f59e0b;
         }
 
-        .project-node {
-            border-color: #ef4444;
-        }
-
-        .project-node .node-header {
-            background: #ef4444;
-        }
-
         .badge-status {
             padding: 3px 8px;
             border-radius: 12px;
@@ -183,6 +179,44 @@
             border-color: #22c55e;
             box-shadow: 0 0 10px #22c55e;
         }
+
+        .socket-points {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            padding-top: 5px;
+            border-top: 1px dashed #eee;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .socket {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            border: 1px solid #666;
+        }
+
+        .socket-in {
+            background: #eee;
+            margin-right: 5px;
+        }
+
+        .socket-out {
+            background: #eee;
+            margin-left: 5px;
+        }
+
+        .socket-flow {
+            background: #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        .socket-hierarchy {
+            background: #6366f1;
+            border-color: #6366f1;
+        }
     </style>
 </head>
 <body>
@@ -207,9 +241,15 @@
         </button>
     </div>
     <div class="d-flex align-items-center gap-2">
-        <button id="connect-btn" class="btn btn-outline-primary btn-sm" onclick="viz.toggleConnectMode()"><i
-                class="bi bi-share"></i> Связать
-        </button>
+        <div class="btn-group">
+            <button id="connect-flow-btn" class="btn btn-outline-primary btn-sm" onclick="viz.toggleConnectMode('flow')"
+                    title="Задача -> Задача (Зависимость)"><i class="bi bi-arrow-right"></i> Поток
+            </button>
+            <button id="connect-hier-btn" class="btn btn-outline-indigo btn-sm"
+                    style="border-color: #6366f1; color: #6366f1" onclick="viz.toggleConnectMode('hierarchy')"
+                    title="Задача -> Подзадача (Иерархия)"><i class="bi bi-diagram-2"></i> Иерархия
+            </button>
+        </div>
         <button class="btn btn-outline-dark btn-sm" onclick="viz.autoLayout()"><i class="bi bi-grid-3x3"></i> Авто
         </button>
         <button id="save-btn" class="btn btn-dark btn-sm"><i class="bi bi-cloud-upload"></i> Сохранить</button>
@@ -253,7 +293,7 @@
             this.users = [];
             this.currentNode = null;
             this.drag = {active: false, node: null, offX: 0, offY: 0};
-            this.connectMode = false;
+            this.connectMode = null;
             this.sourceNodeId = null;
             this.init();
         }
@@ -298,17 +338,38 @@
             }
         }
 
-        toggleConnectMode() {
-            this.connectMode = !this.connectMode;
-            this.sourceNodeId = null;
-            const btn = document.getElementById('connect-btn');
-            if (this.connectMode) {
-                btn.classList.replace('btn-outline-primary', 'btn-primary');
-                document.body.classList.add('connecting-mode');
-            } else {
-                btn.classList.replace('btn-primary', 'btn-outline-primary');
+        toggleConnectMode(mode) {
+            if (this.connectMode === mode) {
+                this.connectMode = null;
+                this.sourceNodeId = null;
                 document.body.classList.remove('connecting-mode');
-                this.render();
+            } else {
+                this.connectMode = mode;
+                this.sourceNodeId = null;
+                document.body.classList.add('connecting-mode');
+            }
+            this.updateToolbar();
+            this.render();
+        }
+
+        updateToolbar() {
+            const btnFlow = document.getElementById('connect-flow-btn');
+            const btnHier = document.getElementById('connect-hier-btn');
+
+            btnFlow.classList.remove('active', 'btn-primary');
+            btnFlow.classList.add('btn-outline-primary');
+
+            btnHier.classList.remove('active');
+            btnHier.style.backgroundColor = '';
+            btnHier.style.color = '#6366f1';
+
+            if (this.connectMode === 'flow') {
+                btnFlow.classList.add('active', 'btn-primary');
+                btnFlow.classList.remove('btn-outline-primary');
+            } else if (this.connectMode === 'hierarchy') {
+                btnHier.classList.add('active');
+                btnHier.style.backgroundColor = '#6366f1';
+                btnHier.style.color = 'white';
             }
         }
 
@@ -321,11 +382,25 @@
                     if (this.sourceNodeId !== nodeId) {
                         const exists = this.connections.find(c => c.source === this.sourceNodeId && c.target === nodeId);
                         if (!exists) {
-                            this.connections.push({source: this.sourceNodeId, target: nodeId});
+                            const source = this.nodes.find(n => n.id === this.sourceNodeId);
+                            const target = this.nodes.find(n => n.id === nodeId);
+
+                            let allowed = false;
+                            if (this.connectMode === 'flow') {
+                                if (source.type === 'task' && target.type === 'task') allowed = true;
+                            } else if (this.connectMode === 'hierarchy') {
+                                if (source.type === 'task' && target.type === 'subtask') allowed = true;
+                            }
+
+                            if (allowed) {
+                                this.connections.push({source: this.sourceNodeId, target: nodeId});
+                            } else {
+                                alert('Неверный тип связи для выбранных узлов');
+                            }
                         }
                     }
                     this.sourceNodeId = null;
-                    this.toggleConnectMode();
+                    this.toggleConnectMode(null);
                 }
             }
         }
@@ -460,7 +535,11 @@
                 const source = this.nodes.find(n => n.id === c.source);
                 const target = this.nodes.find(n => n.id === c.target);
                 if (source && target) {
-                    this.drawArrow(source, target);
+                    let color = '#9ca3af';
+                    if (source.type === 'task' && target.type === 'task') color = '#3b82f6';
+                    if (source.type === 'task' && target.type === 'subtask') color = '#6366f1';
+
+                    this.drawArrow(source, target, color);
                 }
             });
 
@@ -499,6 +578,23 @@
 
                 const canEdit = n.type !== 'project';
 
+                let socketsHtml = '';
+                if (n.type === 'task') {
+                    socketsHtml = `
+                        <div class="socket-points">
+                            <div><span class="socket socket-flow socket-in" title="Вход (Зависимость)"></span></div>
+                            <div>
+                                <span class="socket socket-hierarchy socket-out" title="Подзадачи"></span>
+                                <span class="socket socket-flow socket-out" title="Выход (Зависимость)"></span>
+                            </div>
+                        </div>`;
+                } else if (n.type === 'subtask') {
+                    socketsHtml = `
+                        <div class="socket-points">
+                            <div><span class="socket socket-hierarchy socket-in" title="Родитель"></span></div>
+                        </div>`;
+                }
+
                 el.innerHTML = `
                     <div class="node-header">
                         <span><i class="bi bi-${icon}"></i> ${n.type.toUpperCase()}</span>
@@ -506,6 +602,7 @@
                     <div class="node-content">
                         <strong>${n.title}</strong><br>${badges}
                     </div>
+                    ${socketsHtml}
                     ${canEdit ? `
                     <div class="node-actions">
                         <button class="btn btn-sm btn-light text-primary py-0 px-1" onclick="event.stopPropagation(); viz.openModal('${n.type}', '${n.id}')"><i class="bi bi-pencil"></i></button>
@@ -527,10 +624,10 @@
             });
         }
 
-        drawArrow(source, target) {
-            const sx = source.x + 100;
+        drawArrow(source, target, color) {
+            const sx = source.x + 110;
             const sy = source.y + 50;
-            const tx = target.x + 100;
+            const tx = target.x + 110;
             const ty = target.y + 50;
 
             const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -539,6 +636,7 @@
             line.setAttribute("x2", tx);
             line.setAttribute("y2", ty);
             line.setAttribute("class", "connection-line");
+            line.setAttribute("stroke", color);
             line.setAttribute("marker-end", "url(#arrowhead)");
 
             svgLayer.appendChild(line);
@@ -560,7 +658,7 @@
             if (!document.getElementById('arrowhead')) {
                 const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
                 defs.innerHTML = `
-                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="205" refY="3.5" orient="auto">
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
                         <polygon points="0 0, 10 3.5, 0 7" fill="#9ca3af" />
                     </marker>`;
                 svgLayer.appendChild(defs);

@@ -11,6 +11,7 @@ class Task(models.Model):
 
     title = models.CharField(max_length=255, verbose_name='Название')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='todo', verbose_name='Статус')
+    description = models.TextField(blank=True, verbose_name='Описание')
     estimated_time = models.FloatField(default=0, verbose_name='Планируемое время (ч)')
     actual_time = models.FloatField(default=0, verbose_name='Фактическое время (ч)')
     project = models.ForeignKey('projects.Project', on_delete=models.CASCADE, related_name='tasks',
@@ -18,6 +19,8 @@ class Task(models.Model):
     u_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='assigned_tasks', blank=True,
                                      verbose_name='Исполнители')
     u_tags = models.ManyToManyField('projects.Tag', related_name='tasks', blank=True, verbose_name='Теги')
+    previous_tasks = models.ManyToManyField('self', symmetrical=False, related_name='next_tasks', blank=True,
+                                            verbose_name='Предыдущие задачи')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

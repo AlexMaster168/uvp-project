@@ -159,180 +159,132 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return Response({"detail": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
 
         if request.method == 'GET':
-            structure = project.structure_data or {'nodes': [], 'connections': []}
-            if isinstance(structure, str):
-                structure = json.loads(structure)
+            saved_structure = {}
+            if project.structure_data and isinstance(project.structure_data, str):
+                saved_structure = json.loads(project.structure_data)
 
-            nodes = structure.get('nodes', [])
-            connections = structure.get('connections', [])
+            saved_nodes = saved_structure.get('nodes', [])
 
             project_users = User.objects.filter(
                 Q(project_memberships__project=project) |
                 Q(id=project.u_creator.id)
             ).distinct()
-
             users_data = [{'id': u.id, 'username': u.username} for u in project_users]
 
-            db_tasks_map = {t.id: t for t in Task.objects.filter(project=project)}
-            db_subtasks_map = {st.id: st for st in SubTask.objects.filter(task__project=project)}
-            db_access_map = {a.id: a for a in Access.objects.filter(project=project)}
-            db_billing_map = {b.id: b for b in Billing.objects.filter(project=project)}
-            db_media_map = {m.id: m for m in MediaFile.objects.filter(project=project)}
+            db_tasks = Task.objects.filter(project=project)
+            db_subtasks = SubTask.objects.filter(task__project=project)
+            db_access = Access.objects.filter(project=project)
+            db_billing = Billing.objects.filter(project=project)
+            db_media = MediaFile.objects.filter(project=project)
 
-            cleaned_nodes = []
+            nodes = []
+            connections = []
 
-            for node in nodes:
-                n_type = node.get('type')
-                db_id = node.get('data', {}).get('db_id')
-
-                if n_type == 'project':
-                    cleaned_nodes.append(node)
-                    continue
-
-                if not db_id:
-                    cleaned_nodes.append(node)
-                    continue
-
-                if n_type == 'task':
-                    if db_id in db_tasks_map:
-                        task = db_tasks_map[db_id]
-                        node['title'] = task.title
-                        node['status'] = task.status
-                        node['data']['title'] = task.title
-                        node['data']['assignee'] = task.u_users.first().id if task.u_users.exists() else ""
-                        cleaned_nodes.append(node)
-                elif n_type == 'subtask':
-                    if db_id in db_subtasks_map:
-                        sub = db_subtasks_map[db_id]
-                        node['title'] = sub.title
-                        node['status'] = sub.status
-                        node['data']['title'] = sub.title
-                        node['data']['assignee'] = sub.u_users.first().id if sub.u_users.exists() else ""
-                        cleaned_nodes.append(node)
-                elif n_type == 'access':
-                    if db_id in db_access_map:
-                        acc = db_access_map[db_id]
-                        node['title'] = acc.description or acc.login or "Access"
-                        node['data']['login'] = acc.login
-                        node['data']['url'] = acc.url
-                        node['data']['password'] = acc.password
-                        cleaned_nodes.append(node)
-                elif n_type == 'billing':
-                    if db_id in db_billing_map:
-                        bill = db_billing_map[db_id]
-                        node['title'] = f"{bill.amount} ({bill.get_operation_display()})"
-                        node['status'] = bill.operation
-                        node['data']['amount'] = str(bill.amount)
-                        cleaned_nodes.append(node)
-                elif n_type == 'media':
-                    if db_id in db_media_map:
-                        media = db_media_map[db_id]
-                        title = media.description or media.filename
-                        node['title'] = title
-                        node['data']['title'] = title
-                        cleaned_nodes.append(node)
-
-            valid_node_ids = {n['id'] for n in cleaned_nodes}
-
-            cleaned_connections = []
-            for c in connections:
-                source = c.get('source')
-                target = c.get('target')
-                if source in valid_node_ids and target in valid_node_ids:
-                    cleaned_connections.append(c)
-
-            nodes = cleaned_nodes
-            connections = cleaned_connections
-
-            existing_ids = {
+            saved_nodes_map = {
                 (n.get('type'), n.get('data', {}).get('db_id')): n
-                for n in nodes
+                for n in saved_nodes
                 if n.get('data', {}).get('db_id')
             }
 
-            existing_conn_keys = set()
-            for c in connections:
-                existing_conn_keys.add(f"{c['source']}->{c['target']}")
+            y_offset = 50
 
-            for task in db_tasks_map.values():
-                if ('task', task.id) not in existing_ids:
-                    nodes.append({
-                        "id": f"task_{task.id}",
-                        "type": "task",
+            for task in db_tasks:
+                node_id = f"task_{task.id}"
+
+                saved_node = saved_nodes_map.get(('task', task.id))
+                x = saved_node['x'] if saved_node else 100
+                y = saved_node['y'] if saved_node else y_offset
+                if not saved_node: y_offset += 150
+
+                nodes.append({
+                    "id": node_id,
+                    "type": "task",
+                    "title": task.title,
+                    "status": task.status,
+                    "x": x,
+                    "y": y,
+                    "data": {
+                        "db_id": task.id,
                         "title": task.title,
-                        "status": task.status,
-                        "x": 100,
-                        "y": 100 + len(nodes) * 50,
-                        "data": {
-                            "db_id": task.id,
-                            "title": task.title,
-                            "assignee": task.u_users.first().id if task.u_users.exists() else ""
-                        }
+                        "assignee": task.u_users.first().id if task.u_users.exists() else ""
+                    }
+                })
+
+                for next_task in task.next_tasks.all():
+                    connections.append({
+                        "source": f"task_{task.id}",
+                        "target": f"task_{next_task.id}"
                     })
 
-            for sub in db_subtasks_map.values():
-                sub_node_id = f"subtask_{sub.id}"
-                task_node_id = f"task_{sub.task.id}" if sub.task else None
+            for sub in db_subtasks:
+                node_id = f"subtask_{sub.id}"
 
-                if ('subtask', sub.id) not in existing_ids:
-                    nodes.append({
-                        "id": sub_node_id,
-                        "type": "subtask",
+                saved_node = saved_nodes_map.get(('subtask', sub.id))
+                x = saved_node['x'] if saved_node else 400
+                y = saved_node['y'] if saved_node else y_offset
+                if not saved_node: y_offset += 150
+
+                nodes.append({
+                    "id": node_id,
+                    "type": "subtask",
+                    "title": sub.title,
+                    "status": sub.status,
+                    "x": x,
+                    "y": y,
+                    "data": {
+                        "db_id": sub.id,
                         "title": sub.title,
-                        "status": sub.status,
-                        "x": 300,
-                        "y": 100 + len(nodes) * 50,
-                        "data": {
-                            "db_id": sub.id,
-                            "title": sub.title,
-                            "assignee": sub.u_users.first().id if sub.u_users.exists() else ""
-                        }
+                        "assignee": sub.u_users.first().id if sub.u_users.exists() else ""
+                    }
+                })
+
+                if sub.task:
+                    connections.append({
+                        "source": f"task_{sub.task.id}",
+                        "target": node_id
                     })
 
-                if task_node_id:
-                    conn_key = f"{task_node_id}->{sub_node_id}"
-                    if conn_key not in existing_conn_keys:
-                        connections.append({
-                            "source": task_node_id,
-                            "target": sub_node_id
-                        })
-                        existing_conn_keys.add(conn_key)
+            for acc in db_access:
+                node_id = f"access_{acc.id}"
+                saved_node = saved_nodes_map.get(('access', acc.id))
 
-            for acc in db_access_map.values():
-                if ('access', acc.id) not in existing_ids:
-                    nodes.append({
-                        "id": f"access_{acc.id}",
-                        "type": "access",
-                        "title": acc.description or acc.login or "Access",
-                        "status": "active",
-                        "x": 400,
-                        "y": 100 + len(nodes) * 50,
-                        "data": {"db_id": acc.id, "login": acc.login, "url": acc.url, "password": acc.password}
-                    })
+                nodes.append({
+                    "id": node_id,
+                    "type": "access",
+                    "title": acc.description or acc.login or "Access",
+                    "status": "active",
+                    "x": saved_node['x'] if saved_node else 600,
+                    "y": saved_node['y'] if saved_node else y_offset,
+                    "data": {"db_id": acc.id, "login": acc.login, "url": acc.url, "password": acc.password}
+                })
 
-            for bill in db_billing_map.values():
-                if ('billing', bill.id) not in existing_ids:
-                    nodes.append({
-                        "id": f"billing_{bill.id}",
-                        "type": "billing",
-                        "title": f"{bill.amount} ({bill.get_operation_display()})",
-                        "status": bill.operation,
-                        "x": 700,
-                        "y": 100 + len(nodes) * 50,
-                        "data": {"db_id": bill.id, "amount": str(bill.amount)}
-                    })
+            for bill in db_billing:
+                node_id = f"billing_{bill.id}"
+                saved_node = saved_nodes_map.get(('billing', bill.id))
 
-            for media in db_media_map.values():
-                if ('media', media.id) not in existing_ids:
-                    nodes.append({
-                        "id": f"media_{media.id}",
-                        "type": "media",
-                        "title": media.description or media.filename,
-                        "status": "active",
-                        "x": 1000,
-                        "y": 100 + len(nodes) * 50,
-                        "data": {"db_id": media.id, "title": media.description or media.filename}
-                    })
+                nodes.append({
+                    "id": node_id,
+                    "type": "billing",
+                    "title": f"{bill.amount} ({bill.get_operation_display()})",
+                    "status": bill.operation,
+                    "x": saved_node['x'] if saved_node else 800,
+                    "y": saved_node['y'] if saved_node else y_offset,
+                    "data": {"db_id": bill.id, "amount": str(bill.amount)}
+                })
+
+            for media in db_media:
+                node_id = f"media_{media.id}"
+                saved_node = saved_nodes_map.get(('media', media.id))
+
+                nodes.append({
+                    "id": node_id,
+                    "type": "media",
+                    "title": media.description or media.filename,
+                    "status": "active",
+                    "x": saved_node['x'] if saved_node else 1000,
+                    "y": saved_node['y'] if saved_node else y_offset,
+                    "data": {"db_id": media.id, "title": media.description or media.filename}
+                })
 
             return Response({"nodes": nodes, "connections": connections, "users": users_data})
 
@@ -378,6 +330,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
             MediaFile.objects.filter(project=project).exclude(id__in=media_ids).delete()
 
             SubTask.objects.filter(task__project=project).update(task=None)
+
+            all_tasks = Task.objects.filter(project=project)
+            for t in all_tasks:
+                t.previous_tasks.clear()
 
             for node_data in nodes:
                 node_type = node_data.get('type')
@@ -470,20 +426,29 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 source_id = conn.get('source')
                 target_id = conn.get('target')
 
-                source_info = node_id_to_db_id_map.get(source_id)
-                target_info = node_id_to_db_id_map.get(target_id)
-
                 new_source = original_to_new_id_map.get(source_id, source_id)
                 new_target = original_to_new_id_map.get(target_id, target_id)
                 conn['source'] = new_source
                 conn['target'] = new_target
                 new_connections.append(conn)
 
+                source_info = node_id_to_db_id_map.get(source_id)
+                target_info = node_id_to_db_id_map.get(target_id)
+
                 if source_info and target_info:
                     if source_info['type'] == 'task' and target_info['type'] == 'subtask':
                         task_db_id = source_info['db_id']
                         subtask_db_id = target_info['db_id']
                         SubTask.objects.filter(pk=subtask_db_id).update(task_id=task_db_id)
+
+                    elif source_info['type'] == 'task' and target_info['type'] == 'task':
+                        prev_task_id = source_info['db_id']
+                        next_task_id = target_info['db_id']
+                        try:
+                            next_task = Task.objects.get(pk=next_task_id)
+                            next_task.previous_tasks.add(prev_task_id)
+                        except Task.DoesNotExist:
+                            pass
 
             data['nodes'] = nodes
             data['connections'] = new_connections
