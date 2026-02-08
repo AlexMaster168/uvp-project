@@ -387,7 +387,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     "status": "active",
                     "x": saved_node['x'] if saved_node else 600,
                     "y": saved_node['y'] if saved_node else y_offset,
-                    "data": {"db_id": acc.id, "login": acc.login, "url": acc.url, "password": acc.password}
+                    "data": {
+                        "db_id": acc.id,
+                        "login": acc.login,
+                        "url": acc.url,
+                        "password": acc.password,
+                        "description": acc.description,
+                        "url_drive": acc.url_drive
+                    }
                 })
 
             for bill in db_billing_map.values():
@@ -415,7 +422,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     "status": "active",
                     "x": saved_node['x'] if saved_node else 1000,
                     "y": saved_node['y'] if saved_node else y_offset,
-                    "data": {"db_id": media.id, "title": media.description or media.filename}
+                    "data": {
+                        "db_id": media.id,
+                        "title": media.description or media.filename,
+                        "file_url": media.file.url if media.file else ""
+                    }
                 })
 
             return Response({"nodes": nodes, "connections": connections, "users": users_data})
@@ -518,14 +529,22 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
                 elif node_type == 'access':
                     url = node_data.get('data', {}).get('url', '')
+                    url_drive = node_data.get('data', {}).get('url_drive', '')
                     login = node_data.get('data', {}).get('login', '')
                     password = node_data.get('data', {}).get('password', '')
+                    description = node_data.get('data', {}).get('description', '')
+
                     if db_id:
-                        Access.objects.filter(pk=db_id, project=project).update(url=url, login=login, password=password)
+                        Access.objects.filter(pk=db_id, project=project).update(
+                            url=url, url_drive=url_drive, login=login, password=password, description=description
+                        )
                         node_id_to_db_id_map[original_id] = {'type': 'access', 'db_id': db_id}
                         original_to_new_id_map[original_id] = original_id
                     elif login:
-                        acc = Access.objects.create(project=project, url=url, login=login, password=password)
+                        acc = Access.objects.create(
+                            project=project, url=url, url_drive=url_drive,
+                            login=login, password=password, description=description
+                        )
                         node_data['data']['db_id'] = acc.id
                         node_data['id'] = f"access_{acc.id}"
                         node_id_to_db_id_map[original_id] = {'type': 'access', 'db_id': acc.id}

@@ -36,6 +36,20 @@
             bottom: 0;
             background: #f0f2f5;
             overflow: hidden;
+            cursor: grab;
+        }
+
+        #rete-container:active {
+            cursor: grabbing;
+        }
+
+        #canvas-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform-origin: 0 0;
         }
 
         #connections-layer {
@@ -46,6 +60,7 @@
             height: 100%;
             pointer-events: none;
             z-index: 0;
+            overflow: visible;
         }
 
         .node {
@@ -57,14 +72,13 @@
             min-width: 220px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             user-select: none;
-            transition: transform 0.1s, border-color 0.2s;
+            transition: border-color 0.2s;
             z-index: 1;
             display: flex;
             flex-direction: column;
         }
 
         .node:hover {
-            transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
 
@@ -93,43 +107,43 @@
         }
 
         .task-node {
-            border-color: #3b82f6;
+            border-color: #0d6efd;
         }
 
         .task-node .node-header {
-            background: #3b82f6;
+            background: #0d6efd;
         }
 
         .subtask-node {
-            border-color: #6366f1;
+            border-color: #6610f2;
         }
 
         .subtask-node .node-header {
-            background: #6366f1;
+            background: #6610f2;
         }
 
         .access-node {
-            border-color: #8b5cf6;
+            border-color: #fd7e14;
         }
 
         .access-node .node-header {
-            background: #8b5cf6;
+            background: #fd7e14;
         }
 
         .billing-node {
-            border-color: #10b981;
+            border-color: #198754;
         }
 
         .billing-node .node-header {
-            background: #10b981;
+            background: #198754;
         }
 
         .media-node {
-            border-color: #f59e0b;
+            border-color: #DC143C;
         }
 
         .media-node .node-header {
-            background: #f59e0b;
+            background: #DC143C;
         }
 
         .badge-status {
@@ -140,23 +154,24 @@
         }
 
         .bg-todo {
-            background: #6b7280;
+            background: #6c757d;
         }
 
         .bg-in-progress {
-            background: #f59e0b;
+            background: #ffc107;
+            color: #000;
         }
 
         .bg-done {
-            background: #10b981;
+            background: #198754;
         }
 
         .bg-expense {
-            background: #ef4444;
+            background: #dc3545;
         }
 
         .bg-income {
-            background: #10b981;
+            background: #198754;
         }
 
         .connection-line {
@@ -166,7 +181,7 @@
         }
 
         .connection-line:hover {
-            stroke: #3b82f6;
+            stroke: #0d6efd;
             stroke-width: 3;
             cursor: pointer;
         }
@@ -176,8 +191,8 @@
         }
 
         .node.selected-source {
-            border-color: #22c55e;
-            box-shadow: 0 0 10px #22c55e;
+            border-color: #20c997;
+            box-shadow: 0 0 10px #20c997;
         }
 
         .socket-points {
@@ -209,13 +224,21 @@
         }
 
         .socket-flow {
-            background: #3b82f6;
-            border-color: #3b82f6;
+            background: #0d6efd;
+            border-color: #0d6efd;
         }
 
         .socket-hierarchy {
-            background: #6366f1;
-            border-color: #6366f1;
+            background: #6610f2;
+            border-color: #6610f2;
+        }
+
+        .collapse-btn {
+            background: none;
+            border: none;
+            color: white;
+            padding: 0;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -227,17 +250,17 @@
         <div class="vr"></div>
         <button class="btn btn-primary btn-sm" onclick="viz.openModal('task')"><i class="bi bi-check-square"></i> Задача
         </button>
-        <button class="btn btn-indigo btn-sm text-white" style="background: #6366f1" onclick="viz.openModal('subtask')">
+        <button class="btn btn-indigo btn-sm text-white" style="background: #6610f2" onclick="viz.openModal('subtask')">
             <i class="bi bi-list-task"></i> Подзадача
         </button>
-        <button class="btn btn-purple btn-sm" style="background:#8b5cf6; color:white;"
-                onclick="viz.openModal('access')"><i class="bi bi-key"></i> Доступ
+        <button class="btn btn-purple btn-sm text-white" style="background:#fd7e14;" onclick="viz.openModal('access')">
+            <i class="bi bi-key"></i> Доступ
         </button>
         <button class="btn btn-success btn-sm" onclick="viz.openModal('billing')"><i class="bi bi-currency-dollar"></i>
             Финансы
         </button>
-        <button class="btn btn-warning btn-sm text-white" onclick="viz.openModal('media')"><i
-                class="bi bi-file-earmark-plus"></i> Медиа
+        <button class="btn btn-warning btn-sm text-white" style="background:#DC143C;" onclick="viz.openModal('media')">
+            <i class="bi bi-file-earmark-plus"></i> Медиа
         </button>
     </div>
     <div class="d-flex align-items-center gap-2">
@@ -249,10 +272,13 @@
                     title="Задача -> Задача (Зависимость)"><i class="bi bi-arrow-right"></i> Поток
             </button>
             <button id="connect-hier-btn" class="btn btn-outline-indigo btn-sm"
-                    style="border-color: #6366f1; color: #6366f1" onclick="viz.toggleConnectMode('hierarchy')"
+                    style="border-color: #6610f2; color: #6610f2" onclick="viz.toggleConnectMode('hierarchy')"
                     title="Задача -> Подзадача (Иерархия)"><i class="bi bi-diagram-2"></i> Иерархия
             </button>
         </div>
+        <button class="btn btn-outline-dark btn-sm" onclick="viz.resetZoom()"><i class="bi bi-arrows-fullscreen"></i>
+            100%
+        </button>
         <button class="btn btn-outline-dark btn-sm" onclick="viz.autoLayout()"><i class="bi bi-grid-3x3"></i> Авто
         </button>
         <button id="save-btn" class="btn btn-dark btn-sm"><i class="bi bi-cloud-upload"></i> Сохранить</button>
@@ -260,8 +286,10 @@
 </div>
 
 <div id="rete-container">
-    <svg id="connections-layer"></svg>
-    <div id="nodes-layer"></div>
+    <div id="canvas-layer">
+        <svg id="connections-layer"></svg>
+        <div id="nodes-layer"></div>
+    </div>
 </div>
 
 <div class="modal fade" id="nodeModal" tabindex="-1">
@@ -283,6 +311,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     const container = document.getElementById('rete-container');
+    const canvasLayer = document.getElementById('canvas-layer');
     const nodesLayer = document.getElementById('nodes-layer');
     const svgLayer = document.getElementById('connections-layer');
     const modalEl = document.getElementById('nodeModal');
@@ -296,6 +325,8 @@
             this.users = [];
             this.currentNode = null;
             this.drag = {active: false, node: null, offX: 0, offY: 0};
+            this.pan = {active: false, startX: 0, startY: 0, offX: 0, offY: 0};
+            this.transform = {x: 0, y: 0, k: 1};
             this.connectMode = null;
             this.sourceNodeId = null;
             this.init();
@@ -323,7 +354,7 @@
         }
 
         addNode(id, type, title, status, x, y, data) {
-            this.nodes.push({id, type, title, status, x, y, data});
+            this.nodes.push({id, type, title, status, x, y, data, collapsed: false});
             this.render();
         }
 
@@ -364,14 +395,14 @@
 
             btnHier.classList.remove('active');
             btnHier.style.backgroundColor = '';
-            btnHier.style.color = '#6366f1';
+            btnHier.style.color = '#6610f2';
 
             if (this.connectMode === 'flow') {
                 btnFlow.classList.add('active', 'btn-primary');
                 btnFlow.classList.remove('btn-outline-primary');
             } else if (this.connectMode === 'hierarchy') {
                 btnHier.classList.add('active');
-                btnHier.style.backgroundColor = '#6366f1';
+                btnHier.style.backgroundColor = '#6610f2';
                 btnHier.style.color = 'white';
             }
         }
@@ -408,6 +439,28 @@
             }
         }
 
+        toggleTaskCollapse(nodeId) {
+            const node = this.nodes.find(n => n.id === nodeId);
+            if (node) {
+                node.collapsed = !node.collapsed;
+                this.render();
+            }
+        }
+
+        isNodeVisible(nodeId) {
+            const node = this.nodes.find(n => n.id === nodeId);
+            if (!node) return false;
+
+            if (node.type === 'subtask') {
+                const parentConn = this.connections.find(c => c.target === nodeId && this.nodes.find(sn => sn.id === c.source)?.type === 'task');
+                if (parentConn) {
+                    const parent = this.nodes.find(n => n.id === parentConn.source);
+                    if (parent && parent.collapsed) return false;
+                }
+            }
+            return true;
+        }
+
         openModal(type, nodeId = null) {
             this.currentNode = nodeId ? this.nodes.find(n => n.id === nodeId) : null;
             const isEdit = !!this.currentNode;
@@ -442,7 +495,9 @@
                     ${usersSelect}`;
             } else if (type === 'access') {
                 html = `
+                    <label>Название</label><input type="text" id="inp-desc" class="form-control mb-2" value="${data.description || ''}">
                     <label>URL</label><input type="text" id="inp-url" class="form-control mb-2" value="${data.url || ''}">
+                    <label>Google Drive</label><input type="text" id="inp-drive" class="form-control mb-2" value="${data.url_drive || ''}">
                     <label>Логин</label><input type="text" id="inp-login" class="form-control mb-2" value="${data.login || ''}">
                     <label>Пароль</label><input type="text" id="inp-pass" class="form-control" value="${data.password || ''}">`;
             } else if (type === 'billing') {
@@ -455,9 +510,10 @@
                     </select>`;
             } else if (type === 'media') {
                 html = `<label>Описание / Название</label><input type="text" id="inp-title" class="form-control mb-2" value="${data.title || ''}">`;
-                if (!isEdit) {
-                    html += `<label>Файл</label><input type="file" id="inp-file" class="form-control">`;
+                if (isEdit && data.file_url) {
+                    html += `<div class="mb-2 text-break" style="font-size:12px;"><strong>Файл:</strong> <a href="${data.file_url}" target="_blank">${data.file_url}</a></div>`;
                 }
+                html += `<label>${isEdit ? 'Заменить файл' : 'Файл'}</label><input type="file" id="inp-file" class="form-control">`;
             }
 
             bodyEl.innerHTML = html;
@@ -479,11 +535,13 @@
                 data = {title, assignee};
             } else if (type === 'access') {
                 data = {
+                    description: document.getElementById('inp-desc').value,
                     url: document.getElementById('inp-url').value,
+                    url_drive: document.getElementById('inp-drive').value,
                     login: document.getElementById('inp-login').value,
                     password: document.getElementById('inp-pass').value
                 };
-                title = data.login;
+                title = data.description || data.login;
                 status = 'active';
             } else if (type === 'billing') {
                 data = {amount: document.getElementById('inp-amount').value};
@@ -491,8 +549,9 @@
                 title = `${data.amount}`;
             } else if (type === 'media') {
                 title = document.getElementById('inp-title').value;
+                const fileInput = document.getElementById('inp-file');
+
                 if (!isEdit) {
-                    const fileInput = document.getElementById('inp-file');
                     if (fileInput.files.length > 0) {
                         const formData = new FormData();
                         formData.append('file', fileInput.files[0]);
@@ -508,7 +567,8 @@
                                 const mediaData = await res.json();
                                 this.addNode('media_' + mediaData.id, 'media', title || mediaData.file, 'active', 100, 100, {
                                     db_id: mediaData.id,
-                                    title: title || mediaData.file
+                                    title: title || mediaData.file,
+                                    file_url: mediaData.file
                                 });
                                 modalObj.hide();
                                 return;
@@ -517,8 +577,26 @@
                             console.error(e);
                         }
                     }
+                } else {
+                    if (fileInput.files.length > 0) {
+                        const formData = new FormData();
+                        formData.append('file', fileInput.files[0]);
+                        try {
+                            const res = await fetch(`/api/media_files/${this.currentNode.data.db_id}/`, {
+                                method: 'PATCH',
+                                headers: {'X-CSRFToken': this.getCookie('csrftoken')},
+                                body: formData
+                            });
+                            if (res.ok) {
+                                const updatedMedia = await res.json();
+                                data.file_url = updatedMedia.file;
+                            }
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    }
+                    data.title = title;
                 }
-                data = {title};
                 status = 'active';
             }
 
@@ -534,19 +612,25 @@
             nodesLayer.innerHTML = '';
             svgLayer.innerHTML = '';
 
+            canvasLayer.style.transform = `translate(${this.transform.x}px, ${this.transform.y}px) scale(${this.transform.k})`;
+
             this.connections.forEach(c => {
+                if (!this.isNodeVisible(c.source) || !this.isNodeVisible(c.target)) return;
+
                 const source = this.nodes.find(n => n.id === c.source);
                 const target = this.nodes.find(n => n.id === c.target);
                 if (source && target) {
                     let color = '#9ca3af';
-                    if (source.type === 'task' && target.type === 'task') color = '#3b82f6';
-                    if (source.type === 'task' && target.type === 'subtask') color = '#6366f1';
+                    if (source.type === 'task' && target.type === 'task') color = '#0d6efd';
+                    if (source.type === 'task' && target.type === 'subtask') color = '#6610f2';
 
                     this.drawArrow(source, target, color);
                 }
             });
 
             this.nodes.forEach(n => {
+                if (!this.isNodeVisible(n.id)) return;
+
                 const el = document.createElement('div');
                 el.className = `node ${n.type}-node`;
                 if (this.sourceNodeId === n.id) el.classList.add('selected-source');
@@ -580,6 +664,14 @@
                 }
 
                 const canEdit = n.type !== 'project';
+                let collapseBtn = '';
+                if (n.type === 'task') {
+                    const hasSubtasks = this.connections.some(c => c.source === n.id && this.nodes.find(t => t.id === c.target)?.type === 'subtask');
+                    if (hasSubtasks) {
+                        const iconCls = n.collapsed ? 'bi-chevron-down' : 'bi-chevron-up';
+                        collapseBtn = `<button class="collapse-btn ms-2" onmousedown="event.stopPropagation()" onclick="viz.toggleTaskCollapse('${n.id}')"><i class="bi ${iconCls}"></i></button>`;
+                    }
+                }
 
                 let socketsHtml = '';
                 if (n.type === 'task') {
@@ -600,7 +692,10 @@
 
                 el.innerHTML = `
                     <div class="node-header">
-                        <span><i class="bi bi-${icon}"></i> ${n.type.toUpperCase()}</span>
+                        <div class="d-flex align-items-center">
+                            <span><i class="bi bi-${icon}"></i> ${n.type.toUpperCase()}</span>
+                        </div>
+                        ${collapseBtn}
                     </div>
                     <div class="node-content">
                         <strong>${n.title}</strong><br>${badges}
@@ -615,6 +710,7 @@
 
                 el.onmousedown = (e) => {
                     if (this.connectMode) return;
+                    e.stopPropagation();
                     this.drag = {active: true, node: n, offX: e.offsetX, offY: e.offsetY};
                 };
 
@@ -645,18 +741,62 @@
             svgLayer.appendChild(line);
         }
 
+        resetZoom() {
+            this.transform = {x: 0, y: 0, k: 1};
+            this.render();
+        }
+
         events() {
+            container.onmousedown = (e) => {
+                if (!this.drag.active && !this.connectMode) {
+                    this.pan = {
+                        active: true,
+                        startX: e.clientX,
+                        startY: e.clientY,
+                        offX: this.transform.x,
+                        offY: this.transform.y
+                    };
+                    container.style.cursor = 'grabbing';
+                }
+            };
+
             document.onmousemove = (e) => {
                 if (this.drag.active && this.drag.node) {
-                    this.drag.node.x = e.clientX - this.drag.offX;
-                    this.drag.node.y = e.clientY - 60 - this.drag.offY;
+                    this.drag.node.x = (e.clientX - container.getBoundingClientRect().left - this.transform.x) / this.transform.k - this.drag.offX;
+                    this.drag.node.y = (e.clientY - container.getBoundingClientRect().top - this.transform.y) / this.transform.k - this.drag.offY;
+                    this.render();
+                } else if (this.pan.active) {
+                    this.transform.x = this.pan.offX + (e.clientX - this.pan.startX);
+                    this.transform.y = this.pan.offY + (e.clientY - this.pan.startY);
                     this.render();
                 }
             };
+
             document.onmouseup = () => {
                 this.drag.active = false;
                 this.drag.node = null;
+                this.pan.active = false;
+                container.style.cursor = 'grab';
             };
+
+            container.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const scaleAmount = -e.deltaY * 0.001;
+                const newScale = Math.min(Math.max(0.1, this.transform.k + scaleAmount), 5);
+
+                const rect = container.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                const nodeX = (mouseX - this.transform.x) / this.transform.k;
+                const nodeY = (mouseY - this.transform.y) / this.transform.k;
+
+                this.transform.x = mouseX - nodeX * newScale;
+                this.transform.y = mouseY - nodeY * newScale;
+                this.transform.k = newScale;
+
+                this.render();
+            }, {passive: false});
 
             if (!document.getElementById('arrowhead')) {
                 const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
@@ -690,6 +830,7 @@
         autoLayout() {
             let x = 50, y = 50;
             this.nodes.forEach((n, i) => {
+                if (n.type === 'subtask' && !this.isNodeVisible(n.id)) return;
                 n.x = x;
                 n.y = y;
                 x += 250;
