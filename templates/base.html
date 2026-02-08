@@ -135,10 +135,12 @@
         </a>
         <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
             {% if user.is_authenticated %}
-                <li><a class="dropdown-item" href="{{ url('users:user_detail', pk=user.id) }}">Профиль</a></li>
-                <li>
-                    <hr class="dropdown-divider">
-                </li>
+                {% if user.is_superuser %}
+                    <li><a class="dropdown-item" href="{{ url('users:user_detail', pk=user.id) }}">Профиль</a></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                {% endif %}
                 <li>
                     <form action="{{ url('users:logout') }}" method="post">
                         <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">

@@ -55,7 +55,7 @@
             border-radius: 8px;
             cursor: pointer;
             position: absolute;
-            min-width: 220px;
+            width: 240px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
             user-select: none;
             transition: transform 0.1s;
@@ -87,60 +87,49 @@
 
         .node-actions {
             border-top: 1px solid #eee;
-            padding: 6px;
+            padding: 8px;
             display: flex;
             justify-content: flex-end;
-            gap: 5px;
+            gap: 10px;
+            background: #f8f9fa;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .action-btn {
+            cursor: pointer;
+            color: #555;
+            transition: color 0.2s;
+            font-size: 16px;
+        }
+
+        .action-btn:hover {
+            color: #000;
+        }
+
+        .action-btn.delete:hover {
+            color: #dc3545;
+        }
+
+        .action-btn.edit:hover {
+            color: #0d6efd;
+        }
+
+        .owner-node {
+            border-color: #f59e0b;
+            border-width: 2px;
+        }
+
+        .owner-node .node-header {
+            background: #f59e0b;
         }
 
         .project-node {
-            border-color: #ef4444;
-            border-width: 3px;
+            border-color: #3b82f6;
+            border-width: 2px;
         }
 
         .project-node .node-header {
-            background: #ef4444;
-            font-size: 1.1em;
-        }
-
-        .task-node {
-            border-color: #3b82f6;
-        }
-
-        .task-node .node-header {
             background: #3b82f6;
-        }
-
-        .subtask-node {
-            border-color: #6366f1;
-        }
-
-        .subtask-node .node-header {
-            background: #6366f1;
-        }
-
-        .access-node {
-            border-color: #8b5cf6;
-        }
-
-        .access-node .node-header {
-            background: #8b5cf6;
-        }
-
-        .billing-node {
-            border-color: #10b981;
-        }
-
-        .billing-node .node-header {
-            background: #10b981;
-        }
-
-        .media-node {
-            border-color: #f59e0b;
-        }
-
-        .media-node .node-header {
-            background: #f59e0b;
         }
 
         .connection-line {
@@ -155,53 +144,24 @@
             opacity: 1;
             cursor: pointer;
         }
-
-        .connecting-mode .node {
-            cursor: crosshair;
-        }
-
-        .node.selected-source {
-            border-color: #22c55e;
-            box-shadow: 0 0 15px #22c55e;
-        }
-
-        .socket-points {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 5px;
-            padding-top: 5px;
-            border-top: 1px dashed #eee;
-            font-size: 11px;
-            color: #666;
-        }
-
-        .socket {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            border: 1px solid #666;
-            background: #eee;
-        }
     </style>
 </head>
 <body>
 <div id="toolbar">
     <div class="d-flex align-items-center gap-2">
         <a href="{{ url('projects:project_list') }}" class="btn btn-outline-light btn-sm"><i
-                class="bi bi-arrow-left"></i> Список проектов</a>
+                class="bi bi-arrow-left"></i> Список</a>
         <div class="vr bg-secondary"></div>
-        <span class="fw-bold">ОБЩАЯ СТРУКТУРА</span>
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newProjectModal"><i
+                class="bi bi-plus-lg"></i> Новый проект
+        </button>
+        <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#newUserModal"><i
+                class="bi bi-person-plus"></i> Новый Owner (Superuser)
+        </button>
     </div>
     <div class="d-flex align-items-center gap-2">
-        <div class="btn-group">
-            <button id="connect-flow-btn" class="btn btn-outline-info btn-sm" onclick="viz.toggleConnectMode('flow')"><i
-                    class="bi bi-arrow-right"></i> Связь задач
-            </button>
-            <button id="connect-hier-btn" class="btn btn-outline-warning btn-sm"
-                    onclick="viz.toggleConnectMode('hierarchy')"><i class="bi bi-diagram-2"></i> Привязка
-            </button>
-        </div>
-        <button id="save-btn" class="btn btn-success btn-sm"><i class="bi bi-cloud-upload"></i> Сохранить все</button>
+        <button id="save-btn" class="btn btn-success btn-sm"><i class="bi bi-cloud-upload"></i> Сохранить позицию
+        </button>
     </div>
 </div>
 
@@ -210,17 +170,88 @@
     <div id="nodes-layer"></div>
 </div>
 
-<div class="modal fade" id="nodeModal" tabindex="-1">
+<div class="modal fade" id="newProjectModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalTitle">Элемент</h5>
+                <h5 class="modal-title">Новый проект</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label>Владелец (Owner)</label>
+                    <select id="new-proj-owner" class="form-select">
+                        {% for su in superusers %}
+                            <option value="{{ su.id }}">{{ su.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label>Название</label>
+                    <input type="text" id="new-proj-name" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label>Описание</label>
+                    <textarea id="new-proj-desc" class="form-control"></textarea>
+                </div>
+            </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger me-auto" onclick="viz.deleteNode()">Удалить</button>
-                <button type="button" class="btn btn-primary" onclick="viz.saveNodeFromModal()">OK</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" onclick="createProject()">Создать</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="newUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Новый Owner (Superuser)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label>Username</label>
+                    <input type="text" id="new-user-name" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label>Email</label>
+                    <input type="email" id="new-user-email" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label>Пароль</label>
+                    <input type="password" id="new-user-pass" class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-warning" onclick="createUser()">Создать</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editProjectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Редактировать проект</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-proj-id">
+                <div class="mb-3">
+                    <label>Название</label>
+                    <input type="text" id="edit-proj-name" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label>Описание</label>
+                    <textarea id="edit-proj-desc" class="form-control"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="updateProject()">Сохранить</button>
             </div>
         </div>
     </div>
@@ -231,17 +262,20 @@
     const container = document.getElementById('rete-container');
     const nodesLayer = document.getElementById('nodes-layer');
     const svgLayer = document.getElementById('connections-layer');
-    const modalEl = document.getElementById('nodeModal');
-    const modalObj = new bootstrap.Modal(modalEl);
+    const editModal = new bootstrap.Modal(document.getElementById('editProjectModal'));
+    const createModal = new bootstrap.Modal(document.getElementById('newProjectModal'));
+    const createUserModal = new bootstrap.Modal(document.getElementById('newUserModal'));
+
+    function getCookie(name) {
+        let v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+        return v ? v[2] : null;
+    }
 
     class SuperViz {
         constructor() {
             this.nodes = [];
             this.connections = [];
-            this.users = [];
             this.drag = {active: false, node: null, offX: 0, offY: 0};
-            this.connectMode = null;
-            this.sourceNodeId = null;
             this.scale = 1;
             this.panX = 0;
             this.panY = 0;
@@ -256,118 +290,35 @@
 
         async loadData() {
             try {
-                // Corrected URL to point to the ViewSet Action
-                const res = await fetch(`/api/projects/projects/super-structure/`);
+                const res = await fetch(`/api/projects/super-structure/`);
                 if (res.ok) {
                     const data = await res.json();
                     this.nodes = data.nodes || [];
                     this.connections = data.connections || [];
-                    this.users = data.users || [];
                 }
             } catch (e) {
                 console.error(e);
             }
         }
 
-        updateNode(id, newData) {
-            const node = this.nodes.find(n => n.id === id);
-            if (node) Object.assign(node, newData);
-            this.render();
+        openEditModal(node) {
+            document.getElementById('edit-proj-id').value = node.data.db_id;
+            document.getElementById('edit-proj-name').value = node.title;
+            document.getElementById('edit-proj-desc').value = "";
+            editModal.show();
         }
 
-        deleteNode() {
-            if (!this.currentNode) return;
-            if (confirm('Вы уверены? Удаление применится после сохранения.')) {
-                const id = this.currentNode.id;
-                this.nodes = this.nodes.filter(n => n.id !== id);
-                this.connections = this.connections.filter(c => c.source !== id && c.target !== id);
-                modalObj.hide();
-                this.render();
+        async deleteNode(node) {
+            if (!confirm(`Удалить проект "${node.title}"?`)) return;
+            try {
+                const res = await fetch(`/api/projects/${node.data.db_id}/`, {
+                    method: 'DELETE',
+                    headers: {'X-CSRFToken': getCookie('csrftoken')}
+                });
+                if (res.ok) this.init();
+            } catch (e) {
+                alert('Error');
             }
-        }
-
-        toggleConnectMode(mode) {
-            if (this.connectMode === mode) {
-                this.connectMode = null;
-                document.body.classList.remove('connecting-mode');
-            } else {
-                this.connectMode = mode;
-                document.body.classList.add('connecting-mode');
-            }
-            this.sourceNodeId = null;
-            this.render();
-        }
-
-        handleNodeClick(nodeId) {
-            if (this.connectMode) {
-                if (!this.sourceNodeId) {
-                    this.sourceNodeId = nodeId;
-                    this.render();
-                } else {
-                    if (this.sourceNodeId !== nodeId) {
-                        const exists = this.connections.find(c => c.source === this.sourceNodeId && c.target === nodeId);
-                        if (!exists) {
-                            const src = this.nodes.find(n => n.id === this.sourceNodeId);
-                            const tgt = this.nodes.find(n => n.id === nodeId);
-
-                            let allowed = false;
-                            if (this.connectMode === 'flow') {
-                                if (src.type === 'task' && tgt.type === 'task') allowed = true;
-                            } else {
-                                if (src.type === 'project' && ['task', 'access', 'billing', 'media'].includes(tgt.type)) allowed = true;
-                                if (src.type === 'task' && tgt.type === 'subtask') allowed = true;
-                            }
-
-                            if (allowed) this.connections.push({source: this.sourceNodeId, target: nodeId});
-                        }
-                    }
-                    this.sourceNodeId = null;
-                    this.toggleConnectMode(null);
-                }
-            }
-        }
-
-        openModal(type, nodeId) {
-            const node = this.nodes.find(n => n.id === nodeId);
-            if (!node) return;
-            this.currentNode = node;
-
-            const titleEl = document.getElementById('modalTitle');
-            const bodyEl = document.getElementById('modalBody');
-            titleEl.textContent = `Редактировать: ${node.type}`;
-
-            const data = node.data;
-            let html = '';
-
-            if (type === 'project') {
-                html = `<label>Название</label><input type="text" id="inp-title" class="form-control mb-2" value="${data.title || ''}">`;
-            } else if (type === 'task') {
-                const userOpts = this.users.map(u => `<option value="${u.id}" ${data.assignee == u.id ? 'selected' : ''}>${u.username}</option>`).join('');
-                html = `
-                    <label>Название</label><input type="text" id="inp-title" class="form-control mb-2" value="${data.title || ''}">
-                    <label>Исполнитель</label><select id="inp-assignee" class="form-select">${userOpts}</select>`;
-            } else {
-                html = `<label>Заголовок / Данные</label><input type="text" id="inp-title" class="form-control" value="${data.title || data.login || data.amount || ''}">`;
-            }
-
-            bodyEl.innerHTML = html;
-            bodyEl.dataset.type = type;
-            modalObj.show();
-        }
-
-        saveNodeFromModal() {
-            const type = document.getElementById('modalBody').dataset.type;
-            const title = document.getElementById('inp-title') ? document.getElementById('inp-title').value : '';
-            const assignee = document.getElementById('inp-assignee') ? document.getElementById('inp-assignee').value : null;
-
-            const newData = {...this.currentNode.data};
-            if (title) newData.title = title;
-            if (type === 'access') newData.login = title;
-            if (type === 'billing') newData.amount = title;
-            if (assignee) newData.assignee = assignee;
-
-            this.updateNode(this.currentNode.id, {title, data: newData});
-            modalObj.hide();
         }
 
         render() {
@@ -384,48 +335,86 @@
             this.connections.forEach(c => {
                 const s = this.nodes.find(n => n.id === c.source);
                 const t = this.nodes.find(n => n.id === c.target);
-                if (s && t) this.drawArrow(s, t, svgGroup);
+                if (s && t) this.drawBezier(s, t, svgGroup);
             });
 
             this.nodes.forEach(n => {
                 const el = document.createElement('div');
                 el.className = `node ${n.type}-node`;
-                if (this.sourceNodeId === n.id) el.classList.add('selected-source');
                 el.style.left = n.x + 'px';
                 el.style.top = n.y + 'px';
 
-                let info = n.title;
-                if (n.type === 'billing') info = `${n.data.amount} ${n.status}`;
+                let icon = n.type === 'owner' ? 'person-circle' : 'folder';
+
+                let actionsHtml = '';
+                if (n.type === 'project') {
+                    actionsHtml = `
+                        <div class="node-actions">
+                            <i class="bi bi-pencil action-btn edit" title="Редактировать"></i>
+                            <i class="bi bi-trash action-btn delete" title="Удалить"></i>
+                        </div>
+                    `;
+                }
 
                 el.innerHTML = `
-                    <div class="node-header"><span>${n.type.toUpperCase()}</span></div>
-                    <div class="node-content">${info}</div>
-                    <div class="node-actions">
-                        <button class="btn btn-sm btn-light py-0" onclick="event.stopPropagation(); viz.openModal('${n.type}', '${n.id}')">✎</button>
-                    </div>`;
+                    <div class="node-header"><span><i class="bi bi-${icon}"></i> ${n.type.toUpperCase()}</span></div>
+                    <div class="node-content">
+                        <strong>${n.title}</strong>
+                    </div>
+                    ${actionsHtml}
+                `;
 
                 el.onmousedown = (e) => {
-                    if (this.connectMode) return;
                     e.stopPropagation();
                     this.drag = {active: true, node: n, offX: e.offsetX, offY: e.offsetY};
                 };
+
                 el.onclick = (e) => {
-                    e.stopPropagation();
-                    this.handleNodeClick(n.id);
+                    if (n.type === 'project') {
+                        window.location.href = `/projects/${n.data.db_id}/structure/`;
+                    }
                 };
+
+                if (n.type === 'project') {
+                    const editBtn = el.querySelector('.edit');
+                    const delBtn = el.querySelector('.delete');
+
+                    editBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        this.openEditModal(n);
+                    };
+
+                    delBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        this.deleteNode(n);
+                    };
+                }
+
                 nodesLayer.appendChild(el);
             });
         }
 
-        drawArrow(s, t, container) {
-            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            line.setAttribute("x1", s.x + 110);
-            line.setAttribute("y1", s.y + 40);
-            line.setAttribute("x2", t.x + 110);
-            line.setAttribute("y2", t.y + 40);
-            line.setAttribute("class", "connection-line");
-            line.setAttribute("marker-end", "url(#arrowhead)");
-            container.appendChild(line);
+        drawBezier(s, t, container) {
+            const nodeWidth = 240;
+            const nodeHeight = 80;
+
+            const x1 = s.x + nodeWidth;
+            const y1 = s.y + (nodeHeight / 2);
+
+            const x2 = t.x;
+            const y2 = t.y + (nodeHeight / 2);
+
+            const dist = Math.abs(x2 - x1) * 0.5;
+            const cp1x = x1 + dist;
+            const cp1y = y1;
+            const cp2x = x2 - dist;
+            const cp2y = y2;
+
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("d", `M ${x1} ${y1} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x2} ${y2}`);
+            path.setAttribute("class", "connection-line");
+            path.setAttribute("fill", "none");
+            container.appendChild(path);
         }
 
         events() {
@@ -435,7 +424,6 @@
                     this.panStart = {x: e.clientX - this.panX, y: e.clientY - this.panY};
                 }
             };
-
             document.onmousemove = (e) => {
                 if (this.drag.active && this.drag.node) {
                     this.drag.node.x = (e.clientX - container.getBoundingClientRect().left - this.panX) / this.scale - this.drag.offX;
@@ -447,46 +435,103 @@
                     this.render();
                 }
             };
-
             document.onmouseup = () => {
                 this.drag.active = false;
                 this.isPanning = false;
             };
-
             container.onwheel = (e) => {
                 e.preventDefault();
-                const delta = e.deltaY > 0 ? 0.9 : 1.1;
-                this.scale *= delta;
+                this.scale *= (e.deltaY > 0 ? 0.9 : 1.1);
                 this.render();
             };
-
-            if (!document.getElementById('arrowhead')) {
-                const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-                defs.innerHTML = `<marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6c757d" /></marker>`;
-                svgLayer.appendChild(defs);
-            }
-
             document.getElementById('save-btn').onclick = async () => {
-                try {
-                    const res = await fetch(`/api/projects/projects/super-structure/`, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json', 'X-CSRFToken': this.getCookie('csrftoken')},
-                        body: JSON.stringify({nodes: this.nodes, connections: this.connections})
-                    });
-                    if (res.ok) alert('Сохранено!');
-                } catch (e) {
-                    alert('Ошибка');
-                }
+                await fetch(`/api/projects/super-structure/`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+                    body: JSON.stringify({nodes: this.nodes})
+                });
+                alert('Сохранено!');
             };
-        }
-
-        getCookie(name) {
-            let v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
-            return v ? v[2] : null;
         }
     }
 
     const viz = new SuperViz();
+
+    async function createProject() {
+        const name = document.getElementById('new-proj-name').value;
+        const desc = document.getElementById('new-proj-desc').value;
+        const ownerId = document.getElementById('new-proj-owner').value;
+
+        if (!name || !ownerId) return;
+
+        try {
+            const res = await fetch('/api/projects/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+                body: JSON.stringify({
+                    name: name,
+                    description: desc,
+                    status: 'planned',
+                    owner_id: ownerId
+                })
+            });
+            if (res.ok) {
+                createModal.hide();
+                viz.init();
+            }
+        } catch (e) {
+            alert('Error');
+        }
+    }
+
+    async function createUser() {
+        const name = document.getElementById('new-user-name').value;
+        const email = document.getElementById('new-user-email').value;
+        const pass = document.getElementById('new-user-pass').value;
+        if (!name || !pass) return;
+
+        try {
+            const res = await fetch('/api/users/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+                body: JSON.stringify({
+                    username: name,
+                    email: email,
+                    password: pass,
+                    status: 'active',
+                    is_superuser: true
+                })
+            });
+            if (res.ok) {
+                createUserModal.hide();
+                location.reload();
+            } else {
+                alert('Ошибка создания пользователя');
+            }
+        } catch (e) {
+            alert('Error');
+        }
+    }
+
+    async function updateProject() {
+        const id = document.getElementById('edit-proj-id').value;
+        const name = document.getElementById('edit-proj-name').value;
+        const desc = document.getElementById('edit-proj-desc').value;
+
+        try {
+            const res = await fetch(`/api/projects/${id}/`, {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+                body: JSON.stringify({name: name, description: desc})
+            });
+            if (res.ok) {
+                editModal.hide();
+                viz.init();
+            }
+        } catch (e) {
+            alert('Error');
+        }
+    }
 </script>
 </body>
 </html>

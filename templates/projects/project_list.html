@@ -5,28 +5,56 @@
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1><i class="bi bi-folder"></i> Проекты</h1>
-        <a href="{{ url('projects:project_create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Новый проект
-        </a>
+        {% if user.is_superuser %}
+            <div class="d-flex gap-2">
+                <a href="{{ url('projects:super_structure') }}" class="btn btn-dark">
+                    <i class="bi bi-diagram-3"></i> Супер-структура
+                </a>
+                <a href="{{ url('projects:project_create') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Новый проект
+                </a>
+            </div>
+        {% endif %}
     </div>
 
-    <!-- Filters -->
     <div class="card mb-4">
         <div class="card-body">
             <form method="get" class="row g-3">
                 <div class="col-md-3">
                     <label class="form-label">Поиск</label>
-                    <input type="text" name="q" class="form-control" placeholder="Название проекта...">
+                    <input type="text" name="q" class="form-control" placeholder="Название проекта..."
+                           value="{{ request.GET.get('q', '') }}">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Статус</label>
                     <select name="status" class="form-select">
                         <option value="">Все</option>
-                        <option value="planned">Запланирован</option>
-                        <option value="in_progress">В работе</option>
-                        <option value="idle">Простой</option>
-                        <option value="sleep">Заморожен</option>
-                        <option value="finished">Завершен</option>
+                        <option value="planned" {% if request.GET.get('status') == 'planned' %}selected{% endif %}>
+                            Запланирован
+                        </option>
+                        <option value="in_progress"
+                                {% if request.GET.get('status') == 'in_progress' %}selected{% endif %}>В работе
+                        </option>
+                        <option value="idle" {% if request.GET.get('status') == 'idle' %}selected{% endif %}>Простой
+                        </option>
+                        <option value="sleep" {% if request.GET.get('status') == 'sleep' %}selected{% endif %}>
+                            Заморожен
+                        </option>
+                        <option value="finished" {% if request.GET.get('status') == 'finished' %}selected{% endif %}>
+                            Завершен
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Владелец</label>
+                    <select name="owner" class="form-select">
+                        <option value="">Все</option>
+                        {% for owner in owners %}
+                            <option value="{{ owner.id }}"
+                                    {% if request.GET.get('owner')|int == owner.id %}selected{% endif %}>
+                                {{ owner.username }}
+                            </option>
+                        {% endfor %}
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -39,7 +67,6 @@
         </div>
     </div>
 
-    <!-- Projects Table -->
     <div class="card">
         <div class="table-responsive">
             <table class="table table-hover mb-0">
@@ -48,7 +75,7 @@
                     <th>Владельцы</th>
                     <th>Название</th>
                     <th>Задачи</th>
-                    <th>Получено / Потрачено / Осталость)</th>
+                    <th>Получено / Потрачено / Остаток</th>
                     <th>Статус</th>
                     <th>Действия</th>
                 </tr>
@@ -89,12 +116,14 @@
                                 <span class="badge bg-success">Завершен</span>
                             {% endif %}
                         </td>
-                        <td>
-                            <a href="{{ url('projects:project_edit', pk=project.id) }}"
-                               class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                        </td>
+                        {% if user.is_superuser %}
+                            <td>
+                                <a href="{{ url('projects:project_edit', pk=project.id) }}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </td>
+                        {% endif %}
                     </tr>
                 {% endfor %}
                 </tbody>
@@ -102,16 +131,18 @@
         </div>
     </div>
 
-    <!-- Pagination -->
     {% if is_paginated %}
         <nav class="mt-4">
             <ul class="pagination justify-content-center">
                 {% if page_obj.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page=1">Первая</a>
+                        <a class="page-link" href="?page=1&q={{ request.GET.get('q','') }}&status=
+                                {{ request.GET.get('status','') }}&owner={{ request.GET.get('owner','') }}">Первая</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Назад</a>
+                        <a class="page-link"
+                           href="?page={{ page_obj.previous_page_number }}&q={{ request.GET.get('q','') }}&status=
+                                   {{ request.GET.get('status','') }}&owner={{ request.GET.get('owner','') }}">Назад</a>
                     </li>
                 {% endif %}
 
@@ -121,10 +152,15 @@
 
                 {% if page_obj.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Далее</a>
+                        <a class="page-link"
+                           href="?page={{ page_obj.next_page_number }}&q={{ request.GET.get('q','') }}&status=
+                                   {{ request.GET.get('status','') }}&owner={{ request.GET.get('owner','') }}">Далее</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Последняя</a>
+                        <a class="page-link"
+                           href="?page={{ page_obj.paginator.num_pages }}&q={{ request.GET.get('q','') }}&status=
+                                   {{ request.GET.get('status','') }}&owner=
+                                   {{ request.GET.get('owner','') }}">Последняя</a>
                     </li>
                 {% endif %}
             </ul>

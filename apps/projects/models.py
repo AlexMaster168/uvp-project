@@ -39,6 +39,10 @@ class Project(models.Model):
                                   verbose_name='Создатель')
     u_tags = models.ManyToManyField(Tag, related_name='projects', blank=True, verbose_name='Теги')
     structure_data = models.JSONField(default=dict, blank=True, verbose_name='Структура проекта (JSON)')
+
+    global_x = models.FloatField(default=0, verbose_name='X в супер-структуре')
+    global_y = models.FloatField(default=0, verbose_name='Y в супер-структуре')
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -2,11 +2,12 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
-    path('', include('apps.projects.urls')),
+    path('projects/', include('apps.projects.urls')),
     path('users/', include('apps.users.urls')),
     path('tasks/', include('apps.tasks.urls')),
     path('access/', include('apps.access.urls')),
@@ -17,6 +18,7 @@ urlpatterns = [
     path('api/', include('apps.billing.api_urls')),
     path('api/', include('apps.users.api_urls')),
     path('api/', include('apps.media_files.api_urls')),
+    path('', RedirectView.as_view(url='/projects/', permanent=False)),
 ]
 
 if settings.DEBUG:
