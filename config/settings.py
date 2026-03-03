@@ -35,8 +35,8 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'apps.users.middleware.GlobalSettingsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
+    'apps.users.middleware.GlobalSettingsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -115,6 +115,10 @@ LANGUAGES = [
     ('ru', 'Russian'),
     ('uk', 'Ukrainian'),
     ('en', 'English'),
+]
+
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
 ]
 
 LANGUAGE_CODE = 'ru'

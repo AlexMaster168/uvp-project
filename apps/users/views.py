@@ -106,11 +106,16 @@ class RemoveUserFromProjectView(LoginRequiredMixin, SuperUserRequiredMixin, View
         return redirect('users:user_detail', pk=pk)
 
 
-class SettingsView(LoginRequiredMixin, SuperUserRequiredMixin, UpdateView):
-    model = GlobalSettings
-    form_class = GlobalSettingsForm
-    template_name = 'users/settings.html'
-    success_url = reverse_lazy('users:settings')
+class SettingsView(LoginRequiredMixin, SuperUserRequiredMixin, View):
+    def get(self, request):
+        settings_obj = GlobalSettings.get_settings()
+        form = GlobalSettingsForm(instance=settings_obj)
+        return render(request, 'users/settings.html', {'form': form})
 
-    def get_object(self, queryset=None):
-        return GlobalSettings.get_settings()
+    def post(self, request):
+        settings_obj = GlobalSettings.get_settings()
+        form = GlobalSettingsForm(request.POST, instance=settings_obj)
+        if form.is_valid():
+            form.save()
+            return redirect('users:settings')
+        return render(request, 'users/settings.html', {'form': form})
