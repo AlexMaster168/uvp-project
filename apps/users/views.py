@@ -1,15 +1,15 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.views import LoginView, LogoutView
-from django.views.generic import ListView, CreateView, DetailView, View
+from django.views.generic import ListView, CreateView, DetailView, View, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy, reverse
-from django.contrib import messages
 from rest_framework import viewsets
 from django.contrib.auth import get_user_model
 
-from .forms import CustomUserCreationForm, AddUserToProjectForm
+from .forms import CustomUserCreationForm, AddUserToProjectForm, GlobalSettingsForm
 from apps.projects.models import ProjectMembership
 from .serializers import UserSerializer
+from .models import GlobalSettings
 
 User = get_user_model()
 
@@ -71,15 +71,9 @@ class UserToggleBlockView(LoginRequiredMixin, SuperUserRequiredMixin, View):
             if user.is_active:
                 user.is_active = False
                 user.save()
-                status = "заблокирован"
             else:
                 user.is_active = True
                 user.save()
-                status = "разблокирован"
-
-            messages.success(request, f"Пользователь {user.username} {status}.")
-        else:
-            messages.error(request, "Нельзя заблокировать самого себя.")
         return redirect('users:user_list')
 
 
@@ -90,14 +84,8 @@ class AddUserToProjectView(LoginRequiredMixin, SuperUserRequiredMixin, View):
         if form.is_valid():
             membership = form.save(commit=False)
             membership.user = user
-
-            if ProjectMembership.objects.filter(user=user, project=membership.project).exists():
-                messages.warning(request, "Пользователь уже в этом проекте.")
-            else:
+            if not ProjectMembership.objects.filter(user=user, project=membership.project).exists():
                 membership.save()
-                messages.success(request, "Пользователь добавлен в проект.")
-        else:
-            messages.error(request, "Ошибка при добавлении.")
         return redirect('users:user_detail', pk=pk)
 
 
@@ -108,16 +96,21 @@ class UpdateUserRoleView(LoginRequiredMixin, SuperUserRequiredMixin, View):
         if new_role in dict(ProjectMembership.ROLE_CHOICES):
             membership.role = new_role
             membership.save()
-            messages.success(request, "Роль обновлена.")
-        else:
-            messages.error(request, "Некорректная роль.")
         return redirect('users:user_detail', pk=pk)
 
 
 class RemoveUserFromProjectView(LoginRequiredMixin, SuperUserRequiredMixin, View):
     def post(self, request, pk, membership_id):
         membership = get_object_or_404(ProjectMembership, id=membership_id, user_id=pk)
-        project_name = membership.project.name
         membership.delete()
-        messages.success(request, f"Пользователь удален из проекта {project_name}.")
         return redirect('users:user_detail', pk=pk)
+
+
+class SettingsView(LoginRequiredMixin, SuperUserRequiredMixin, UpdateView):
+    model = GlobalSettings
+    form_class = GlobalSettingsForm
+    template_name = 'users/settings.html'
+    success_url = reverse_lazy('users:settings')
+
+    def get_object(self, queryset=None):
+        return GlobalSettings.get_settings()

@@ -7,21 +7,10 @@ class GroupUsers(models.Model):
         ('admin', 'Admin'),
         ('guest', 'Guest'),
     ]
-
-    name = models.CharField(
-        max_length=50,
-        choices=GROUP_CHOICES,
-        unique=True,
-        verbose_name='Название группы'
-    )
+    name = models.CharField(max_length=50, choices=GROUP_CHOICES, unique=True)
 
     class Meta:
-        verbose_name = 'Группа пользователей'
-        verbose_name_plural = 'Группы пользователей'
         db_table = 'group_users'
-
-    def __str__(self):
-        return self.get_name_display()
 
 
 class User(AbstractUser):
@@ -30,37 +19,15 @@ class User(AbstractUser):
         ('blocked', 'Заблокирован'),
         ('pending', 'Ожидает подтверждения'),
     ]
-
-    email = models.EmailField(
-        unique=True,
-        verbose_name='Email'
-    )
-    status = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default='active',
-        verbose_name='Статус'
-    )
-    u_group = models.ForeignKey(
-        GroupUsers,
-        on_delete=models.PROTECT,
-        related_name='users',
-        verbose_name='Группа',
-        null=True,
-        blank=True
-    )
-
-    global_x = models.FloatField(default=0, verbose_name='X в супер-структуре')
-    global_y = models.FloatField(default=0, verbose_name='Y в супер-структуре')
+    email = models.EmailField(unique=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    u_group = models.ForeignKey(GroupUsers, on_delete=models.PROTECT, related_name='users', null=True, blank=True)
+    global_x = models.FloatField(default=0)
+    global_y = models.FloatField(default=0)
 
     class Meta:
-        verbose_name = 'Пользователь'
-        verbose_name_plural = 'Пользователи'
         db_table = 'users'
         ordering = ['username']
-
-    def __str__(self):
-        return self.username
 
     def is_super_admin(self):
         return self.is_superuser or (self.u_group and self.u_group.name == 'admin' and self.is_staff)
@@ -80,3 +47,35 @@ class User(AbstractUser):
         self.status = 'active'
         self.is_active = True
         self.save()
+
+
+class GlobalSettings(models.Model):
+    THEME_CHOICES = [
+        ('bg-gradient-1', 'Ocean Blue'),
+        ('bg-gradient-2', 'Sunset Orange'),
+        ('bg-gradient-3', 'Purple Dream'),
+        ('bg-gradient-4', 'Forest Green'),
+        ('bg-gradient-5', 'Night Sky'),
+        ('bg-gradient-6', 'Cherry Blossom'),
+        ('bg-gradient-7', 'Cosmic Fusion'),
+        ('bg-gradient-8', 'Deep Sea'),
+        ('bg-gradient-9', 'Tropical Sunrise'),
+        ('bg-gradient-10', 'Arctic Frost'),
+        ('bg-gradient-11', 'Neon Lights'),
+        ('bg-gradient-12', 'Golden Hour'),
+    ]
+    LANGUAGE_CHOICES = [
+        ('ru', 'Русский'),
+        ('uk', 'Українська'),
+        ('en', 'English'),
+    ]
+    theme = models.CharField(max_length=50, choices=THEME_CHOICES, default='bg-gradient-1')
+    language = models.CharField(max_length=10, choices=LANGUAGE_CHOICES, default='ru')
+
+    class Meta:
+        db_table = 'global_settings'
+
+    @classmethod
+    def get_settings(cls):
+        obj, _ = cls.objects.get_or_create(id=1)
+        return obj

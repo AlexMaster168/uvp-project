@@ -42,5 +42,53 @@ body {
 .alert {
     border-radius: 8px;
     border: none;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.bg-gradient-1 {
+    background: linear-gradient(135deg, #74ebd5 0%, #acb6e5 100%);
+}
+
+.bg-gradient-2 {
+    background: linear-gradient(135deg, #f12711 0%, #f5af19 100%);
+}
+
+.bg-gradient-3 {
+    background: linear-gradient(135deg, #654ea3 0%, #eaafc8 100%);
+}
+
+.bg-gradient-4 {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.bg-gradient-5 {
+    background: linear-gradient(135deg, #141e30 0%, #243b55 100%);
+}
+
+.bg-gradient-6 {
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+}
+
+.bg-gradient-7 {
+    background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%);
+}
+
+.bg-gradient-8 {
+    background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
+}
+
+.bg-gradient-9 {
+    background: linear-gradient(135deg, #f83600 0%, #f9d423 100%);
+}
+
+.bg-gradient-10 {
+    background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+}
+
+.bg-gradient-11 {
+    background: linear-gradient(135deg, #00dbde 0%, #fc00ff 100%);
+}
+
+.bg-gradient-12 {
+    background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
 }

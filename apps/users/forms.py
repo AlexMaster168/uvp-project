@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model
 from apps.projects.models import Project, ProjectMembership
+from .models import GlobalSettings
 
 User = get_user_model()
 
@@ -19,7 +20,7 @@ class CustomUserCreationForm(UserCreationForm):
 
 
 class AddUserToProjectForm(forms.ModelForm):
-    project = forms.ModelChoiceField(queryset=Project.objects.all(), label="Проект",
+    project = forms.ModelChoiceField(queryset=Project.objects.all(),
                                      widget=forms.Select(attrs={'class': 'form-select'}))
 
     class Meta:
@@ -27,4 +28,14 @@ class AddUserToProjectForm(forms.ModelForm):
         fields = ['project', 'role']
         widgets = {
             'role': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+
+class GlobalSettingsForm(forms.ModelForm):
+    class Meta:
+        model = GlobalSettings
+        fields = ['theme', 'language']
+        widgets = {
+            'theme': forms.Select(attrs={'class': 'form-select'}),
+            'language': forms.Select(attrs={'class': 'form-select'}),
         }
