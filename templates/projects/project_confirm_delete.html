@@ -4,13 +4,13 @@
         <div class="col-md-6 offset-md-3">
             <div class="card">
                 <div class="card-body text-center">
-                    <h3>Удалить {{ object.name }}?</h3>
-                    <p class="text-danger">Это удалит все связанные задачи, финансы и файлы!</p>
+                    <h3>{{ _('Удалить') }} {{ object.name }}?</h3>
+                    <p class="text-danger">{{ _('Это удалит все связанные задачи, финансы и файлы!') }}</p>
                     <form method="post">
                         <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-                        <button type="submit" class="btn btn-danger">Да, удалить</button>
+                        <button type="submit" class="btn btn-danger">{{ _('Да, удалить') }}</button>
                         <a href="{{ url('projects:project_detail', pk=object.pk) }}"
-                           class="btn btn-secondary">Отмена</a>
+                           class="btn btn-secondary">{{ _('Отмена') }}</a>
                     </form>
                 </div>
             </div>

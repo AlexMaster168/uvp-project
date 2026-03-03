@@ -4,7 +4,8 @@
         <div class="col-md-6">
             <div class="card shadow-sm">
                 <div class="card-header bg-white">
-                    <h4 class="mb-0">{% if object %}Редактировать{% else %}Добавить{% endif %} операцию</h4>
+                    <h4 class="mb-0">{% if object %}{{ _('Редактировать') }}{% else %}
+                        {{ _('Добавить') }}{% endif %} {{ _('операцию') }}</h4>
                 </div>
                 <div class="card-body">
                     <form method="post">
@@ -13,38 +14,39 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Дата</label>
+                                <label class="form-label">{{ _('Дата') }}</label>
                                 {{ form.date }}
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Сумма</label>
+                                <label class="form-label">{{ _('Сумма') }}</label>
                                 {{ form.amount }}
                             </div>
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Тип</label>
+                                <label class="form-label">{{ _('Тип') }}</label>
                                 {{ form.operation }}
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Категория</label>
+                                <label class="form-label">{{ _('Категория') }}</label>
                                 {{ form.tag }}
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Описание</label>
+                            <label class="form-label">{{ _('Описание') }}</label>
                             {{ form.description }}
                         </div>
                         <div class="d-flex justify-content-between mt-4">
-                            <button type="button" class="btn btn-secondary" onclick="history.back()">Назад</button>
-                            <button type="submit" class="btn btn-success px-4">Сохранить</button>
+                            <button type="button" class="btn btn-secondary"
+                                    onclick="history.back()">{{ _('Назад') }}</button>
+                            <button type="submit" class="btn btn-success px-4">{{ _('Сохранить') }}</button>
                         </div>
                     </form>
                     {% if object %}
                         <div class="text-end mt-3 border-top pt-3">
                             <form action="{{ url('billing:billing_delete', pk=object.pk) }}" method="post">
                                 <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-                                <button type="submit" class="btn btn-outline-danger btn-sm">Удалить</button>
+                                <button type="submit" class="btn btn-outline-danger btn-sm">{{ _('Удалить') }}</button>
                             </form>
                         </div>
                     {% endif %}

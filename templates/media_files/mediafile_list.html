@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Медиафайлы{% endblock %}
+{% block title %}{{ _('Медиафайлы') }}{% endblock %}
 
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Медиафайлы</h2>
+        <h2>{{ _('Медиафайлы') }}</h2>
         {% if user.is_superuser %}
             <a href="{{ url('media_files:media_create') }}" class="btn btn-primary">
-                <i class="bi bi-cloud-upload"></i> Загрузить файл
+                <i class="bi bi-cloud-upload"></i> {{ _('Загрузить файл') }}
             </a>
         {% endif %}
     </div>
@@ -45,13 +45,13 @@
                         </div>
                     </div>
                     <div class="card-footer text-muted small text-center">
-                        Проект: <a href="
+                        {{ _('Проект') }}: <a href="
                             {{ url('projects:project_detail', pk=media.project.id) }}">{{ media.project.name }}</a>
                     </div>
                 </div>
             </div>
             {% else %}
-            <div class="col-12 text-center text-muted">Нет файлов</div>
+            <div class="col-12 text-center text-muted">{{ _('Нет файлов') }}</div>
         {% endfor %}
     </div>
 {% endblock %}

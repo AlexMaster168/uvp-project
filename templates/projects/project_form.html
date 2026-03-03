@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}
-    {% if form.instance.pk %}Редактировать проект{% else %}Создать проект{% endif %}
+    {% if form.instance.pk %}{{ _('Редактировать проект') }}{% else %}{{ _('Создать проект') }}{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -10,7 +10,8 @@
             <div class="card shadow-sm">
                 <div class="card-header bg-white">
                     <h4 class="mb-0">
-                        {% if form.instance.pk %}Редактировать проект{% else %}Создать проект{% endif %}
+                        {% if form.instance.pk %}{{ _('Редактировать проект') }}{% else %}
+                            {{ _('Создать проект') }}{% endif %}
                     </h4>
                 </div>
                 <div class="card-body">
@@ -19,64 +20,64 @@
 
                         {% if form.errors %}
                             <div class="alert alert-danger">
-                                Пожалуйста, исправьте ошибки ниже.
+                                {{ _('Пожалуйста, исправьте ошибки ниже.') }}
                                 {{ form.errors }}
                             </div>
                         {% endif %}
 
                         <div class="mb-3">
-                            <label class="form-label">Название</label>
+                            <label class="form-label">{{ _('Название') }}</label>
                             {{ form.name }}
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Описание</label>
+                            <label class="form-label">{{ _('Описание') }}</label>
                             {{ form.description }}
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Дата начала</label>
+                                <label class="form-label">{{ _('Дата начала') }}</label>
                                 {{ form.start_date }}
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Дата окончания</label>
+                                <label class="form-label">{{ _('Дата окончания') }}</label>
                                 {{ form.end_date }}
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Статус</label>
+                            <label class="form-label">{{ _('Статус') }}</label>
                             {{ form.status }}
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Логотип</label>
+                            <label class="form-label">{{ _('Логотип') }}</label>
                             {{ form.logo }}
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Выберите существующие теги</label>
+                            <label class="form-label">{{ _('Выберите существующие теги') }}</label>
                             {{ form.u_tags }}
-                            <div class="form-text">Зажмите Ctrl (или Cmd), чтобы выбрать несколько.</div>
+                            <div class="form-text">{{ _('Зажмите Ctrl (или Cmd), чтобы выбрать несколько.') }}</div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Добавить новые теги</label>
+                            <label class="form-label">{{ _('Добавить новые теги') }}</label>
                             {{ form.new_tags }}
-                            <div class="form-text">Введите названия новых тегов через запятую. Они будут созданы и
-                                добавлены к проекту.
+                            <div class="form-text">{{ _('Введите названия новых тегов через запятую. Они будут созданы и добавлены к проекту.') }}
                             </div>
                         </div>
 
                         <div class="d-flex justify-content-end gap-2">
                             {% if form.instance.pk %}
                                 <a href="{{ url('projects:project_detail', pk=form.instance.pk) }}"
-                                   class="btn btn-secondary">Отмена</a>
+                                   class="btn btn-secondary">{{ _('Отмена') }}</a>
                             {% else %}
-                                <a href="{{ url('projects:project_list') }}" class="btn btn-secondary">Отмена</a>
+                                <a href="{{ url('projects:project_list') }}"
+                                   class="btn btn-secondary">{{ _('Отмена') }}</a>
                             {% endif %}
-                            <button type="submit" class="btn btn-primary">Сохранить</button>
+                            <button type="submit" class="btn btn-primary">{{ _('Сохранить') }}</button>
                         </div>
                     </form>
                 </div>

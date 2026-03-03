@@ -1,13 +1,15 @@
 {% extends "base.html" %}
 
-{% block title %}{% if form.instance.pk %}Редактировать файл{% else %}Загрузить файл{% endif %}{% endblock %}
+{% block title %}{% if form.instance.pk %}{{ _('Редактировать файл') }}{% else %}{{ _('Загрузить файл') }}
+{% endif %}{% endblock %}
 
 {% block content %}
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card mt-4">
                 <div class="card-header">
-                    {% if form.instance.pk %}Редактировать медиафайл{% else %}Новый медиафайл{% endif %}
+                    {% if form.instance.pk %}{{ _('Редактировать медиафайл') }}{% else %}
+                        {{ _('Новый медиафайл') }}{% endif %}
                 </div>
                 <div class="card-body">
                     <form method="post" enctype="multipart/form-data">
@@ -28,14 +30,14 @@
                         <div class="d-flex justify-content-end gap-2">
                             {% if project %}
                                 <a href="{{ url('projects:project_detail', pk=project.pk) }}#media"
-                                   class="btn btn-secondary">Отмена</a>
+                                   class="btn btn-secondary">{{ _('Отмена') }}</a>
                             {% elif form.instance.project %}
                                 <a href="{{ url('projects:project_detail', pk=form.instance.project.pk) }}#media"
-                                   class="btn btn-secondary">Отмена</a>
+                                   class="btn btn-secondary">{{ _('Отмена') }}</a>
                             {% else %}
-                                <a href="javascript:history.back()" class="btn btn-secondary">Отмена</a>
+                                <a href="javascript:history.back()" class="btn btn-secondary">{{ _('Отмена') }}</a>
                             {% endif %}
-                            <button type="submit" class="btn btn-primary">Сохранить</button>
+                            <button type="submit" class="btn btn-primary">{{ _('Сохранить') }}</button>
                         </div>
                     </form>
                 </div>

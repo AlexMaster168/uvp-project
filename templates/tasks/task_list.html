@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Задачи - УВП{% endblock %}
+{% block title %}{{ _('Задачи') }} - {{ _('УВП') }}{% endblock %}
 
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="bi bi-check2-square"></i> Задачи</h1>
+        <h1><i class="bi bi-check2-square"></i> {{ _('Задачи') }}</h1>
     </div>
 
     <div class="card">
@@ -12,11 +12,11 @@
             <table class="table table-hover mb-0">
                 <thead class="table-light">
                 <tr>
-                    <th>Статус</th>
-                    <th>Название</th>
-                    <th>Проект</th>
-                    <th>Исполнители</th>
-                    <th>Время (План/Факт)</th>
+                    <th>{{ _('Статус') }}</th>
+                    <th>{{ _('Название') }}</th>
+                    <th>{{ _('Проект') }}</th>
+                    <th>{{ _('Исполнители') }}</th>
+                    <th>{{ _('Время (План/Факт)') }}</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -24,11 +24,11 @@
                     <tr>
                         <td>
                             {% if task.status == 'done' %}
-                                <span class="badge bg-success">Готово</span>
+                                <span class="badge bg-success">{{ _('Готово') }}</span>
                             {% elif task.status == 'in_progress' %}
-                                <span class="badge bg-warning">В работе</span>
+                                <span class="badge bg-warning">{{ _('В работе') }}</span>
                             {% else %}
-                                <span class="badge bg-secondary">К выполнению</span>
+                                <span class="badge bg-secondary">{{ _('К выполнению') }}</span>
                             {% endif %}
                         </td>
                         <td>
@@ -44,11 +44,11 @@
                                 <span class="badge bg-secondary">{{ user.username }}</span>
                             {% endfor %}
                         </td>
-                        <td>{{ task.estimated_time }} / {{ task.actual_time }} ч.</td>
+                        <td>{{ task.estimated_time }} / {{ task.actual_time }} {{ _('ч.') }}</td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="5" class="text-center py-3">Нет задач</td>
+                        <td colspan="5" class="text-center py-3">{{ _('Нет задач') }}</td>
                     </tr>
                 {% endfor %}
                 </tbody>
@@ -61,11 +61,12 @@
             <ul class="pagination justify-content-center">
                 {% if page_obj.has_previous %}
                     <li class="page-item"><a class="page-link"
-                                             href="?page={{ page_obj.previous_page_number }}">Назад</a></li>
+                                             href="?page={{ page_obj.previous_page_number }}">{{ _('Назад') }}</a></li>
                 {% endif %}
                 <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
                 {% if page_obj.has_next %}
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Далее</a>
+                    <li class="page-item"><a class="page-link"
+                                             href="?page={{ page_obj.next_page_number }}">{{ _('Далее') }}</a>
                     </li>
                 {% endif %}
             </ul>

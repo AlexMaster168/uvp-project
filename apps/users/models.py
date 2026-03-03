@@ -51,6 +51,7 @@ class User(AbstractUser):
 
 class GlobalSettings(models.Model):
     THEME_CHOICES = [
+        ('light', 'Light (Светлая)'),
         ('bg-gradient-1', 'Ocean Blue'),
         ('bg-gradient-2', 'Sunset Orange'),
         ('bg-gradient-3', 'Purple Dream'),
@@ -69,7 +70,7 @@ class GlobalSettings(models.Model):
         ('uk', 'Українська'),
         ('en', 'English'),
     ]
-    theme = models.CharField(max_length=50, choices=THEME_CHOICES, default='bg-gradient-1')
+    theme = models.CharField(max_length=50, choices=THEME_CHOICES, default='light')
     language = models.CharField(max_length=10, choices=LANGUAGE_CHOICES, default='ru')
 
     class Meta:

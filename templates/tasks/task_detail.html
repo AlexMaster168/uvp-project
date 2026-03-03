@@ -16,30 +16,30 @@
                         {% endif %}
                         {% if user.is_superuser %}
                             <a href="{{ url('tasks:task_edit', pk=task.id) }}"
-                               class="btn btn-sm btn-outline-primary ms-2">Изменить</a>
+                               class="btn btn-sm btn-outline-primary ms-2">{{ _('Изменить') }}</a>
                         {% endif %}
                     </div>
                 </div>
                 <div class="card-body">
-                    <p><strong>Проект:</strong> <a
+                    <p><strong>{{ _('Проект') }}:</strong> <a
                             href="{{ url('projects:project_detail', pk=task.project.id) }}">{{ task.project.name }}</a>
                     </p>
-                    <p><strong>Описание:</strong></p>
+                    <p><strong>{{ _('Описание') }}:</strong></p>
                     <div class="p-3 bg-light rounded mb-3">
                         {% if task.description %}
                             {{ task.description|linebreaks }}
                         {% else %}
-                            Нет описания
+                            {{ _('Нет описания') }}
                         {% endif %}
                     </div>
 
                     <div class="row">
                         <div class="col-md-6">
-                            <p><strong>Оценка времени:</strong> {{ task.estimated_time }} ч</p>
-                            <p><strong>Затрачено:</strong> {{ task.actual_time }} ч</p>
+                            <p><strong>{{ _('Оценка времени') }}:</strong> {{ task.estimated_time }} {{ _('ч') }}</p>
+                            <p><strong>{{ _('Затрачено') }}:</strong> {{ task.actual_time }} {{ _('ч') }}</p>
                         </div>
                         <div class="col-md-6">
-                            <p><strong>Исполнители:</strong></p>
+                            <p><strong>{{ _('Исполнители') }}:</strong></p>
                             {% for u in task.u_users.all() %}
                                 <span class="badge bg-info text-dark">{{ u.username }}</span>
                             {% endfor %}
@@ -48,7 +48,7 @@
 
                     {% if task.subtasks.all() %}
                         <div class="mt-4">
-                            <h5>Подзадачи:</h5>
+                            <h5>{{ _('Подзадачи') }}:</h5>
                             <ul class="list-group">
                                 {% for sub in task.subtasks.all() %}
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -63,8 +63,8 @@
                     {% endif %}
                 </div>
                 <div class="card-footer">
-                    <a href="{{ url('projects:project_detail', pk=task.project.id) }}" class="btn btn-secondary">Назад к
-                        проекту</a>
+                    <a href="{{ url('projects:project_detail', pk=task.project.id) }}"
+                       class="btn btn-secondary">{{ _('Назад к проекту') }}</a>
                 </div>
             </div>
         </div>

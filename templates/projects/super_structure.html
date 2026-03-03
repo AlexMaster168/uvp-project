@@ -1,9 +1,10 @@
+{% set global_settings = get_global_settings() %}
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="{{ global_settings.language|default('ru') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Общая структура проектов</title>
+    <title>{{ _('Общая структура проектов') }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
@@ -161,17 +162,18 @@
 <div id="toolbar">
     <div class="d-flex align-items-center gap-2">
         <a href="{{ url('projects:project_list') }}" class="btn btn-outline-light btn-sm"><i
-                class="bi bi-arrow-left"></i> Список</a>
+                class="bi bi-arrow-left"></i> {{ _('Список') }}</a>
         <div class="vr bg-secondary"></div>
         <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newProjectModal"><i
-                class="bi bi-plus-lg"></i> Новый проект
+                class="bi bi-plus-lg"></i> {{ _('Новый проект') }}
         </button>
         <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#newUserModal"><i
-                class="bi bi-person-plus"></i> Новый Owner (Superuser)
+                class="bi bi-person-plus"></i> {{ _('Новый Owner (Superuser)') }}
         </button>
     </div>
     <div class="d-flex align-items-center gap-2">
-        <button id="save-btn" class="btn btn-success btn-sm"><i class="bi bi-cloud-upload"></i> Сохранить позицию
+        <button id="save-btn" class="btn btn-success btn-sm"><i
+                class="bi bi-cloud-upload"></i> {{ _('Сохранить позицию') }}
         </button>
     </div>
 </div>
@@ -185,12 +187,12 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Новый проект</h5>
+                <h5 class="modal-title">{{ _('Новый проект') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label>Владелец (Owner)</label>
+                    <label>{{ _('Владелец (Owner)') }}</label>
                     <select id="new-proj-owner" class="form-select">
                         {% for su in superusers %}
                             <option value="{{ su.id }}">{{ su.username }}</option>
@@ -198,31 +200,31 @@
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label>Название</label>
+                    <label>{{ _('Название') }}</label>
                     <input type="text" id="new-proj-name" class="form-control">
                 </div>
                 <div class="mb-3">
-                    <label>Описание</label>
+                    <label>{{ _('Описание') }}</label>
                     <textarea id="new-proj-desc" class="form-control"></textarea>
                 </div>
                 <div class="mb-3">
-                    <label>Статус</label>
+                    <label>{{ _('Статус') }}</label>
                     <select id="new-proj-status" class="form-select">
-                        <option value="planned">Запланирован</option>
-                        <option value="in_progress">В работе</option>
-                        <option value="idle">Простой</option>
-                        <option value="sleep">Заморожен</option>
-                        <option value="finished">Завершен</option>
+                        <option value="planned">{{ _('Запланирован') }}</option>
+                        <option value="in_progress">{{ _('В работе') }}</option>
+                        <option value="idle">{{ _('Простой') }}</option>
+                        <option value="sleep">{{ _('Заморожен') }}</option>
+                        <option value="finished">{{ _('Завершен') }}</option>
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label>Логотип</label>
+                    <label>{{ _('Логотип') }}</label>
                     <input type="file" id="new-proj-logo" class="form-control">
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                <button type="button" class="btn btn-primary" onclick="createProject()">Создать</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Отмена') }}</button>
+                <button type="button" class="btn btn-primary" onclick="createProject()">{{ _('Создать') }}</button>
             </div>
         </div>
     </div>
@@ -232,7 +234,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Новый Owner (Superuser)</h5>
+                <h5 class="modal-title">{{ _('Новый Owner (Superuser)') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -245,13 +247,13 @@
                     <input type="email" id="new-user-email" class="form-control">
                 </div>
                 <div class="mb-3">
-                    <label>Пароль</label>
+                    <label>{{ _('Пароль') }}</label>
                     <input type="password" id="new-user-pass" class="form-control">
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                <button type="button" class="btn btn-warning" onclick="createUser()">Создать</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Отмена') }}</button>
+                <button type="button" class="btn btn-warning" onclick="createUser()">{{ _('Создать') }}</button>
             </div>
         </div>
     </div>
@@ -261,13 +263,13 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Редактировать проект</h5>
+                <h5 class="modal-title">{{ _('Редактировать проект') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="edit-proj-id">
                 <div class="mb-3">
-                    <label>Владелец</label>
+                    <label>{{ _('Владелец') }}</label>
                     <select id="edit-proj-owner" class="form-select">
                         {% for su in superusers %}
                             <option value="{{ su.id }}">{{ su.username }}</option>
@@ -275,34 +277,34 @@
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label>Название</label>
+                    <label>{{ _('Название') }}</label>
                     <input type="text" id="edit-proj-name" class="form-control">
                 </div>
                 <div class="mb-3">
-                    <label>Описание</label>
+                    <label>{{ _('Описание') }}</label>
                     <textarea id="edit-proj-desc" class="form-control"></textarea>
                 </div>
                 <div class="mb-3">
-                    <label>Статус</label>
+                    <label>{{ _('Статус') }}</label>
                     <select id="edit-proj-status" class="form-select">
-                        <option value="planned">Запланирован</option>
-                        <option value="in_progress">В работе</option>
-                        <option value="idle">Простой</option>
-                        <option value="sleep">Заморожен</option>
-                        <option value="finished">Завершен</option>
+                        <option value="planned">{{ _('Запланирован') }}</option>
+                        <option value="in_progress">{{ _('В работе') }}</option>
+                        <option value="idle">{{ _('Простой') }}</option>
+                        <option value="sleep">{{ _('Заморожен') }}</option>
+                        <option value="finished">{{ _('Завершен') }}</option>
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label>Логотип</label>
+                    <label>{{ _('Логотип') }}</label>
                     <div class="mb-2">
-                        <img id="edit-proj-current-logo" src="" alt="Текущий логотип"
+                        <img id="edit-proj-current-logo" src="" alt="{{ _('Текущий логотип') }}"
                              style="max-height: 80px; display: none; border-radius: 4px; border: 1px solid #ddd;">
                     </div>
                     <input type="file" id="edit-proj-logo" class="form-control">
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="updateProject()">Сохранить</button>
+                <button type="button" class="btn btn-primary" onclick="updateProject()">{{ _('Сохранить') }}</button>
             </div>
         </div>
     </div>
@@ -373,7 +375,7 @@
         }
 
         async deleteNode(node) {
-            if (!confirm(`Удалить проект "${node.title}"?`)) return;
+            if (!confirm('{{ _("Удалить проект") }} "' + node.title + '"?')) return;
             try {
                 const res = await fetch(`/api/projects/${node.data.db_id}/`, {
                     method: 'DELETE',
@@ -381,7 +383,7 @@
                 });
                 if (res.ok) this.init();
             } catch (e) {
-                alert('Error');
+                alert('{{ _("Ошибка") }}');
             }
         }
 
@@ -409,19 +411,20 @@
                 el.style.top = n.y + 'px';
 
                 let icon = n.type === 'owner' ? 'person-circle' : 'folder';
+                let typeName = n.type.toUpperCase();
 
                 let actionsHtml = '';
                 if (n.type === 'project') {
                     actionsHtml = `
                         <div class="node-actions">
-                            <i class="bi bi-pencil action-btn edit" title="Редактировать"></i>
-                            <i class="bi bi-trash action-btn delete" title="Удалить"></i>
+                            <i class="bi bi-pencil action-btn edit" title="{{ _("Редактировать") }}"></i>
+                            <i class="bi bi-trash action-btn delete" title="{{ _("Удалить") }}"></i>
                         </div>
                     `;
                 }
 
                 el.innerHTML = `
-                    <div class="node-header"><span><i class="bi bi-${icon}"></i> ${n.type.toUpperCase()}</span></div>
+                    <div class="node-header"><span><i class="bi bi-${icon}"></i> ${typeName}</span></div>
                     <div class="node-content">
                         <strong>${n.title}</strong>
                     </div>
@@ -514,7 +517,7 @@
                     headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
                     body: JSON.stringify({nodes: this.nodes})
                 });
-                alert('Сохранено!');
+                alert('{{ _("Сохранено!") }}');
             };
         }
     }
@@ -550,7 +553,7 @@
                 viz.init();
             }
         } catch (e) {
-            alert('Error');
+            alert('{{ _("Ошибка") }}');
         }
     }
 
@@ -576,10 +579,10 @@
                 createUserModal.hide();
                 location.reload();
             } else {
-                alert('Ошибка создания пользователя');
+                alert('{{ _("Ошибка создания пользователя") }}');
             }
         } catch (e) {
-            alert('Error');
+            alert('{{ _("Ошибка") }}');
         }
     }
 
@@ -611,7 +614,7 @@
                 viz.init();
             }
         } catch (e) {
-            alert('Error');
+            alert('{{ _("Ошибка") }}');
         }
     }
 </script>

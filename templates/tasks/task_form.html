@@ -4,7 +4,8 @@
         <div class="col-md-8">
             <div class="card shadow-sm">
                 <div class="card-header bg-white">
-                    <h4 class="mb-0">{% if object %}Задача #{{ object.id }}{% else %}Новая задача{% endif %}</h4>
+                    <h4 class="mb-0">{% if object %}{{ _('Задача') }} #{{ object.id }}{% else %}
+                        {{ _('Новая задача') }}{% endif %}</h4>
                 </div>
                 <div class="card-body">
                     <form method="post">
@@ -12,38 +13,39 @@
                         <div class="d-none">{{ form.project }}</div>
 
                         <div class="mb-3">
-                            <label class="form-label">Название задачи</label>
+                            <label class="form-label">{{ _('Название задачи') }}</label>
                             {{ form.title }}
                         </div>
 
                         <div class="row mb-3">
                             <div class="col-md-4">
-                                <label class="form-label">Статус</label>
+                                <label class="form-label">{{ _('Статус') }}</label>
                                 {{ form.status }}
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">План (ч)</label>
+                                <label class="form-label">{{ _('План (ч)') }}</label>
                                 {{ form.estimated_time }}
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Факт (ч)</label>
+                                <label class="form-label">{{ _('Факт (ч)') }}</label>
                                 {{ form.actual_time }}
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Исполнители</label>
+                            <label class="form-label">{{ _('Исполнители') }}</label>
                             {{ form.u_users }}
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Теги</label>
+                            <label class="form-label">{{ _('Теги') }}</label>
                             {{ form.u_tags }}
                         </div>
 
                         <div class="d-flex justify-content-between mt-4">
-                            <button type="button" class="btn btn-secondary" onclick="history.back()">Назад</button>
-                            <button type="submit" class="btn btn-primary px-4">Сохранить</button>
+                            <button type="button" class="btn btn-secondary"
+                                    onclick="history.back()">{{ _('Назад') }}</button>
+                            <button type="submit" class="btn btn-primary px-4">{{ _('Сохранить') }}</button>
                         </div>
                     </form>
                 </div>

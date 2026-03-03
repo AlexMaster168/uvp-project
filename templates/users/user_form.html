@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Новый пользователь{% endblock %}
+{% block title %}{{ _('Новый пользователь') }}{% endblock %}
 
 {% block content %}
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Создание пользователя</h5>
+                    <h5 class="mb-0">{{ _('Создание пользователя') }}</h5>
                 </div>
                 <div class="card-body">
                     <form method="post">
@@ -25,8 +25,8 @@
                             </div>
                         {% endfor %}
                         <div class="d-flex justify-content-end gap-2 mt-4">
-                            <a href="{{ url('users:user_list') }}" class="btn btn-secondary">Отмена</a>
-                            <button type="submit" class="btn btn-primary">Создать</button>
+                            <a href="{{ url('users:user_list') }}" class="btn btn-secondary">{{ _('Отмена') }}</a>
+                            <button type="submit" class="btn btn-primary">{{ _('Создать') }}</button>
                         </div>
                     </form>
                 </div>

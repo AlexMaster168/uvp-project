@@ -1,9 +1,10 @@
+{% set global_settings = get_global_settings() %}
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="{{ global_settings.language|default('ru') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Структура проекта</title>
+    <title>{{ _('Структура проекта') }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
@@ -246,42 +247,46 @@
 <div id="toolbar">
     <div class="d-flex align-items-center gap-2">
         <a href="{{ url('projects:project_detail', pk=project.id) }}" class="btn btn-outline-secondary btn-sm"><i
-                class="bi bi-arrow-left"></i> Назад</a>
+                class="bi bi-arrow-left"></i> {{ _('Назад') }}</a>
         <div class="vr"></div>
-        <button class="btn btn-primary btn-sm" onclick="viz.openModal('task')"><i class="bi bi-check-square"></i> Задача
+        <button class="btn btn-primary btn-sm" onclick="viz.openModal('task')"><i
+                class="bi bi-check-square"></i> {{ _('Задача') }}
         </button>
         <button class="btn btn-indigo btn-sm text-white" style="background: #6610f2" onclick="viz.openModal('subtask')">
-            <i class="bi bi-list-task"></i> Подзадача
+            <i class="bi bi-list-task"></i> {{ _('Подзадача') }}
         </button>
         <button class="btn btn-purple btn-sm text-white" style="background:#fd7e14;" onclick="viz.openModal('access')">
-            <i class="bi bi-key"></i> Доступ
+            <i class="bi bi-key"></i> {{ _('Доступ') }}
         </button>
         <button class="btn btn-success btn-sm" onclick="viz.openModal('billing')"><i class="bi bi-currency-dollar"></i>
-            Финансы
+            {{ _('Финансы') }}
         </button>
         <button class="btn btn-warning btn-sm text-white" style="background:#DC143C;" onclick="viz.openModal('media')">
-            <i class="bi bi-file-earmark-plus"></i> Медиа
+            <i class="bi bi-file-earmark-plus"></i> {{ _('Медиа') }}
         </button>
     </div>
     <div class="d-flex align-items-center gap-2">
         <a href="{{ url('projects:super_structure') }}" class="btn btn-outline-dark btn-sm"><i
-                class="bi bi-diagram-3"></i> Супер-структура</a>
+                class="bi bi-diagram-3"></i> {{ _('Супер-структура') }}</a>
         <div class="vr"></div>
         <div class="btn-group">
             <button id="connect-flow-btn" class="btn btn-outline-primary btn-sm" onclick="viz.toggleConnectMode('flow')"
-                    title="Задача -> Задача (Зависимость)"><i class="bi bi-arrow-right"></i> Поток
+                    title="{{ _('Задача -> Задача (Зависимость)') }}"><i class="bi bi-arrow-right"></i> {{ _('Поток') }}
             </button>
             <button id="connect-hier-btn" class="btn btn-outline-indigo btn-sm"
                     style="border-color: #6610f2; color: #6610f2" onclick="viz.toggleConnectMode('hierarchy')"
-                    title="Задача -> Подзадача (Иерархия)"><i class="bi bi-diagram-2"></i> Иерархия
+                    title="{{ _('Задача -> Подзадача (Иерархия)') }}"><i
+                    class="bi bi-diagram-2"></i> {{ _('Иерархия') }}
             </button>
         </div>
         <button class="btn btn-outline-dark btn-sm" onclick="viz.resetZoom()"><i class="bi bi-arrows-fullscreen"></i>
             100%
         </button>
-        <button class="btn btn-outline-dark btn-sm" onclick="viz.autoLayout()"><i class="bi bi-grid-3x3"></i> Авто
+        <button class="btn btn-outline-dark btn-sm" onclick="viz.autoLayout()"><i
+                class="bi bi-grid-3x3"></i> {{ _('Авто') }}
         </button>
-        <button id="save-btn" class="btn btn-dark btn-sm"><i class="bi bi-cloud-upload"></i> Сохранить</button>
+        <button id="save-btn" class="btn btn-dark btn-sm"><i class="bi bi-cloud-upload"></i> {{ _('Сохранить') }}
+        </button>
     </div>
 </div>
 
@@ -296,13 +301,14 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalTitle">Редактирование</h5>
+                <h5 class="modal-title" id="modalTitle">{{ _('Редактирование') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="modalBody">
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="viz.saveNodeFromModal()">Сохранить</button>
+                <button type="button" class="btn btn-primary"
+                        onclick="viz.saveNodeFromModal()">{{ _('Сохранить') }}</button>
             </div>
         </div>
     </div>
@@ -346,7 +352,7 @@
                     this.nodes = data.nodes || [];
                     this.connections = data.connections || [];
                     this.users = data.users || [];
-                    if (this.nodes.length === 0) this.addNode('project', 'project', 'Проект', 'active', 50, 50, {});
+                    if (this.nodes.length === 0) this.addNode('project', 'project', '{{ _("Проект") }}', 'active', 50, 50, {});
                 }
             } catch (e) {
                 console.error(e);
@@ -365,7 +371,7 @@
         }
 
         deleteNode(id) {
-            if (confirm('Удалить элемент?')) {
+            if (confirm('{{ _("Удалить элемент?") }}')) {
                 this.nodes = this.nodes.filter(n => n.id !== id);
                 this.connections = this.connections.filter(c => c.source !== id && c.target !== id);
                 this.render();
@@ -429,7 +435,7 @@
                             if (allowed) {
                                 this.connections.push({source: this.sourceNodeId, target: nodeId});
                             } else {
-                                alert('Неверный тип связи для выбранных узлов');
+                                alert('{{ _("Неверный тип связи для выбранных узлов") }}');
                             }
                         }
                     }
@@ -467,7 +473,7 @@
             const titleEl = document.getElementById('modalTitle');
             const bodyEl = document.getElementById('modalBody');
 
-            titleEl.textContent = isEdit ? 'Редактировать' : 'Создать';
+            titleEl.textContent = isEdit ? '{{ _("Редактировать") }}' : '{{ _("Создать") }}';
 
             let html = '';
             const data = isEdit ? this.currentNode.data : {};
@@ -477,43 +483,43 @@
                 `<option value="${u.id}" ${data.assignee == u.id ? 'selected' : ''}>${u.username}</option>`
             ).join('');
             const usersSelect = `
-                <label>Исполнитель</label>
+                <label>{{ _("Исполнитель") }}</label>
                 <select id="inp-assignee" class="form-select mb-2">
-                    <option value="">Не назначен</option>
+                    <option value="">{{ _("Не назначен") }}</option>
                     ${userOptions}
                 </select>`;
 
             if (type === 'task' || type === 'subtask') {
                 html = `
-                    <label>Название</label><input type="text" id="inp-title" class="form-control mb-2" value="${data.title || ''}">
-                    <label>Статус</label>
+                    <label>{{ _("Название") }}</label><input type="text" id="inp-title" class="form-control mb-2" value="${data.title || ''}">
+                    <label>{{ _("Статус") }}</label>
                     <select id="inp-status" class="form-select mb-2">
-                        <option value="todo" ${status === 'todo' ? 'selected' : ''}>К выполнению</option>
-                        <option value="in_progress" ${status === 'in_progress' ? 'selected' : ''}>В работе</option>
-                        <option value="done" ${status === 'done' ? 'selected' : ''}>Готово</option>
+                        <option value="todo" ${status === 'todo' ? 'selected' : ''}>{{ _("К выполнению") }}</option>
+                        <option value="in_progress" ${status === 'in_progress' ? 'selected' : ''}>{{ _("В работе") }}</option>
+                        <option value="done" ${status === 'done' ? 'selected' : ''}>{{ _("Готово") }}</option>
                     </select>
                     ${usersSelect}`;
             } else if (type === 'access') {
                 html = `
-                    <label>Название</label><input type="text" id="inp-desc" class="form-control mb-2" value="${data.description || ''}">
+                    <label>{{ _("Описание") }}</label><input type="text" id="inp-desc" class="form-control mb-2" value="${data.description || ''}">
                     <label>URL</label><input type="text" id="inp-url" class="form-control mb-2" value="${data.url || ''}">
                     <label>Google Drive</label><input type="text" id="inp-drive" class="form-control mb-2" value="${data.url_drive || ''}">
-                    <label>Логин</label><input type="text" id="inp-login" class="form-control mb-2" value="${data.login || ''}">
-                    <label>Пароль</label><input type="text" id="inp-pass" class="form-control" value="${data.password || ''}">`;
+                    <label>{{ _("Логин") }}</label><input type="text" id="inp-login" class="form-control mb-2" value="${data.login || ''}">
+                    <label>{{ _("Пароль") }}</label><input type="text" id="inp-pass" class="form-control" value="${data.password || ''}">`;
             } else if (type === 'billing') {
                 html = `
-                    <label>Сумма</label><input type="number" id="inp-amount" class="form-control mb-2" value="${data.amount || ''}">
-                    <label>Тип</label>
+                    <label>{{ _("Сумма") }}</label><input type="number" id="inp-amount" class="form-control mb-2" value="${data.amount || ''}">
+                    <label>{{ _("Тип") }}</label>
                     <select id="inp-status" class="form-select">
-                        <option value="expense" ${status === 'expense' ? 'selected' : ''}>Расход</option>
-                        <option value="income" ${status === 'income' ? 'selected' : ''}>Доход</option>
+                        <option value="expense" ${status === 'expense' ? 'selected' : ''}>{{ _("Расход") }}</option>
+                        <option value="income" ${status === 'income' ? 'selected' : ''}>{{ _("Доход") }}</option>
                     </select>`;
             } else if (type === 'media') {
-                html = `<label>Описание / Название</label><input type="text" id="inp-title" class="form-control mb-2" value="${data.title || ''}">`;
+                html = `<label>{{ _("Описание / Название") }}</label><input type="text" id="inp-title" class="form-control mb-2" value="${data.title || ''}">`;
                 if (isEdit && data.file_url) {
-                    html += `<div class="mb-2 text-break" style="font-size:12px;"><strong>Файл:</strong> <a href="${data.file_url}" target="_blank">${data.file_url}</a></div>`;
+                    html += `<div class="mb-2 text-break" style="font-size:12px;"><strong>{{ _("Файл") }}:</strong> <a href="${data.file_url}" target="_blank">${data.file_url}</a></div>`;
                 }
-                html += `<label>${isEdit ? 'Заменить файл' : 'Файл'}</label><input type="file" id="inp-file" class="form-control">`;
+                html += `<label>${isEdit ? '{{ _("Заменить файл") }}' : '{{ _("Файл") }}'}</label><input type="file" id="inp-file" class="form-control">`;
             }
 
             bodyEl.innerHTML = html;
@@ -639,21 +645,53 @@
                 el.style.top = n.y + 'px';
 
                 let icon = 'circle';
-                if (n.type === 'task') icon = 'check-square';
-                else if (n.type === 'subtask') icon = 'list-task';
-                else if (n.type === 'access') icon = 'key';
-                else if (n.type === 'billing') icon = 'currency-dollar';
-                else if (n.type === 'media') icon = 'file-earmark';
-                else if (n.type === 'project') icon = 'folder';
+                let typeName = n.type.toUpperCase();
+
+                if (n.type === 'task') {
+                    icon = 'check-square';
+                    typeName = '{{ _("ЗАДАЧА") }}';
+                } else if (n.type === 'subtask') {
+                    icon = 'list-task';
+                    typeName = '{{ _("ПОДЗАДАЧА") }}';
+                } else if (n.type === 'access') {
+                    icon = 'key';
+                    typeName = '{{ _("ДОСТУП") }}';
+                } else if (n.type === 'billing') {
+                    icon = 'currency-dollar';
+                    typeName = '{{ _("ФИНАНСЫ") }}';
+                } else if (n.type === 'media') {
+                    icon = 'file-earmark';
+                    typeName = '{{ _("МЕДИА") }}';
+                } else if (n.type === 'project') {
+                    icon = 'folder';
+                    typeName = '{{ _("ПРОЕКТ") }}';
+                }
 
                 let badges = '';
                 if (n.status && n.type !== 'access' && n.type !== 'media') {
                     let cl = 'bg-secondary';
-                    if (n.status === 'todo') cl = 'bg-todo';
-                    if (n.status === 'in_progress') cl = 'bg-in-progress';
-                    if (n.status === 'done' || n.status === 'income') cl = 'bg-done';
-                    if (n.status === 'expense') cl = 'bg-expense';
-                    badges = `<span class="badge-status ${cl}">${n.status}</span>`;
+                    let statusName = n.status;
+                    if (n.status === 'todo') {
+                        cl = 'bg-todo';
+                        statusName = '{{ _("К выполнению") }}';
+                    }
+                    if (n.status === 'in_progress') {
+                        cl = 'bg-in-progress';
+                        statusName = '{{ _("В работе") }}';
+                    }
+                    if (n.status === 'done') {
+                        cl = 'bg-done';
+                        statusName = '{{ _("Готово") }}';
+                    }
+                    if (n.status === 'income') {
+                        cl = 'bg-done';
+                        statusName = '{{ _("Доход") }}';
+                    }
+                    if (n.status === 'expense') {
+                        cl = 'bg-expense';
+                        statusName = '{{ _("Расход") }}';
+                    }
+                    badges = `<span class="badge-status ${cl}">${statusName}</span>`;
                 }
 
                 if (n.data.assignee) {
@@ -677,23 +715,23 @@
                 if (n.type === 'task') {
                     socketsHtml = `
                         <div class="socket-points">
-                            <div><span class="socket socket-flow socket-in" title="Вход (Зависимость)"></span></div>
+                            <div><span class="socket socket-flow socket-in" title="{{ _("Вход (Зависимость)") }}"></span></div>
                             <div>
-                                <span class="socket socket-hierarchy socket-out" title="Подзадачи"></span>
-                                <span class="socket socket-flow socket-out" title="Выход (Зависимость)"></span>
+                                <span class="socket socket-hierarchy socket-out" title="{{ _("Подзадачи") }}"></span>
+                                <span class="socket socket-flow socket-out" title="{{ _("Выход (Зависимость)") }}"></span>
                             </div>
                         </div>`;
                 } else if (n.type === 'subtask') {
                     socketsHtml = `
                         <div class="socket-points">
-                            <div><span class="socket socket-hierarchy socket-in" title="Родитель"></span></div>
+                            <div><span class="socket socket-hierarchy socket-in" title="{{ _("Родитель") }}"></span></div>
                         </div>`;
                 }
 
                 el.innerHTML = `
                     <div class="node-header">
                         <div class="d-flex align-items-center">
-                            <span><i class="bi bi-${icon}"></i> ${n.type.toUpperCase()}</span>
+                            <span><i class="bi bi-${icon}"></i> ${typeName}</span>
                         </div>
                         ${collapseBtn}
                     </div>
@@ -703,8 +741,8 @@
                     ${socketsHtml}
                     ${canEdit ? `
                     <div class="node-actions">
-                        <button class="btn btn-sm btn-light text-primary py-0 px-1" onclick="event.stopPropagation(); viz.openModal('${n.type}', '${n.id}')"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-sm btn-light text-danger py-0 px-1" onclick="event.stopPropagation(); viz.deleteNode('${n.id}')"><i class="bi bi-trash"></i></button>
+                        <button class="btn btn-sm btn-light text-primary py-0 px-1" onclick="event.stopPropagation(); viz.openModal('${n.type}', '${n.id}')" title="{{ _("Редактировать") }}"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-light text-danger py-0 px-1" onclick="event.stopPropagation(); viz.deleteNode('${n.id}')" title="{{ _("Удалить") }}"><i class="bi bi-trash"></i></button>
                     </div>` : ''}
                 `;
 
@@ -820,9 +858,9 @@
                     if (!res.ok) throw new Error('Error');
                     location.reload();
                 } catch (e) {
-                    alert('Ошибка сохранения');
+                    alert('{{ _("Ошибка сохранения") }}');
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="bi bi-cloud-upload"></i> Сохранить';
+                    btn.innerHTML = '<i class="bi bi-cloud-upload"></i> {{ _("Сохранить") }}';
                 }
             };
         }

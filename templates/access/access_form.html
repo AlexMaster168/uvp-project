@@ -2,55 +2,63 @@
 {% block content %}
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                    <h4 class="mb-0">{% if object %}Редактировать{% else %}Добавить{% endif %} доступ</h4>
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white pt-3 pb-2 border-bottom-0">
+                    <h4 class="mb-0">{% if object %}{{ _('Редактировать') }}{% else %}
+                        {{ _('Добавить') }}{% endif %} {{ _('доступ') }}</h4>
                 </div>
                 <div class="card-body">
                     <form method="post">
                         <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
                         <div class="d-none">{{ form.project }}</div>
 
-                        <div class="row mb-3">
+                        <div class="row mb-3 g-3">
                             <div class="col-md-6">
-                                <label class="form-label">URL сервиса</label>
+                                <label class="form-label text-muted small fw-bold text-uppercase mb-1">{{ _('URL сервиса') }}</label>
                                 {{ form.url }}
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Google Drive</label>
+                                <label class="form-label text-muted small fw-bold text-uppercase mb-1">Google
+                                    Drive</label>
                                 {{ form.url_drive }}
                             </div>
                         </div>
-                        <div class="row mb-3">
+                        <div class="row mb-3 g-3">
                             <div class="col-md-6">
-                                <label class="form-label">Логин</label>
+                                <label class="form-label text-muted small fw-bold text-uppercase mb-1">{{ _('Логин') }}</label>
                                 {{ form.login }}
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Пароль</label>
+                                <label class="form-label text-muted small fw-bold text-uppercase mb-1">{{ _('Пароль') }}</label>
                                 {{ form.password }}
                             </div>
                         </div>
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Теги</label>
+                        <div class="row mb-3 g-3">
+                            <div class="col-md-12">
+                                <label class="form-label text-muted small fw-bold text-uppercase mb-1">{{ _('Теги') }}</label>
                                 {{ form.tags }}
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Описание</label>
+                        <div class="mb-4">
+                            <label class="form-label text-muted small fw-bold text-uppercase mb-1">{{ _('Описание') }}</label>
                             {{ form.description }}
                         </div>
-                        <div class="d-flex justify-content-between mt-4">
-                            <button type="button" class="btn btn-secondary" onclick="history.back()">Назад</button>
-                            <button type="submit" class="btn btn-primary px-4">Сохранить</button>
+                        <div class="d-flex justify-content-between align-items-center mt-2 border-top pt-3">
+                            <button type="button" class="btn btn-light border" onclick="history.back()">
+                                <i class="bi bi-arrow-left me-1"></i>{{ _('Назад') }}
+                            </button>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-check2 me-1"></i>{{ _('Сохранить') }}
+                            </button>
                         </div>
                     </form>
                     {% if object %}
-                        <div class="text-end mt-3 border-top pt-3">
+                        <div class="text-end mt-3">
                             <form action="{{ url('access:access_delete', pk=object.pk) }}" method="post">
                                 <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-                                <button type="submit" class="btn btn-outline-danger btn-sm">Удалить</button>
+                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-trash me-1"></i>{{ _('Удалить') }}
+                                </button>
                             </form>
                         </div>
                     {% endif %}

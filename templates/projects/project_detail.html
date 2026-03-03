@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ project.name }} - УВП{% endblock %}
+{% block title %}{{ project.name }} - {{ _('УВП') }}{% endblock %}
 
 {% block extra_css %}
     <style>
@@ -50,37 +50,37 @@
 
                         <div class="row g-2 mb-2">
                             <div class="col-auto">
-                                <span class="fw-bold">Статус:</span>
+                                <span class="fw-bold">{{ _('Статус') }}:</span>
                                 {% if project.status == 'in_progress' %}
-                                    <span class="badge bg-success">В работе</span>
+                                    <span class="badge bg-success">{{ _('В работе') }}</span>
                                 {% elif project.status == 'planned' %}
-                                    <span class="badge bg-info text-dark">Запланирован</span>
+                                    <span class="badge bg-info text-dark">{{ _('Запланирован') }}</span>
                                 {% elif project.status == 'idle' %}
-                                    <span class="badge bg-warning text-dark">Простой</span>
+                                    <span class="badge bg-warning text-dark">{{ _('Простой') }}</span>
                                 {% elif project.status == 'sleep' %}
-                                    <span class="badge bg-secondary">Заморожен</span>
+                                    <span class="badge bg-secondary">{{ _('Заморожен') }}</span>
                                 {% elif project.status == 'finished' %}
-                                    <span class="badge bg-success">Завершен</span>
+                                    <span class="badge bg-success">{{ _('Завершен') }}</span>
                                 {% else %}
                                     <span class="badge bg-secondary">{{ project.get_status_display() }}</span>
                                 {% endif %}
                             </div>
                             <div class="col-auto">
-                                <span class="fw-bold">Сроки:</span>
+                                <span class="fw-bold">{{ _('Сроки') }}:</span>
                                 {% if project.start_date and project.end_date %}
                                     {{ project.start_date }} - {{ project.end_date }}
                                 {% else %}
-                                    <span class="text-muted">Не указаны</span>
+                                    <span class="text-muted">{{ _('Не указаны') }}</span>
                                 {% endif %}
                             </div>
                         </div>
 
                         <div class="mb-2">
-                            <strong>Создатель:</strong> {{ project.u_creator.username }}
+                            <strong>{{ _('Создатель') }}:</strong> {{ project.u_creator.username }}
                         </div>
 
                         <div class="mb-2">
-                            <strong>Участники:</strong>
+                            <strong>{{ _('Участники') }}:</strong>
                             {% for member in project.members.all() %}
                                 <span class="badge border text-dark {% if member.role == 'owner' %}bg-primary-subtle border-primary{% else %}bg-light{% endif %}">
                                         {{ member.user.username }} ({{ member.get_role_display() }})
@@ -90,7 +90,7 @@
 
                         {% if project.u_tags.all() %}
                             <div>
-                                <strong>Теги:</strong>
+                                <strong>{{ _('Теги') }}:</strong>
                                 {% for tag in project.u_tags.all() %}
                                     <span class="badge bg-secondary">{{ tag.name }}</span>
                                 {% endfor %}
@@ -102,11 +102,11 @@
                         {% if is_owner %}
                             <a href="{{ url('projects:project_edit', pk=project.id) }}"
                                class="btn btn-outline-primary">
-                                <i class="bi bi-pencil"></i> Редактировать
+                                <i class="bi bi-pencil"></i> {{ _('Редактировать') }}
                             </a>
                             <a href="{{ url('projects:project_delete', pk=project.id) }}"
                                class="btn btn-outline-danger">
-                                <i class="bi bi-trash"></i> Удалить
+                                <i class="bi bi-trash"></i> {{ _('Удалить') }}
                             </a>
                         {% endif %}
                     </div>
@@ -120,7 +120,7 @@
 
 <div class="card shadow-sm">
     <div class="card-header bg-white">
-        <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Прогресс выполнения проекта</h5>
+        <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>{{ _('Прогресс выполнения проекта') }}</h5>
     </div>
     <div class="card-body py-5">
         <h2 class="text-center mb-4">{{ project.progress }}%</h2>
@@ -134,14 +134,14 @@
             </div>
         </div>
         <p class="text-center text-muted mt-3">
-            Выполнено задач: <strong>{{ project.tasks.filter(status='done').count() }}</strong> из <strong>
-            {{ project.tasks.count() }}</strong>
+            {{ _('Выполнено задач') }}: <strong>{{ project.tasks.filter(status='done').count() }}</strong> {{ _('из') }}
+            <strong>
+                {{ project.tasks.count() }}</strong>
         </p>
 
         <div class="alert alert-light border mt-4 text-center">
             <i class="bi bi-info-circle text-primary me-2"></i>
-            Как заказчик, вы видите общий статус выполнения проекта.
-            Для получения деталей обратитесь к менеджеру проекта.
+            {{ _('Как заказчик, вы видите общий статус выполнения проекта. Для получения деталей обратитесь к менеджеру проекта.') }}
         </div>
     </div>
 </div>
@@ -152,34 +152,34 @@
     <li class="nav-item" role="presentation">
         <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview"
                 type="button">
-            <i class="bi bi-info-circle"></i> Обзор
+            <i class="bi bi-info-circle"></i> {{ _('Обзор') }}
         </button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks" type="button">
-            <i class="bi bi-check2-square"></i> Задачи <span
+            <i class="bi bi-check2-square"></i> {{ _('Задачи') }} <span
                 class="badge bg-secondary rounded-pill ms-1">{{ project.tasks.count() }}</span>
         </button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="billing-tab" data-bs-toggle="tab" data-bs-target="#billing" type="button">
-            <i class="bi bi-currency-dollar"></i> Финансы
+            <i class="bi bi-currency-dollar"></i> {{ _('Финансы') }}
         </button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="access-tab" data-bs-toggle="tab" data-bs-target="#access" type="button">
-            <i class="bi bi-key"></i> Доступы
+            <i class="bi bi-key"></i> {{ _('Доступы') }}
         </button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="media-tab" data-bs-toggle="tab" data-bs-target="#media" type="button">
-            <i class="bi bi-images"></i> Медиа
+            <i class="bi bi-images"></i> {{ _('Медиа') }}
         </button>
     </li>
     {% if is_owner %}
         <li class="nav-item" role="presentation">
             <a class="nav-link text-primary" href="{{ url('projects:structure', pk=project.id) }}">
-                <i class="bi bi-diagram-3"></i> Структура (Rete.js)
+                <i class="bi bi-diagram-3"></i> {{ _('Структура (Rete.js)') }}
             </a>
         </li>
     {% endif %}
@@ -189,15 +189,15 @@
     <div class="tab-pane fade show active" id="overview" role="tabpanel">
         <div class="card border-top-0 shadow-sm">
             <div class="card-body">
-                <h5 class="card-title">Описание</h5>
-                <p>{{ project.description or "Описание не указано" }}</p>
+                <h5 class="card-title">{{ _('Описание') }}</h5>
+                <p>{{ project.description or _('Описание не указано') }}</p>
 
-                <h6 class="mt-4 border-bottom pb-2">Команда проекта</h6>
+                <h6 class="mt-4 border-bottom pb-2">{{ _('Команда проекта') }}</h6>
                 <table class="table table-hover mt-2">
                     <thead>
                     <tr>
-                        <th>Участник</th>
-                        <th>Роль</th>
+                        <th>{{ _('Участник') }}</th>
+                        <th>{{ _('Роль') }}</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -206,7 +206,7 @@
                         <td>{{ member.user.username }}</td>
                         <td>
                             {% if member.role == 'owner' %}
-                                <span class="badge bg-primary">Владелец</span>
+                                <span class="badge bg-primary">{{ _('Владелец') }}</span>
                             {% else %}
                                 <span class="badge bg-secondary">{{ member.get_role_display() }}</span>
                             {% endif %}
@@ -214,7 +214,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="2" class="text-muted">Нет участников</td>
+                        <td colspan="2" class="text-muted">{{ _('Нет участников') }}</td>
                     </tr>
                     {% endfor %}
                     </tbody>
@@ -226,11 +226,11 @@
     <div class="tab-pane fade" id="tasks" role="tabpanel">
         <div class="card border-top-0 shadow-sm">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">Список задач</h6>
+                <h6 class="mb-0">{{ _('Список задач') }}</h6>
                 {% if is_owner %}
                     <a href="{{ url('tasks:task_create') }}?project={{ project.id }}"
                        class="btn btn-sm btn-primary">
-                        <i class="bi bi-plus-lg"></i> Задача
+                        <i class="bi bi-plus-lg"></i> {{ _('Задача') }}
                     </a>
                 {% endif %}
             </div>
@@ -238,10 +238,10 @@
                 <table class="table table-hover mb-0 align-middle">
                     <thead class="table-light">
                     <tr>
-                        <th>Статус</th>
-                        <th>Название</th>
-                        <th>Исполнители</th>
-                        <th>Время (План/Факт)</th>
+                        <th>{{ _('Статус') }}</th>
+                        <th>{{ _('Название') }}</th>
+                        <th>{{ _('Исполнители') }}</th>
+                        <th>{{ _('Время (План/Факт)') }}</th>
                         <th style="width: 100px;"></th>
                     </tr>
                     </thead>
@@ -250,9 +250,9 @@
                         <tr>
                             <td>
                                 {% if task.status == 'done' %}
-                                    <span class="badge bg-success">Готово</span>
+                                    <span class="badge bg-success">{{ _('Готово') }}</span>
                                 {% elif task.status == 'in_progress' %}
-                                    <span class="badge bg-warning text-dark">В работе</span>
+                                    <span class="badge bg-warning text-dark">{{ _('В работе') }}</span>
                                 {% else %}
                                     <span class="badge bg-secondary">{{ task.get_status_display() }}</span>
                                 {% endif %}
@@ -271,11 +271,11 @@
                                 {% if is_owner %}
                                     <div class="btn-group">
                                         <a href="{{ url('tasks:task_edit', pk=task.id) }}"
-                                           class="btn btn-sm btn-outline-secondary" title="Редактировать">
+                                           class="btn btn-sm btn-outline-secondary" title="{{ _('Редактировать') }}">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <a href="{{ url('tasks:task_delete', pk=task.id) }}"
-                                           class="btn btn-sm btn-outline-danger" title="Удалить">
+                                           class="btn btn-sm btn-outline-danger" title="{{ _('Удалить') }}">
                                             <i class="bi bi-trash"></i>
                                         </a>
                                     </div>
@@ -284,7 +284,7 @@
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">Задач пока нет</td>
+                            <td colspan="5" class="text-center py-4 text-muted">{{ _('Задач пока нет') }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>
@@ -296,11 +296,11 @@
     <div class="tab-pane fade" id="billing" role="tabpanel">
         <div class="card border-top-0 shadow-sm">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">Финансовые операции</h6>
+                <h6 class="mb-0">{{ _('Финансовые операции') }}</h6>
                 {% if is_owner %}
                     <a href="{{ url('billing:billing_create') }}?project={{ project.id }}"
                        class="btn btn-sm btn-primary">
-                        <i class="bi bi-plus-lg"></i> Операция
+                        <i class="bi bi-plus-lg"></i> {{ _('Операция') }}
                     </a>
                 {% endif %}
             </div>
@@ -308,10 +308,10 @@
                 <table class="table table-hover mb-0 align-middle">
                     <thead class="table-light">
                     <tr>
-                        <th>Дата</th>
-                        <th>Сумма</th>
-                        <th>Тип</th>
-                        <th>Описание</th>
+                        <th>{{ _('Дата') }}</th>
+                        <th>{{ _('Сумма') }}</th>
+                        <th>{{ _('Тип') }}</th>
+                        <th>{{ _('Описание') }}</th>
                         <th style="width: 100px;"></th>
                     </tr>
                     </thead>
@@ -345,7 +345,7 @@
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">Операций нет</td>
+                            <td colspan="5" class="text-center py-4 text-muted">{{ _('Операций нет') }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>
@@ -357,11 +357,11 @@
     <div class="tab-pane fade" id="access" role="tabpanel">
         <div class="card border-top-0 shadow-sm">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">Учетные записи</h6>
+                <h6 class="mb-0">{{ _('Учетные записи') }}</h6>
                 {% if is_owner %}
                     <a href="{{ url('access:access_create') }}?project={{ project.id }}"
                        class="btn btn-sm btn-primary">
-                        <i class="bi bi-plus-lg"></i> Доступ
+                        <i class="bi bi-plus-lg"></i> {{ _('Доступ') }}
                     </a>
                 {% endif %}
             </div>
@@ -369,11 +369,11 @@
                 <table class="table table-hover mb-0 align-middle">
                     <thead class="table-light">
                     <tr>
-                        <th>Сервис</th>
-                        <th>Drive</th>
-                        <th>Логин</th>
-                        <th>Пароль</th>
-                        <th>Описание</th>
+                        <th>{{ _('Сервис') }}</th>
+                        <th>{{ _('Drive') }}</th>
+                        <th>{{ _('Логин') }}</th>
+                        <th>{{ _('Пароль') }}</th>
+                        <th>{{ _('Описание') }}</th>
                         <th style="width: 100px;"></th>
                     </tr>
                     </thead>
@@ -411,7 +411,7 @@
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">Доступов нет</td>
+                            <td colspan="6" class="text-center py-4 text-muted">{{ _('Доступов нет') }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>
@@ -423,11 +423,11 @@
     <div class="tab-pane fade" id="media" role="tabpanel">
         <div class="card border-top-0 shadow-sm">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">Файлы проекта</h6>
+                <h6 class="mb-0">{{ _('Файлы проекта') }}</h6>
                 {% if is_owner %}
                     <a href="{{ url('media_files:media_create') }}?project={{ project.id }}"
                        class="btn btn-sm btn-primary">
-                        <i class="bi bi-cloud-upload"></i> Загрузить
+                        <i class="bi bi-cloud-upload"></i> {{ _('Загрузить') }}
                     </a>
                 {% endif %}
             </div>
@@ -477,7 +477,7 @@
                         {% else %}
                         <div class="col-12 text-center py-5 text-muted">
                             <i class="bi bi-folder2-open display-4 mb-3 d-block"></i>
-                            Файлов нет
+                            {{ _('Файлов нет') }}
                         </div>
                     {% endfor %}
                 </div>
