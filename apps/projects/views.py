@@ -161,33 +161,72 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return ProjectDetailSerializer
 
     def perform_create(self, serializer):
-        owner_id = self.request.data.get('owner_id')
         target_user = self.request.user
+        project = serializer.save(u_creator=target_user)
 
-        if owner_id:
+        owner_ids_str = self.request.data.get('owner_ids')
+        owner_id = self.request.data.get('owner_id')
+
+        owners_to_add = []
+        if owner_ids_str:
             try:
-                target_user = User.objects.get(pk=owner_id)
+                owners_to_add = json.loads(owner_ids_str)
+            except Exception:
+                pass
+        elif owner_id:
+            owners_to_add = [owner_id]
+
+        if not owners_to_add:
+            owners_to_add = [target_user.id]
+
+        first_owner = None
+        for oid in owners_to_add:
+            try:
+                user = User.objects.get(pk=oid)
+                if not first_owner:
+                    first_owner = user
+                ProjectMembership.objects.create(project=project, user=user, role='owner')
             except User.DoesNotExist:
                 pass
 
-        project = serializer.save(u_creator=target_user)
-        ProjectMembership.objects.create(project=project, user=target_user, role='owner')
+        if first_owner:
+            project.u_creator = first_owner
+            project.save()
 
     def perform_update(self, serializer):
         project = serializer.save()
+
+        owner_ids_str = self.request.data.get('owner_ids')
         owner_id = self.request.data.get('owner_id')
-        if owner_id:
+
+        owners_to_set = []
+        if owner_ids_str:
             try:
-                user = User.objects.get(pk=owner_id)
-                project.u_creator = user
-                project.save()
-                ProjectMembership.objects.update_or_create(
-                    project=project,
-                    user=user,
-                    defaults={'role': 'owner'}
-                )
-            except User.DoesNotExist:
+                owners_to_set = json.loads(owner_ids_str)
+            except Exception:
                 pass
+        elif owner_id:
+            owners_to_set = [owner_id]
+
+        if owners_to_set:
+            ProjectMembership.objects.filter(project=project, role='owner').exclude(user_id__in=owners_to_set).delete()
+            first_owner = None
+            for oid in owners_to_set:
+                try:
+                    user = User.objects.get(pk=oid)
+                    if not first_owner:
+                        first_owner = user
+                    ProjectMembership.objects.update_or_create(
+                        project=project,
+                        user=user,
+                        defaults={'role': 'owner'}
+                    )
+                except User.DoesNotExist:
+                    pass
+
+            if first_owner:
+                project.u_creator = first_owner
+                project.save()
 
     @action(detail=False, methods=['get', 'post'], url_path='super-structure')
     def super_structure(self, request):
@@ -234,6 +273,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
                             py = oy + 200
                             unsaved_proj_offset += 280
 
+                        owner_ids = list(
+                            ProjectMembership.objects.filter(project=proj, role='owner').values_list('user_id',
+                                                                                                     flat=True))
+
                         nodes.append({
                             "id": proj_id,
                             "type": "project",
@@ -246,7 +289,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                                 "description": proj.description,
                                 "status": proj.status,
                                 "logo": proj.logo.url if proj.logo else '',
-                                "owner_id": proj.u_creator.id
+                                "owner_ids": owner_ids
                             }
                         })
 

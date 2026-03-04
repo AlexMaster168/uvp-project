@@ -8,6 +8,14 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
+        :root {
+            --color-task: #0d6efd;
+            --color-subtask: #6610f2;
+            --color-access: #fd7e14;
+            --color-billing: #198754;
+            --color-media: #DC143C;
+        }
+
         body, html {
             margin: 0;
             padding: 0;
@@ -108,43 +116,43 @@
         }
 
         .task-node {
-            border-color: #0d6efd;
+            border-color: var(--color-task);
         }
 
         .task-node .node-header {
-            background: #0d6efd;
+            background: var(--color-task);
         }
 
         .subtask-node {
-            border-color: #6610f2;
+            border-color: var(--color-subtask);
         }
 
         .subtask-node .node-header {
-            background: #6610f2;
+            background: var(--color-subtask);
         }
 
         .access-node {
-            border-color: #fd7e14;
+            border-color: var(--color-access);
         }
 
         .access-node .node-header {
-            background: #fd7e14;
+            background: var(--color-access);
         }
 
         .billing-node {
-            border-color: #198754;
+            border-color: var(--color-billing);
         }
 
         .billing-node .node-header {
-            background: #198754;
+            background: var(--color-billing);
         }
 
         .media-node {
-            border-color: #DC143C;
+            border-color: var(--color-media);
         }
 
         .media-node .node-header {
-            background: #DC143C;
+            background: var(--color-media);
         }
 
         .badge-status {
@@ -182,7 +190,7 @@
         }
 
         .connection-line:hover {
-            stroke: #0d6efd;
+            stroke: var(--color-task);
             stroke-width: 3;
             cursor: pointer;
         }
@@ -225,13 +233,13 @@
         }
 
         .socket-flow {
-            background: #0d6efd;
-            border-color: #0d6efd;
+            background: var(--color-task);
+            border-color: var(--color-task);
         }
 
         .socket-hierarchy {
-            background: #6610f2;
-            border-color: #6610f2;
+            background: var(--color-subtask);
+            border-color: var(--color-subtask);
         }
 
         .collapse-btn {
@@ -249,19 +257,27 @@
         <a href="{{ url('projects:project_detail', pk=project.id) }}" class="btn btn-outline-secondary btn-sm"><i
                 class="bi bi-arrow-left"></i> {{ _('Назад') }}</a>
         <div class="vr"></div>
-        <button class="btn btn-primary btn-sm" onclick="viz.openModal('task')"><i
-                class="bi bi-check-square"></i> {{ _('Задача') }}
+        <button class="btn btn-sm text-white" style="background: var(--color-task); border-color: var(--color-task);"
+                onclick="viz.openModal('task')">
+            <i class="bi bi-check-square"></i> {{ _('Задача') }}
         </button>
-        <button class="btn btn-indigo btn-sm text-white" style="background: #6610f2" onclick="viz.openModal('subtask')">
+        <button class="btn btn-sm text-white"
+                style="background: var(--color-subtask); border-color: var(--color-subtask);"
+                onclick="viz.openModal('subtask')">
             <i class="bi bi-list-task"></i> {{ _('Подзадача') }}
         </button>
-        <button class="btn btn-purple btn-sm text-white" style="background:#fd7e14;" onclick="viz.openModal('access')">
+        <button class="btn btn-sm text-white"
+                style="background: var(--color-access); border-color: var(--color-access);"
+                onclick="viz.openModal('access')">
             <i class="bi bi-key"></i> {{ _('Доступ') }}
         </button>
-        <button class="btn btn-success btn-sm" onclick="viz.openModal('billing')"><i class="bi bi-currency-dollar"></i>
-            {{ _('Финансы') }}
+        <button class="btn btn-sm text-white"
+                style="background: var(--color-billing); border-color: var(--color-billing);"
+                onclick="viz.openModal('billing')">
+            <i class="bi bi-currency-dollar"></i> {{ _('Финансы') }}
         </button>
-        <button class="btn btn-warning btn-sm text-white" style="background:#DC143C;" onclick="viz.openModal('media')">
+        <button class="btn btn-sm text-white" style="background: var(--color-media); border-color: var(--color-media);"
+                onclick="viz.openModal('media')">
             <i class="bi bi-file-earmark-plus"></i> {{ _('Медиа') }}
         </button>
     </div>
@@ -270,11 +286,14 @@
                 class="bi bi-diagram-3"></i> {{ _('Супер-структура') }}</a>
         <div class="vr"></div>
         <div class="btn-group">
-            <button id="connect-flow-btn" class="btn btn-outline-primary btn-sm" onclick="viz.toggleConnectMode('flow')"
+            <button id="connect-flow-btn" class="btn btn-sm"
+                    style="color: var(--color-task); border-color: var(--color-task); background: transparent;"
+                    onclick="viz.toggleConnectMode('flow')"
                     title="{{ _('Задача -> Задача (Зависимость)') }}"><i class="bi bi-arrow-right"></i> {{ _('Поток') }}
             </button>
-            <button id="connect-hier-btn" class="btn btn-outline-indigo btn-sm"
-                    style="border-color: #6610f2; color: #6610f2" onclick="viz.toggleConnectMode('hierarchy')"
+            <button id="connect-hier-btn" class="btn btn-sm"
+                    style="color: var(--color-subtask); border-color: var(--color-subtask); background: transparent;"
+                    onclick="viz.toggleConnectMode('hierarchy')"
                     title="{{ _('Задача -> Подзадача (Иерархия)') }}"><i
                     class="bi bi-diagram-2"></i> {{ _('Иерархия') }}
             </button>
@@ -285,6 +304,8 @@
         <button class="btn btn-outline-dark btn-sm" onclick="viz.autoLayout()"><i
                 class="bi bi-grid-3x3"></i> {{ _('Авто') }}
         </button>
+        <button class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#colorsModal"><i
+                class="bi bi-palette"></i> {{ _('Цвета') }}</button>
         <button id="save-btn" class="btn btn-dark btn-sm"><i class="bi bi-cloud-upload"></i> {{ _('Сохранить') }}
         </button>
     </div>
@@ -294,6 +315,45 @@
     <div id="canvas-layer">
         <svg id="connections-layer"></svg>
         <div id="nodes-layer"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="colorsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ _('Настройка цветов') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label>{{ _('Задача') }}</label>
+                    <input type="color" id="color-task" class="form-control form-control-color w-100">
+                </div>
+                <div class="mb-3">
+                    <label>{{ _('Подзадача') }}</label>
+                    <input type="color" id="color-subtask" class="form-control form-control-color w-100">
+                </div>
+                <div class="mb-3">
+                    <label>{{ _('Доступ') }}</label>
+                    <input type="color" id="color-access" class="form-control form-control-color w-100">
+                </div>
+                <div class="mb-3">
+                    <label>{{ _('Финансы') }}</label>
+                    <input type="color" id="color-billing" class="form-control form-control-color w-100">
+                </div>
+                <div class="mb-3">
+                    <label>{{ _('Медиа') }}</label>
+                    <input type="color" id="color-media" class="form-control form-control-color w-100">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-danger me-auto"
+                        onclick="resetColors()">{{ _('По умолчанию') }}</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Отмена') }}</button>
+                <button type="button" class="btn btn-primary" onclick="saveColors()">{{ _('Сохранить') }}</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -316,6 +376,64 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    const defaultProjColors = {
+        task: '#0d6efd',
+        subtask: '#6610f2',
+        access: '#fd7e14',
+        billing: '#198754',
+        media: '#DC143C'
+    };
+
+    let projColors = JSON.parse(localStorage.getItem('projColors')) || {...defaultProjColors};
+
+    function applyColors() {
+        document.documentElement.style.setProperty('--color-task', projColors.task);
+        document.documentElement.style.setProperty('--color-subtask', projColors.subtask);
+        document.documentElement.style.setProperty('--color-access', projColors.access);
+        document.documentElement.style.setProperty('--color-billing', projColors.billing);
+        document.documentElement.style.setProperty('--color-media', projColors.media);
+    }
+
+    function saveColors() {
+        projColors.task = document.getElementById('color-task').value;
+        projColors.subtask = document.getElementById('color-subtask').value;
+        projColors.access = document.getElementById('color-access').value;
+        projColors.billing = document.getElementById('color-billing').value;
+        projColors.media = document.getElementById('color-media').value;
+        localStorage.setItem('projColors', JSON.stringify(projColors));
+        applyColors();
+        bootstrap.Modal.getInstance(document.getElementById('colorsModal')).hide();
+        if (viz) {
+            viz.updateToolbar();
+            viz.render();
+        }
+    }
+
+    function resetColors() {
+        projColors = {...defaultProjColors};
+        document.getElementById('color-task').value = projColors.task;
+        document.getElementById('color-subtask').value = projColors.subtask;
+        document.getElementById('color-access').value = projColors.access;
+        document.getElementById('color-billing').value = projColors.billing;
+        document.getElementById('color-media').value = projColors.media;
+        localStorage.setItem('projColors', JSON.stringify(projColors));
+        applyColors();
+        bootstrap.Modal.getInstance(document.getElementById('colorsModal')).hide();
+        if (viz) {
+            viz.updateToolbar();
+            viz.render();
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        applyColors();
+        document.getElementById('color-task').value = projColors.task;
+        document.getElementById('color-subtask').value = projColors.subtask;
+        document.getElementById('color-access').value = projColors.access;
+        document.getElementById('color-billing').value = projColors.billing;
+        document.getElementById('color-media').value = projColors.media;
+    });
+
     const container = document.getElementById('rete-container');
     const canvasLayer = document.getElementById('canvas-layer');
     const nodesLayer = document.getElementById('nodes-layer');
@@ -346,7 +464,7 @@
 
         async loadData() {
             try {
-                const res = await fetch(`/api/projects/${this.projectId}/structure/`);
+                const res = await fetch(`/api/projects/projects/${this.projectId}/structure/`);
                 if (res.ok) {
                     const data = await res.json();
                     this.nodes = data.nodes || [];
@@ -396,19 +514,23 @@
             const btnFlow = document.getElementById('connect-flow-btn');
             const btnHier = document.getElementById('connect-hier-btn');
 
-            btnFlow.classList.remove('active', 'btn-primary');
-            btnFlow.classList.add('btn-outline-primary');
+            btnFlow.classList.remove('active');
+            btnFlow.style.backgroundColor = 'transparent';
+            btnFlow.style.color = 'var(--color-task)';
+            btnFlow.style.borderColor = 'var(--color-task)';
 
             btnHier.classList.remove('active');
-            btnHier.style.backgroundColor = '';
-            btnHier.style.color = '#6610f2';
+            btnHier.style.backgroundColor = 'transparent';
+            btnHier.style.color = 'var(--color-subtask)';
+            btnHier.style.borderColor = 'var(--color-subtask)';
 
             if (this.connectMode === 'flow') {
-                btnFlow.classList.add('active', 'btn-primary');
-                btnFlow.classList.remove('btn-outline-primary');
+                btnFlow.classList.add('active');
+                btnFlow.style.backgroundColor = 'var(--color-task)';
+                btnFlow.style.color = 'white';
             } else if (this.connectMode === 'hierarchy') {
                 btnHier.classList.add('active');
-                btnHier.style.backgroundColor = '#6610f2';
+                btnHier.style.backgroundColor = 'var(--color-subtask)';
                 btnHier.style.color = 'white';
             }
         }
@@ -564,7 +686,7 @@
                         formData.append('project', this.projectId);
                         formData.append('description', title);
                         try {
-                            const res = await fetch('/api/media_files/', {
+                            const res = await fetch('/api/media/media_files/', {
                                 method: 'POST',
                                 headers: {'X-CSRFToken': this.getCookie('csrftoken')},
                                 body: formData
@@ -588,7 +710,7 @@
                         const formData = new FormData();
                         formData.append('file', fileInput.files[0]);
                         try {
-                            const res = await fetch(`/api/media_files/${this.currentNode.data.db_id}/`, {
+                            const res = await fetch(`/api/media/media_files/${this.currentNode.data.db_id}/`, {
                                 method: 'PATCH',
                                 headers: {'X-CSRFToken': this.getCookie('csrftoken')},
                                 body: formData
@@ -627,8 +749,8 @@
                 const target = this.nodes.find(n => n.id === c.target);
                 if (source && target) {
                     let color = '#9ca3af';
-                    if (source.type === 'task' && target.type === 'task') color = '#0d6efd';
-                    if (source.type === 'task' && target.type === 'subtask') color = '#6610f2';
+                    if (source.type === 'task' && target.type === 'task') color = 'var(--color-task)';
+                    if (source.type === 'task' && target.type === 'subtask') color = 'var(--color-subtask)';
 
                     this.drawArrow(source, target, color);
                 }
@@ -850,7 +972,7 @@
                 btn.disabled = true;
                 btn.innerHTML = '<i class="bi bi-hourglass"></i> ...';
                 try {
-                    const res = await fetch(`/api/projects/${this.projectId}/structure/`, {
+                    const res = await fetch(`/api/projects/projects/${this.projectId}/structure/`, {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json', 'X-CSRFToken': this.getCookie('csrftoken')},
                         body: JSON.stringify({nodes: this.nodes, connections: this.connections})

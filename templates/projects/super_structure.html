@@ -8,6 +8,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
+        :root {
+            --color-owner: #f59e0b;
+            --color-project: #3b82f6;
+        }
+
         body, html {
             margin: 0;
             padding: 0;
@@ -127,21 +132,21 @@
         }
 
         .owner-node {
-            border-color: #f59e0b;
+            border-color: var(--color-owner);
             border-width: 2px;
         }
 
         .owner-node .node-header {
-            background: #f59e0b;
+            background: var(--color-owner) !important;
         }
 
         .project-node {
-            border-color: #3b82f6;
+            border-color: var(--color-project);
             border-width: 2px;
         }
 
         .project-node .node-header {
-            background: #3b82f6;
+            background: var(--color-project) !important;
         }
 
         .connection-line {
@@ -164,14 +169,20 @@
         <a href="{{ url('projects:project_list') }}" class="btn btn-outline-light btn-sm"><i
                 class="bi bi-arrow-left"></i> {{ _('Список') }}</a>
         <div class="vr bg-secondary"></div>
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newProjectModal"><i
+        <button class="btn btn-sm text-white"
+                style="background: var(--color-project); border-color: var(--color-project);" data-bs-toggle="modal"
+                data-bs-target="#newProjectModal"><i
                 class="bi bi-plus-lg"></i> {{ _('Новый проект') }}
         </button>
-        <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#newUserModal"><i
+        <button class="btn btn-sm text-white" style="background: var(--color-owner); border-color: var(--color-owner);"
+                data-bs-toggle="modal" data-bs-target="#newUserModal"><i
                 class="bi bi-person-plus"></i> {{ _('Новый Owner (Superuser)') }}
         </button>
     </div>
     <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-info btn-sm text-white" data-bs-toggle="modal" data-bs-target="#colorsModal">
+            <i class="bi bi-palette"></i> {{ _('Цвета') }}
+        </button>
         <button id="save-btn" class="btn btn-success btn-sm"><i
                 class="bi bi-cloud-upload"></i> {{ _('Сохранить позицию') }}
         </button>
@@ -181,6 +192,33 @@
 <div id="rete-container">
     <svg id="connections-layer"></svg>
     <div id="nodes-layer"></div>
+</div>
+
+<div class="modal fade" id="colorsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ _('Настройка цветов') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label>Owner</label>
+                    <input type="color" id="color-owner" class="form-control form-control-color w-100">
+                </div>
+                <div class="mb-3">
+                    <label>Project</label>
+                    <input type="color" id="color-project" class="form-control form-control-color w-100">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-danger me-auto"
+                        onclick="resetColors()">{{ _('По умолчанию') }}</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Отмена') }}</button>
+                <button type="button" class="btn btn-primary" onclick="saveColors()">{{ _('Сохранить') }}</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="modal fade" id="newProjectModal" tabindex="-1">
@@ -193,11 +231,12 @@
             <div class="modal-body">
                 <div class="mb-3">
                     <label>{{ _('Владелец (Owner)') }}</label>
-                    <select id="new-proj-owner" class="form-select">
+                    <select id="new-proj-owner" class="form-select" multiple size="3">
                         {% for su in superusers %}
                             <option value="{{ su.id }}">{{ su.username }}</option>
                         {% endfor %}
                     </select>
+                    <small class="text-muted">{{ _('Зажмите Ctrl (или Cmd), чтобы выбрать несколько.') }}</small>
                 </div>
                 <div class="mb-3">
                     <label>{{ _('Название') }}</label>
@@ -269,12 +308,13 @@
             <div class="modal-body">
                 <input type="hidden" id="edit-proj-id">
                 <div class="mb-3">
-                    <label>{{ _('Владелец') }}</label>
-                    <select id="edit-proj-owner" class="form-select">
+                    <label>{{ _('Владельцы') }}</label>
+                    <select id="edit-proj-owner" class="form-select" multiple size="3">
                         {% for su in superusers %}
                             <option value="{{ su.id }}">{{ su.username }}</option>
                         {% endfor %}
                     </select>
+                    <small class="text-muted">{{ _('Зажмите Ctrl (или Cmd), чтобы выбрать несколько.') }}</small>
                 </div>
                 <div class="mb-3">
                     <label>{{ _('Название') }}</label>
@@ -312,6 +352,37 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    const defaultSuperColors = {owner: '#f59e0b', project: '#3b82f6'};
+    let superColors = JSON.parse(localStorage.getItem('superColors')) || {...defaultSuperColors};
+
+    function applyColors() {
+        document.documentElement.style.setProperty('--color-owner', superColors.owner);
+        document.documentElement.style.setProperty('--color-project', superColors.project);
+    }
+
+    function saveColors() {
+        superColors.owner = document.getElementById('color-owner').value;
+        superColors.project = document.getElementById('color-project').value;
+        localStorage.setItem('superColors', JSON.stringify(superColors));
+        applyColors();
+        bootstrap.Modal.getInstance(document.getElementById('colorsModal')).hide();
+    }
+
+    function resetColors() {
+        superColors = {...defaultSuperColors};
+        document.getElementById('color-owner').value = superColors.owner;
+        document.getElementById('color-project').value = superColors.project;
+        localStorage.setItem('superColors', JSON.stringify(superColors));
+        applyColors();
+        bootstrap.Modal.getInstance(document.getElementById('colorsModal')).hide();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        applyColors();
+        document.getElementById('color-owner').value = superColors.owner;
+        document.getElementById('color-project').value = superColors.project;
+    });
+
     const container = document.getElementById('rete-container');
     const nodesLayer = document.getElementById('nodes-layer');
     const svgLayer = document.getElementById('connections-layer');
@@ -343,7 +414,7 @@
 
         async loadData() {
             try {
-                const res = await fetch(`/api/projects/super-structure/`);
+                const res = await fetch(`/api/projects/projects/super-structure/`);
                 if (res.ok) {
                     const data = await res.json();
                     this.nodes = data.nodes || [];
@@ -359,7 +430,12 @@
             document.getElementById('edit-proj-name').value = node.title;
             document.getElementById('edit-proj-desc').value = node.data.description || "";
             document.getElementById('edit-proj-status').value = node.data.status || 'planned';
-            document.getElementById('edit-proj-owner').value = node.data.owner_id;
+
+            const ownerIds = node.data.owner_ids || [];
+            const select = document.getElementById('edit-proj-owner');
+            Array.from(select.options).forEach(opt => {
+                opt.selected = ownerIds.includes(parseInt(opt.value));
+            });
 
             const logoImg = document.getElementById('edit-proj-current-logo');
             if (node.data.logo) {
@@ -377,7 +453,7 @@
         async deleteNode(node) {
             if (!confirm('{{ _("Удалить проект") }} "' + node.title + '"?')) return;
             try {
-                const res = await fetch(`/api/projects/${node.data.db_id}/`, {
+                const res = await fetch(`/api/projects/projects/${node.data.db_id}/`, {
                     method: 'DELETE',
                     headers: {'X-CSRFToken': getCookie('csrftoken')}
                 });
@@ -512,7 +588,7 @@
                 this.render();
             };
             document.getElementById('save-btn').onclick = async () => {
-                await fetch(`/api/projects/super-structure/`, {
+                await fetch(`/api/projects/projects/super-structure/`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
                     body: JSON.stringify({nodes: this.nodes})
@@ -527,23 +603,24 @@
     async function createProject() {
         const name = document.getElementById('new-proj-name').value;
         const desc = document.getElementById('new-proj-desc').value;
-        const ownerId = document.getElementById('new-proj-owner').value;
+        const ownerOptions = document.getElementById('new-proj-owner').selectedOptions;
+        const ownerIds = Array.from(ownerOptions).map(opt => opt.value);
         const status = document.getElementById('new-proj-status').value;
         const logo = document.getElementById('new-proj-logo').files[0];
 
-        if (!name || !ownerId) return;
+        if (!name || ownerIds.length === 0) return;
 
         const formData = new FormData();
         formData.append('name', name);
         formData.append('description', desc);
-        formData.append('owner_id', ownerId);
+        formData.append('owner_ids', JSON.stringify(ownerIds));
         formData.append('status', status);
         if (logo) {
             formData.append('logo', logo);
         }
 
         try {
-            const res = await fetch('/api/projects/', {
+            const res = await fetch('/api/projects/projects/', {
                 method: 'POST',
                 headers: {'X-CSRFToken': getCookie('csrftoken')},
                 body: formData
@@ -564,7 +641,7 @@
         if (!name || !pass) return;
 
         try {
-            const res = await fetch('/api/users/', {
+            const res = await fetch('/api/users/users/', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
                 body: JSON.stringify({
@@ -591,20 +668,21 @@
         const name = document.getElementById('edit-proj-name').value;
         const desc = document.getElementById('edit-proj-desc').value;
         const status = document.getElementById('edit-proj-status').value;
-        const ownerId = document.getElementById('edit-proj-owner').value;
+        const ownerOptions = document.getElementById('edit-proj-owner').selectedOptions;
+        const ownerIds = Array.from(ownerOptions).map(opt => opt.value);
         const logo = document.getElementById('edit-proj-logo').files[0];
 
         const formData = new FormData();
         formData.append('name', name);
         formData.append('description', desc);
         formData.append('status', status);
-        formData.append('owner_id', ownerId);
+        formData.append('owner_ids', JSON.stringify(ownerIds));
         if (logo) {
             formData.append('logo', logo);
         }
 
         try {
-            const res = await fetch(`/api/projects/${id}/`, {
+            const res = await fetch(`/api/projects/projects/${id}/`, {
                 method: 'PATCH',
                 headers: {'X-CSRFToken': getCookie('csrftoken')},
                 body: formData
