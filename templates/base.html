@@ -124,7 +124,7 @@
     <ul class="nav nav-pills flex-column mb-auto">
         <li class="nav-item">
             <a href="{{ url('projects:project_list') }}"
-               class="nav-link {% if request.resolver_match.app_name == 'projects' %}active{% endif %}">
+               class="nav-link {% if request.resolver_match.app_name == 'projects' and request.resolver_match.url_name != 'dashboard' %}active{% endif %}">
                 <i class="bi bi-folder me-2"></i> {{ _('Проекты') }}
             </a>
         </li>
@@ -159,6 +159,12 @@
         {% endif %}
         {% if user.is_superuser %}
             <hr class="text-white-50">
+            <li>
+                <a href="{{ url('projects:dashboard') }}"
+                   class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="bi bi-speedometer2 me-2"></i> {{ _('Дашборд') }}
+                </a>
+            </li>
             <li>
                 <a href="{{ url('users:user_list') }}"
                    class="nav-link {% if request.resolver_match.app_name == 'users' and request.resolver_match.url_name != 'settings' %}active{% endif %}">

@@ -1,5 +1,5 @@
 import json
-from django.db.models import Q
+from django.db.models import Q, Count, Sum
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -650,3 +650,38 @@ class ProjectViewSet(viewsets.ModelViewSet):
             project.structure_data = json.dumps(data)
             project.save()
             return Response(data)
+
+
+class DashboardView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
+    template_name = 'projects/dashboard.html'
+
+    def test_func(self):
+        return self.request.user.is_superuser
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        total_projects = Project.objects.count()
+        projects_status_raw = list(Project.objects.values('status').annotate(count=Count('id')))
+        projects_by_status = {item['status']: item['count'] for item in projects_status_raw}
+
+        total_tasks = Task.objects.count()
+        tasks_status_raw = list(Task.objects.values('status').annotate(count=Count('id')))
+        tasks_by_status = {item['status']: item['count'] for item in tasks_status_raw}
+
+        total_income = Billing.objects.filter(operation='income').aggregate(total=Sum('amount'))['total'] or 0
+        total_expense = Billing.objects.filter(operation='expense').aggregate(total=Sum('amount'))['total'] or 0
+
+        context['stats'] = {
+            'total_projects': total_projects,
+            'total_tasks': total_tasks,
+            'total_income': float(total_income),
+            'total_expense': float(total_expense),
+        }
+
+        context['chart_data'] = json.dumps({
+            'projects_by_status': projects_by_status,
+            'tasks_by_status': tasks_by_status,
+            'finances': [float(total_income), float(total_expense)]
+        })
+        return context

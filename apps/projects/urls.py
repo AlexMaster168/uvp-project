@@ -10,6 +10,7 @@ router.register(r'tags', views.TagViewSet, basename='tag')
 
 urlpatterns = [
     path('', views.ProjectListView.as_view(), name='project_list'),
+    path('dashboard/', views.DashboardView.as_view(), name='dashboard'),
     path('create/', views.ProjectCreateView.as_view(), name='project_create'),
     path('super-structure/', views.SuperStructureView.as_view(), name='super_structure'),
     path('<int:pk>/', views.ProjectDetailView.as_view(), name='project_detail'),
