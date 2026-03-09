@@ -6,38 +6,51 @@
 {% block content %}
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <div class="card mt-4">
-                <div class="card-header">
-                    {% if form.instance.pk %}{{ _('Редактировать медиафайл') }}{% else %}
-                        {{ _('Новый медиафайл') }}{% endif %}
+            <div class="card shadow-sm border-0 rounded-4 mt-4">
+                <div class="card-header bg-white border-0 pt-4 pb-0">
+                    <h5 class="mb-0 fw-bold">
+                        {% if form.instance.pk %}{{ _('Редактировать медиафайл') }}{% else %}
+                            {{ _('Новый медиафайл') }}{% endif %}
+                    </h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     <form method="post" enctype="multipart/form-data">
                         <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+                        <div class="mb-4 text-center">
+                            <img id="media-preview" src="
+                                    {% if form.instance.file and form.instance.is_image %}{{ form.instance.file.url }}{% endif %}"
+                                 class="rounded-3 border shadow-sm {% if not form.instance.file or not form.instance.is_image %}d-none{% endif %}"
+                                 style="max-width: 100%; height: auto; max-height: 250px; object-fit: contain;">
+                        </div>
 
                         {% for field in form %}
                             <div class="mb-3">
                                 {% if not field.is_hidden %}
-                                    <label class="form-label">{{ field.label }}</label>
+                                    <label class="form-label text-muted small fw-bold text-uppercase">{{ field.label }}</label>
                                 {% endif %}
                                 {{ field }}
                                 {% if field.errors %}
-                                    <div class="text-danger small">{{ field.errors[0] }}</div>
+                                    <div class="text-danger small mt-1">{{ field.errors[0] }}</div>
                                 {% endif %}
                             </div>
                         {% endfor %}
 
+                        <hr class="my-4 text-muted opacity-25">
+
                         <div class="d-flex justify-content-end gap-2">
                             {% if project %}
                                 <a href="{{ url('projects:project_detail', pk=project.pk) }}#media"
-                                   class="btn btn-secondary">{{ _('Отмена') }}</a>
+                                   class="btn btn-light rounded-pill px-4">{{ _('Отмена') }}</a>
                             {% elif form.instance.project %}
                                 <a href="{{ url('projects:project_detail', pk=form.instance.project.pk) }}#media"
-                                   class="btn btn-secondary">{{ _('Отмена') }}</a>
+                                   class="btn btn-light rounded-pill px-4">{{ _('Отмена') }}</a>
                             {% else %}
-                                <a href="javascript:history.back()" class="btn btn-secondary">{{ _('Отмена') }}</a>
+                                <a href="javascript:history.back()"
+                                   class="btn btn-light rounded-pill px-4">{{ _('Отмена') }}</a>
                             {% endif %}
-                            <button type="submit" class="btn btn-primary">{{ _('Сохранить') }}</button>
+                            <button type="submit"
+                                    class="btn btn-primary rounded-pill px-4">{{ _('Сохранить') }}</button>
                         </div>
                     </form>
                 </div>

@@ -10,12 +10,28 @@ User = get_user_model()
 class CustomUserCreationForm(UserCreationForm):
     class Meta:
         model = User
-        fields = ['username', 'email', 'first_name', 'last_name']
+        fields = ['username', 'email', 'first_name', 'last_name', 'avatar']
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'avatar': forms.FileInput(
+                attrs={'class': 'form-control image-crop-input', 'data-preview-target': '#avatar-preview'}),
+        }
+
+
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'first_name', 'last_name', 'avatar']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control bg-light border-0 py-2'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control bg-light border-0 py-2'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control bg-light border-0 py-2'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control bg-light border-0 py-2'}),
+            'avatar': forms.FileInput(attrs={'class': 'form-control bg-light border-0 py-2 image-crop-input',
+                                             'data-preview-target': '#avatar-preview'}),
         }
 
 

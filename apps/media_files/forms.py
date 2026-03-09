@@ -8,7 +8,9 @@ class MediaFileForm(forms.ModelForm):
         fields = ['project', 'file', 'description']
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
-            'file': forms.FileInput(attrs={'class': 'form-control'}),
+            'file': forms.FileInput(
+                attrs={'class': 'form-control image-crop-input', 'data-preview-target': '#media-preview',
+                       'accept': 'image/*'}),
             'project': forms.Select(attrs={'class': 'form-select'}),
         }
 

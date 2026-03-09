@@ -6,7 +6,7 @@ from django.urls import reverse_lazy, reverse
 from rest_framework import viewsets
 from django.contrib.auth import get_user_model
 
-from .forms import CustomUserCreationForm, AddUserToProjectForm, GlobalSettingsForm
+from .forms import CustomUserCreationForm, AddUserToProjectForm, GlobalSettingsForm, UserProfileForm
 from apps.projects.models import ProjectMembership
 from .serializers import UserSerializer
 from .models import GlobalSettings
@@ -119,3 +119,13 @@ class SettingsView(LoginRequiredMixin, SuperUserRequiredMixin, View):
             form.save()
             return redirect('users:settings')
         return render(request, 'users/settings.html', {'form': form})
+
+
+class UserProfileView(LoginRequiredMixin, UpdateView):
+    model = User
+    form_class = UserProfileForm
+    template_name = 'users/profile.html'
+    success_url = reverse_lazy('users:profile')
+
+    def get_object(self, queryset=None):
+        return self.request.user

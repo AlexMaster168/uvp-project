@@ -24,6 +24,7 @@ class User(AbstractUser):
     u_group = models.ForeignKey(GroupUsers, on_delete=models.PROTECT, related_name='users', null=True, blank=True)
     global_x = models.FloatField(default=0)
     global_y = models.FloatField(default=0)
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
 
     class Meta:
         db_table = 'users'
@@ -47,6 +48,17 @@ class User(AbstractUser):
         self.status = 'active'
         self.is_active = True
         self.save()
+
+    def get_avatar_url(self):
+        if self.avatar and hasattr(self.avatar, 'url'):
+            return self.avatar.url
+        try:
+            social_account = self.socialaccount_set.filter(provider='google').first()
+            if social_account and social_account.extra_data.get('picture'):
+                return social_account.extra_data.get('picture')
+        except Exception:
+            pass
+        return f"https://ui-avatars.com/api/?name={self.username}&background=random&color=fff&size=256"
 
 
 class GlobalSettings(models.Model):

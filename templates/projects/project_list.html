@@ -7,27 +7,28 @@
         <h1><i class="bi bi-folder"></i> {{ _('Проекты') }}</h1>
         {% if user.is_superuser %}
             <div class="d-flex gap-2">
-                <a href="{{ url('projects:super_structure') }}" class="btn btn-dark">
+                <a href="{{ url('projects:super_structure') }}" class="btn btn-dark rounded-pill px-3">
                     <i class="bi bi-diagram-3"></i> {{ _('Супер-структура') }}
                 </a>
-                <a href="{{ url('projects:project_create') }}" class="btn btn-primary">
+                <a href="{{ url('projects:project_create') }}" class="btn btn-primary rounded-pill px-3">
                     <i class="bi bi-plus-circle"></i> {{ _('Новый проект') }}
                 </a>
             </div>
         {% endif %}
     </div>
 
-    <div class="card mb-4">
-        <div class="card-body">
+    <div class="card mb-4 border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
             <form method="get" class="row g-3">
                 <div class="col-md-3">
-                    <label class="form-label">{{ _('Поиск') }}</label>
-                    <input type="text" name="q" class="form-control" placeholder="{{ _('Название проекта...') }}"
+                    <label class="form-label text-muted small fw-bold text-uppercase">{{ _('Поиск') }}</label>
+                    <input type="text" name="q" class="form-control bg-light border-0 py-2"
+                           placeholder="{{ _('Название проекта...') }}"
                            value="{{ request.GET.get('q', '') }}">
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">{{ _('Статус') }}</label>
-                    <select name="status" class="form-select">
+                    <label class="form-label text-muted small fw-bold text-uppercase">{{ _('Статус') }}</label>
+                    <select name="status" class="form-select bg-light border-0 py-2">
                         <option value="">{{ _('Все') }}</option>
                         <option value="planned" {% if request.GET.get('status') == 'planned' %}selected{% endif %}>
                             {{ _('Запланирован') }}
@@ -47,8 +48,8 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">{{ _('Владелец') }}</label>
-                    <select name="owner" class="form-select">
+                    <label class="form-label text-muted small fw-bold text-uppercase">{{ _('Владелец') }}</label>
+                    <select name="owner" class="form-select bg-light border-0 py-2">
                         <option value="">{{ _('Все') }}</option>
                         {% for owner in owners %}
                             <option value="{{ owner.id }}"
@@ -58,9 +59,8 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label">&nbsp;</label>
-                    <button type="submit" class="btn btn-secondary w-100">
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-secondary w-100 py-2 rounded-3">
                         <i class="bi bi-search"></i> {{ _('Фильтр') }}
                     </button>
                 </div>
@@ -68,81 +68,113 @@
         </div>
     </div>
 
-    <div class="card">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
-                <tr>
-                    <th>{{ _('Владельцы') }}</th>
-                    <th>{{ _('Название') }}</th>
-                    <th>{{ _('Задачи') }}</th>
-                    <th>{{ _('Получено / Потрачено / Остаток') }}</th>
-                    <th>{{ _('Статус') }}</th>
-                    <th>{{ _('Действия') }}</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for project in projects %}
-                    <tr>
-                        <td>
-                            {% for owner in project.get_owners() %}
-                                <span class="badge bg-secondary">{{ owner.user.username }}</span>
-                            {% endfor %}
-                        </td>
-                        <td>
-                            <a href="{{ url('projects:project_detail', pk=project.id) }}">
-                                {{ project.name }} <small class="text-muted">#{{ project.id }}</small>
-                            </a>
-                        </td>
-                        <td>
-                            <a href="{{ url('tasks:task_list') }}?project={{ project.id }}">
-                                {{ project.get_tasks_count() }}
-                            </a>
-                        </td>
-                        <td>
-                            {% set fin = project.get_financial_summary() %}
-                            <small>{{ fin.income|default(0) }} / {{ fin.expense|default(0) }} /
-                                {{ fin.balance|default(0) }}</small>
-                        </td>
-                        <td>
-                            {% if project.status == 'in_progress' %}
-                                <span class="badge bg-success">{{ _('В работе') }}</span>
-                            {% elif project.status == 'planned' %}
-                                <span class="badge bg-info">{{ _('Запланирован') }}</span>
-                            {% elif project.status == 'idle' %}
-                                <span class="badge bg-warning">{{ _('Простой') }}</span>
-                            {% elif project.status == 'sleep' %}
-                                <span class="badge bg-secondary">{{ _('Заморожен') }}</span>
-                            {% elif project.status == 'finished' %}
-                                <span class="badge bg-success">{{ _('Завершен') }}</span>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+        {% for project in projects %}
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm rounded-4 position-relative overflow-hidden transition-hover">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="d-flex">
+                                {% for owner in project.get_owners() %}
+                                    <img src="{{ owner.user.get_avatar_url() }}" alt="{{ owner.user.username }}"
+                                         class="rounded-circle border border-white border-3 shadow-sm"
+                                         width="50" height="50"
+                                         style="object-fit: cover; {% if not loop.first %}margin-left: -15px;{% endif %} position: relative; z-index: {{ loop.revindex }};"
+                                         title="{{ owner.user.username }}">
+                                {% endfor %}
+                            </div>
+
+                            {% if user.is_superuser %}
+                                <div class="dropdown">
+                                    <button class="btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center"
+                                            type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                                            style="width: 35px; height: 35px;">
+                                        <i class="bi bi-three-dots-vertical text-secondary"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                        <li>
+                                            <a class="dropdown-item d-flex align-items-center gap-2"
+                                               href="{{ url('projects:project_edit', pk=project.id) }}">
+                                                <i class="bi bi-pencil text-primary"></i> {{ _('Редактировать') }}
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
                             {% endif %}
-                        </td>
-                        {% if user.is_superuser %}
-                            <td>
-                                <a href="{{ url('projects:project_edit', pk=project.id) }}"
-                                   class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-pencil"></i>
+                        </div>
+
+                        <a href="{{ url('projects:project_detail', pk=project.id) }}"
+                           class="text-decoration-none text-dark d-block mb-1">
+                            <h4 class="card-title fw-bold mb-0 text-truncate">{{ project.name }}</h4>
+                        </a>
+                        <p class="text-muted small mb-4">#{{ project.id }}</p>
+
+                        <div class="d-flex flex-column gap-2">
+                            <div class="d-flex justify-content-between align-items-center bg-light rounded-3 p-2 px-3">
+                                <span class="text-muted small fw-medium"><i
+                                        class="bi bi-check2-square me-2"></i>{{ _('Задачи') }}</span>
+                                <a href="{{ url('tasks:task_list') }}?project={{ project.id }}"
+                                   class="badge bg-primary text-decoration-none rounded-pill px-3 py-2">
+                                    {{ project.get_tasks_count() }}
                                 </a>
-                            </td>
-                        {% endif %}
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center bg-light rounded-3 p-2 px-3">
+                                <span class="text-muted small fw-medium"><i
+                                        class="bi bi-wallet2 me-2"></i>{{ _('Финансы') }}</span>
+                                {% set fin = project.get_financial_summary() %}
+                                <small class="fw-bold">
+                                    <span class="text-success"
+                                          title="{{ _('Получено') }}">{{ fin.income|default(0) }}</span> /
+                                    <span class="text-danger"
+                                          title="{{ _('Потрачено') }}">{{ fin.expense|default(0) }}</span> /
+                                    <span class="{% if fin.balance|default(0) < 0 %}text-danger{% else %}text-primary{% endif %}"
+                                          title="{{ _('Остаток') }}">{{ fin.balance|default(0) }}</span>
+                                </small>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center bg-light rounded-3 p-2 px-3">
+                                <span class="text-muted small fw-medium"><i
+                                        class="bi bi-activity me-2"></i>{{ _('Статус') }}</span>
+                                {% if project.status == 'in_progress' %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill">{{ _('В работе') }}</span>
+                                {% elif project.status == 'planned' %}
+                                    <span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-2 rounded-pill">{{ _('Запланирован') }}</span>
+                                {% elif project.status == 'idle' %}
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2 rounded-pill">{{ _('Простой') }}</span>
+                                {% elif project.status == 'sleep' %}
+                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-3 py-2 rounded-pill">{{ _('Заморожен') }}</span>
+                                {% elif project.status == 'finished' %}
+                                    <span class="badge bg-success border border-success px-3 py-2 rounded-pill">{{ _('Завершен') }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-12 w-100">
+                <div class="text-center py-5 text-muted bg-white rounded-4 shadow-sm">
+                    <i class="bi bi-folder-x display-1 mb-3 text-secondary opacity-50"></i>
+                    <h5 class="fw-bold">{{ _('Проекты не найдены') }}</h5>
+                    <p class="mb-0">{{ _('Попробуйте изменить параметры фильтрации или создайте новый проект.') }}</p>
+                </div>
+            </div>
+        {% endfor %}
     </div>
 
     {% if is_paginated %}
-        <nav class="mt-4">
-            <ul class="pagination justify-content-center">
+        <nav class="mt-5">
+            <ul class="pagination justify-content-center border-0 gap-2">
                 {% if page_obj.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page=1&q={{ request.GET.get('q','') }}&status=
-                                {{ request.GET.get('status','') }}&owner=
-                                {{ request.GET.get('owner','') }}">{{ _('Первая') }}</a>
+                        <a class="page-link shadow-sm border-0 rounded-pill px-3"
+                           href="?page=1&q={{ request.GET.get('q','') }}&status=
+                                   {{ request.GET.get('status','') }}&owner=
+                                   {{ request.GET.get('owner','') }}">{{ _('Первая') }}</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link"
+                        <a class="page-link shadow-sm border-0 rounded-pill px-3"
                            href="?page={{ page_obj.previous_page_number }}&q={{ request.GET.get('q','') }}&status=
                                    {{ request.GET.get('status','') }}&owner=
                                    {{ request.GET.get('owner','') }}">{{ _('Назад') }}</a>
@@ -150,18 +182,18 @@
                 {% endif %}
 
                 <li class="page-item active">
-                    <span class="page-link">{{ page_obj.number }} {{ _('из') }} {{ page_obj.paginator.num_pages }}</span>
+                    <span class="page-link shadow-sm border-0 rounded-pill px-4 fw-bold">{{ page_obj.number }} {{ _('из') }} {{ page_obj.paginator.num_pages }}</span>
                 </li>
 
                 {% if page_obj.has_next %}
                     <li class="page-item">
-                        <a class="page-link"
+                        <a class="page-link shadow-sm border-0 rounded-pill px-3"
                            href="?page={{ page_obj.next_page_number }}&q={{ request.GET.get('q','') }}&status=
                                    {{ request.GET.get('status','') }}&owner=
                                    {{ request.GET.get('owner','') }}">{{ _('Далее') }}</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link"
+                        <a class="page-link shadow-sm border-0 rounded-pill px-3"
                            href="?page={{ page_obj.paginator.num_pages }}&q={{ request.GET.get('q','') }}&status=
                                    {{ request.GET.get('status','') }}&owner=
                                    {{ request.GET.get('owner','') }}">{{ _('Последняя') }}</a>
@@ -170,4 +202,15 @@
             </ul>
         </nav>
     {% endif %}
+
+    <style>
+        .transition-hover {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .transition-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+        }
+    </style>
 {% endblock %}

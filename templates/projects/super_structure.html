@@ -7,6 +7,7 @@
     <title>{{ _('Общая структура проектов') }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <style>
         :root {
             --color-owner: #f59e0b;
@@ -258,7 +259,7 @@
                 </div>
                 <div class="mb-3">
                     <label>{{ _('Логотип') }}</label>
-                    <input type="file" id="new-proj-logo" class="form-control">
+                    <input type="file" id="new-proj-logo" class="form-control image-crop-input" accept="image/*">
                 </div>
             </div>
             <div class="modal-footer">
@@ -288,6 +289,10 @@
                 <div class="mb-3">
                     <label>{{ _('Пароль') }}</label>
                     <input type="password" id="new-user-pass" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label>{{ _('Аватар') }}</label>
+                    <input type="file" id="new-user-avatar" class="form-control image-crop-input" accept="image/*">
                 </div>
             </div>
             <div class="modal-footer">
@@ -340,7 +345,8 @@
                         <img id="edit-proj-current-logo" src="" alt="{{ _('Текущий логотип') }}"
                              style="max-height: 80px; display: none; border-radius: 4px; border: 1px solid #ddd;">
                     </div>
-                    <input type="file" id="edit-proj-logo" class="form-control">
+                    <input type="file" id="edit-proj-logo" class="form-control image-crop-input" accept="image/*"
+                           data-preview-target="#edit-proj-current-logo">
                 </div>
             </div>
             <div class="modal-footer">
@@ -350,7 +356,31 @@
     </div>
 </div>
 
+<div class="modal fade" id="globalCropModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+     aria-hidden="true" style="z-index: 2000;">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">{{ _('Обрезать изображение') }}</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 text-center bg-white">
+                <div style="max-height: 500px; width: 100%; overflow: hidden; display: flex; justify-content: center; background-color: #f8f9fa; border-radius: 10px;">
+                    <img id="global-image-to-crop" src="" style="max-width: 100%; max-height: 500px; display: block;">
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light rounded-pill px-4"
+                        data-bs-dismiss="modal">{{ _('Отмена') }}</button>
+                <button type="button" class="btn btn-primary rounded-pill px-4"
+                        id="global-crop-btn">{{ _('Применить') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <script>
     const defaultSuperColors = {owner: '#f59e0b', project: '#3b82f6'};
     let superColors = JSON.parse(localStorage.getItem('superColors')) || {...defaultSuperColors};
@@ -381,6 +411,74 @@
         applyColors();
         document.getElementById('color-owner').value = superColors.owner;
         document.getElementById('color-project').value = superColors.project;
+
+        let cropper = null;
+        let currentFileInput = null;
+        let originalFile = null;
+        const imageToCrop = document.getElementById('global-image-to-crop');
+        const cropModalElement = document.getElementById('globalCropModal');
+        if (!cropModalElement) return;
+        const cropModal = new bootstrap.Modal(cropModalElement);
+        const cropBtn = document.getElementById('global-crop-btn');
+
+        document.addEventListener('change', function (e) {
+            if (e.target && e.target.classList.contains('image-crop-input')) {
+                const files = e.target.files;
+                if (files && files.length > 0) {
+                    currentFileInput = e.target;
+                    originalFile = files[0];
+                    if (!originalFile.type.startsWith('image/')) return;
+                    const url = URL.createObjectURL(originalFile);
+                    imageToCrop.src = url;
+                    cropModal.show();
+                }
+            }
+        });
+
+        cropModalElement.addEventListener('shown.bs.modal', function () {
+            if (cropper) cropper.destroy();
+            cropper = new Cropper(imageToCrop, {
+                aspectRatio: NaN,
+                viewMode: 1,
+                autoCropArea: 1,
+                dragMode: 'move',
+                background: false,
+            });
+        });
+
+        cropModalElement.addEventListener('hidden.bs.modal', function () {
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+            imageToCrop.src = '';
+        });
+
+        cropBtn.addEventListener('click', function () {
+            if (!cropper || !currentFileInput) return;
+
+            cropper.getCroppedCanvas({
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high',
+            }).toBlob(function (blob) {
+                const fileName = originalFile ? originalFile.name : 'cropped.png';
+                const croppedFile = new File([blob], fileName, {type: 'image/png', lastModified: new Date().getTime()});
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(croppedFile);
+                currentFileInput.files = dataTransfer.files;
+
+                const previewTargetSelector = currentFileInput.getAttribute('data-preview-target');
+                if (previewTargetSelector) {
+                    const previewTargets = document.querySelectorAll(previewTargetSelector);
+                    previewTargets.forEach(target => {
+                        target.src = URL.createObjectURL(blob);
+                        target.style.display = 'block';
+                        target.classList.remove('d-none');
+                    });
+                }
+                cropModal.hide();
+            }, 'image/png');
+        });
     });
 
     const container = document.getElementById('rete-container');
@@ -638,19 +736,24 @@
         const name = document.getElementById('new-user-name').value;
         const email = document.getElementById('new-user-email').value;
         const pass = document.getElementById('new-user-pass').value;
+        const avatar = document.getElementById('new-user-avatar').files[0];
         if (!name || !pass) return;
+
+        const formData = new FormData();
+        formData.append('username', name);
+        formData.append('email', email);
+        formData.append('password', pass);
+        formData.append('status', 'active');
+        formData.append('is_superuser', 'true');
+        if (avatar) {
+            formData.append('avatar', avatar);
+        }
 
         try {
             const res = await fetch('/api/users/users/', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
-                body: JSON.stringify({
-                    username: name,
-                    email: email,
-                    password: pass,
-                    status: 'active',
-                    is_superuser: true
-                })
+                headers: {'X-CSRFToken': getCookie('csrftoken')},
+                body: formData
             });
             if (res.ok) {
                 createUserModal.hide();

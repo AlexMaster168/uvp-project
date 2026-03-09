@@ -7,77 +7,97 @@
 {% block content %}
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                    <h4 class="mb-0">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-white border-0 pt-4 pb-0">
+                    <h4 class="mb-0 fw-bold">
                         {% if form.instance.pk %}{{ _('Редактировать проект') }}{% else %}
                             {{ _('Создать проект') }}{% endif %}
                     </h4>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     <form method="post" enctype="multipart/form-data">
                         <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
 
                         {% if form.errors %}
-                            <div class="alert alert-danger">
+                            <div class="alert alert-danger rounded-3">
                                 {{ _('Пожалуйста, исправьте ошибки ниже.') }}
-                                {{ form.errors }}
                             </div>
                         {% endif %}
 
-                        <div class="mb-3">
-                            <label class="form-label">{{ _('Название') }}</label>
-                            {{ form.name }}
+                        <div class="mb-4 text-center">
+                            <img id="logo-preview"
+                                 src="{% if form.instance.logo %}{{ form.instance.logo.url }}{% endif %}"
+                                 class="rounded-3 border shadow-sm {% if not form.instance.logo %}d-none{% endif %}"
+                                 width="160" height="160" style="object-fit: cover;">
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">{{ _('Описание') }}</label>
+                            <label class="form-label text-muted small fw-bold text-uppercase">{{ _('Название') }}</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="text-danger small mt-1">{{ form.name.errors[0] }}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold text-uppercase">{{ _('Описание') }}</label>
                             {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small mt-1">{{ form.description.errors[0] }}</div>{% endif %}
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{{ _('Дата начала') }}</label>
+                                <label class="form-label text-muted small fw-bold text-uppercase">{{ _('Дата начала') }}</label>
                                 {{ form.start_date }}
+                                {% if form.start_date.errors %}
+                                    <div class="text-danger small mt-1">{{ form.start_date.errors[0] }}</div>{% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{{ _('Дата окончания') }}</label>
+                                <label class="form-label text-muted small fw-bold text-uppercase">{{ _('Дата окончания') }}</label>
                                 {{ form.end_date }}
+                                {% if form.end_date.errors %}
+                                    <div class="text-danger small mt-1">{{ form.end_date.errors[0] }}</div>{% endif %}
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">{{ _('Статус') }}</label>
+                            <label class="form-label text-muted small fw-bold text-uppercase">{{ _('Статус') }}</label>
                             {{ form.status }}
+                            {% if form.status.errors %}
+                                <div class="text-danger small mt-1">{{ form.status.errors[0] }}</div>{% endif %}
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">{{ _('Логотип') }}</label>
+                            <label class="form-label text-muted small fw-bold text-uppercase">{{ _('Логотип') }}</label>
                             {{ form.logo }}
+                            {% if form.logo.errors %}
+                                <div class="text-danger small mt-1">{{ form.logo.errors[0] }}</div>{% endif %}
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">{{ _('Выберите существующие теги') }}</label>
+                            <label class="form-label text-muted small fw-bold text-uppercase">{{ _('Выберите существующие теги') }}</label>
                             {{ form.u_tags }}
                             <div class="form-text">{{ _('Зажмите Ctrl (или Cmd), чтобы выбрать несколько.') }}</div>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">{{ _('Добавить новые теги') }}</label>
+                        <div class="mb-4">
+                            <label class="form-label text-muted small fw-bold text-uppercase">{{ _('Добавить новые теги') }}</label>
                             {{ form.new_tags }}
-                            <div class="form-text">{{ _('Введите названия новых тегов через запятую. Они будут созданы и добавлены к проекту.') }}
-                            </div>
+                            <div class="form-text">{{ _('Введите названия новых тегов через запятую. Они будут созданы и добавлены к проекту.') }}</div>
                         </div>
+
+                        <hr class="my-4 text-muted opacity-25">
 
                         <div class="d-flex justify-content-end gap-2">
                             {% if form.instance.pk %}
                                 <a href="{{ url('projects:project_detail', pk=form.instance.pk) }}"
-                                   class="btn btn-secondary">{{ _('Отмена') }}</a>
+                                   class="btn btn-light rounded-pill px-4">{{ _('Отмена') }}</a>
                             {% else %}
                                 <a href="{{ url('projects:project_list') }}"
-                                   class="btn btn-secondary">{{ _('Отмена') }}</a>
+                                   class="btn btn-light rounded-pill px-4">{{ _('Отмена') }}</a>
                             {% endif %}
-                            <button type="submit" class="btn btn-primary">{{ _('Сохранить') }}</button>
+                            <button type="submit"
+                                    class="btn btn-primary rounded-pill px-4">{{ _('Сохранить') }}</button>
                         </div>
                     </form>
                 </div>

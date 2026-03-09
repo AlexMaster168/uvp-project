@@ -19,7 +19,10 @@ class ProjectForm(forms.ModelForm):
             'start_date': forms.DateInput(attrs={'type': 'date'}),
             'end_date': forms.DateInput(attrs={'type': 'date'}),
             'description': forms.Textarea(attrs={'rows': 4}),
-            'u_tags': forms.SelectMultiple(attrs={'class': 'form-select'})
+            'u_tags': forms.SelectMultiple(attrs={'class': 'form-select'}),
+            'logo': forms.FileInput(
+                attrs={'class': 'form-control image-crop-input', 'data-preview-target': '#logo-preview',
+                       'accept': 'image/*'})
         }
 
     def __init__(self, *args, **kwargs):
