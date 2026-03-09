@@ -4,64 +4,65 @@
 
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="bi bi-folder"></i> {{ _('Проекты') }}</h1>
+        <h1 class="h2 fw-bold text-dark mb-0">
+            <i class="bi bi-grid-1x2-fill text-primary me-2"></i>{{ _('Проекты') }}
+        </h1>
         {% if user.is_superuser %}
             <div class="d-flex gap-2">
-                <a href="{{ url('projects:super_structure') }}" class="btn btn-dark rounded-pill px-3">
-                    <i class="bi bi-diagram-3"></i> {{ _('Супер-структура') }}
+                <a href="{{ url('projects:super_structure') }}"
+                   class="btn btn-outline-dark rounded-pill px-4 shadow-sm border-2">
+                    <i class="bi bi-diagram-3-fill me-2"></i>{{ _('Супер-структура') }}
                 </a>
-                <a href="{{ url('projects:project_create') }}" class="btn btn-primary rounded-pill px-3">
-                    <i class="bi bi-plus-circle"></i> {{ _('Новый проект') }}
+                <a href="{{ url('projects:project_create') }}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-plus-lg me-2"></i>{{ _('Создать') }}
                 </a>
             </div>
         {% endif %}
     </div>
 
-    <div class="card mb-4 border-0 shadow-sm rounded-4">
+    <div class="card mb-5 border-0 shadow-sm rounded-4 bg-white overflow-hidden">
         <div class="card-body p-4">
             <form method="get" class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label text-muted small fw-bold text-uppercase">{{ _('Поиск') }}</label>
-                    <input type="text" name="q" class="form-control bg-light border-0 py-2"
-                           placeholder="{{ _('Название проекта...') }}"
-                           value="{{ request.GET.get('q', '') }}">
+                <div class="col-md-4">
+                    <label class="form-label text-muted small fw-bold text-uppercase ms-1">{{ _('Поиск') }}</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0"><i class="bi bi-search"></i></span>
+                        <input type="text" name="q" class="form-control bg-light border-0 py-2"
+                               placeholder="{{ _('Название проекта...') }}"
+                               value="{{ request.GET.get('q', '') }}">
+                    </div>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label text-muted small fw-bold text-uppercase">{{ _('Статус') }}</label>
+                <div class="col-md-3">
+                    <label class="form-label text-muted small fw-bold text-uppercase ms-1">{{ _('Статус') }}</label>
                     <select name="status" class="form-select bg-light border-0 py-2">
                         <option value="">{{ _('Все') }}</option>
-                        <option value="planned" {% if request.GET.get('status') == 'planned' %}selected{% endif %}>
-                            {{ _('Запланирован') }}
-                        </option>
-                        <option value="in_progress"
-                                {% if request.GET.get('status') == 'in_progress' %}selected{% endif %}>{{ _('В работе') }}
-                        </option>
-                        <option value="idle"
-                                {% if request.GET.get('status') == 'idle' %}selected{% endif %}>{{ _('Простой') }}
-                        </option>
-                        <option value="sleep" {% if request.GET.get('status') == 'sleep' %}selected{% endif %}>
-                            {{ _('Заморожен') }}
-                        </option>
-                        <option value="finished" {% if request.GET.get('status') == 'finished' %}selected{% endif %}>
-                            {{ _('Завершен') }}
-                        </option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label text-muted small fw-bold text-uppercase">{{ _('Владелец') }}</label>
-                    <select name="owner" class="form-select bg-light border-0 py-2">
-                        <option value="">{{ _('Все') }}</option>
-                        {% for owner in owners %}
-                            <option value="{{ owner.id }}"
-                                    {% if request.GET.get('owner')|int == owner.id %}selected{% endif %}>
-                                {{ owner.username }}
+                        {% set status_dict = [
+                        ('planned', _('Запланирован')),
+                        ('in_progress', _('В работе')),
+                        ('idle', _('Простой')),
+                        ('sleep', _('Заморожен')),
+                        ('finished', _('Завершен'))
+                        ] %}
+                        {% for code, label in status_dict %}
+                            <option value="{{ code }}" {% if request.GET.get('status') == code %}selected{% endif %}>
+                                {{ label }}
                             </option>
                         {% endfor %}
                     </select>
                 </div>
+                <div class="col-md-3">
+                    <label class="form-label text-muted small fw-bold text-uppercase ms-1">{{ _('Владелец') }}</label>
+                    <select name="owner" class="form-select bg-light border-0 py-2">
+                        <option value="">{{ _('Все') }}</option>
+                        {% for owner in owners %}
+                            <option value="{{ owner.id }}"
+                                    {% if request.GET.get('owner') == owner.id|string %}selected{% endif %}>{{ owner.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
                 <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-secondary w-100 py-2 rounded-3">
-                        <i class="bi bi-search"></i> {{ _('Фильтр') }}
+                    <button type="submit" class="btn btn-primary w-100 py-2 rounded-3 shadow-sm fw-bold">
+                        {{ _('Поиск') }}
                     </button>
                 </div>
             </form>
@@ -71,82 +72,117 @@
     <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
         {% for project in projects %}
             <div class="col">
-                <div class="card h-100 border-0 shadow-sm rounded-4 position-relative overflow-hidden transition-hover">
+                <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden project-card transition-hover bg-white"
+                     style="cursor: pointer;"
+                     onclick="window.location='{{ url('projects:project_detail', pk=project.id) }}'">
+                    <div class="position-relative" style="height: 180px;">
+                        {% if project.logo %}
+                            <img src="{{ project.logo.url }}" class="card-img-top h-100 w-100"
+                                 style="object-fit: cover;" alt="{{ project.name }}">
+                        {% else %}
+                            <div class="h-100 w-100 d-flex flex-column align-items-center justify-content-center bg-gradient-project text-white">
+                                <span class="display-3 fw-bold opacity-50">{{ project.name[0]|upper }}</span>
+                            </div>
+                        {% endif %}
+
+                        <div class="position-absolute top-0 end-0 m-3">
+                            {% set status_badges = {
+                            'in_progress': 'bg-success',
+                            'planned': 'bg-info',
+                            'idle': 'bg-warning text-dark',
+                            'sleep': 'bg-secondary',
+                            'finished': 'bg-primary'
+                            } %}
+                            <span class="badge
+
+                                    {{ status_badges.get(project.status, 'bg-dark') }} shadow-sm px-3 py-2 rounded-pill">
+                                {{ _(project.get_status_display()) if project.get_status_display else project.status }}
+                            </span>
+                        </div>
+                    </div>
+
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div class="d-flex">
-                                {% for owner in project.get_owners() %}
-                                    <img src="{{ owner.user.get_avatar_url() }}" alt="{{ owner.user.username }}"
-                                         class="rounded-circle border border-white border-3 shadow-sm"
-                                         width="50" height="50"
-                                         style="object-fit: cover; {% if not loop.first %}margin-left: -15px;{% endif %} position: relative; z-index: {{ loop.revindex }};"
-                                         title="{{ owner.user.username }}">
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for membership in project.get_owners() %}
+                                    <div class="avatar-pill d-flex align-items-center bg-light border rounded-pill pe-3"
+                                         title="{{ membership.user.username }}" onclick="event.stopPropagation();">
+                                        <img src="{{ membership.user.get_avatar_url() }}" class="rounded-circle me-2"
+                                             width="28" height="28" style="object-fit: cover;">
+                                        <span class="small fw-bold text-dark">{{ membership.user.username }}</span>
+                                    </div>
                                 {% endfor %}
                             </div>
-
                             {% if user.is_superuser %}
-                                <div class="dropdown">
-                                    <button class="btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center"
-                                            type="button" data-bs-toggle="dropdown" aria-expanded="false"
-                                            style="width: 35px; height: 35px;">
-                                        <i class="bi bi-three-dots-vertical text-secondary"></i>
+                                <div class="dropdown" onclick="event.stopPropagation();">
+                                    <button class="btn btn-link text-muted p-0" type="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots-vertical fs-5"></i>
                                     </button>
-                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                                        <li>
-                                            <a class="dropdown-item d-flex align-items-center gap-2"
+                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+                                        <li><a class="dropdown-item py-2"
                                                href="{{ url('projects:project_edit', pk=project.id) }}">
-                                                <i class="bi bi-pencil text-primary"></i> {{ _('Редактировать') }}
-                                            </a>
-                                        </li>
+                                            <i class="bi bi-pencil me-2"></i>{{ _('Изменить') }}</a></li>
                                     </ul>
                                 </div>
                             {% endif %}
                         </div>
 
-                        <a href="{{ url('projects:project_detail', pk=project.id) }}"
-                           class="text-decoration-none text-dark d-block mb-1">
-                            <h4 class="card-title fw-bold mb-0 text-truncate">{{ project.name }}</h4>
-                        </a>
-                        <p class="text-muted small mb-4">#{{ project.id }}</p>
+                        <h5 class="fw-bold text-dark mb-1 text-truncate">#{{ project.id }} {{ project.name }}</h5>
 
-                        <div class="d-flex flex-column gap-2">
-                            <div class="d-flex justify-content-between align-items-center bg-light rounded-3 p-2 px-3">
-                                <span class="text-muted small fw-medium"><i
-                                        class="bi bi-check2-square me-2"></i>{{ _('Задачи') }}</span>
-                                <a href="{{ url('tasks:task_list') }}?project={{ project.id }}"
-                                   class="badge bg-primary text-decoration-none rounded-pill px-3 py-2">
-                                    {{ project.get_tasks_count() }}
-                                </a>
+                        <div class="mt-4">
+                            {% set total_tasks = project.tasks.count() %}
+                            {% set remaining_tasks = project.tasks.exclude(status='done').count() %}
+
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted small fw-bold">
+                                    <i class="bi bi-list-check me-1"></i> {{ _('Задачи') }} {{ total_tasks }} ({{ remaining_tasks }} {{ _('осталось') }})
+                                </span>
+                                <span class="text-primary small fw-bold">{{ project.progress }}%</span>
                             </div>
 
-                            <div class="d-flex justify-content-between align-items-center bg-light rounded-3 p-2 px-3">
-                                <span class="text-muted small fw-medium"><i
-                                        class="bi bi-wallet2 me-2"></i>{{ _('Финансы') }}</span>
-                                {% set fin = project.get_financial_summary() %}
-                                <small class="fw-bold">
-                                    <span class="text-success"
-                                          title="{{ _('Получено') }}">{{ fin.income|default(0) }}</span> /
-                                    <span class="text-danger"
-                                          title="{{ _('Потрачено') }}">{{ fin.expense|default(0) }}</span> /
-                                    <span class="{% if fin.balance|default(0) < 0 %}text-danger{% else %}text-primary{% endif %}"
-                                          title="{{ _('Остаток') }}">{{ fin.balance|default(0) }}</span>
-                                </small>
+                            <div class="progress rounded-pill mb-4" style="height: 8px; background-color: #f0f0f0;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
+                                     role="progressbar"
+                                     style="width: {{ project.progress }}%"></div>
                             </div>
 
-                            <div class="d-flex justify-content-between align-items-center bg-light rounded-3 p-2 px-3">
-                                <span class="text-muted small fw-medium"><i
-                                        class="bi bi-activity me-2"></i>{{ _('Статус') }}</span>
-                                {% if project.status == 'in_progress' %}
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill">{{ _('В работе') }}</span>
-                                {% elif project.status == 'planned' %}
-                                    <span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-2 rounded-pill">{{ _('Запланирован') }}</span>
-                                {% elif project.status == 'idle' %}
-                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2 rounded-pill">{{ _('Простой') }}</span>
-                                {% elif project.status == 'sleep' %}
-                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-3 py-2 rounded-pill">{{ _('Заморожен') }}</span>
-                                {% elif project.status == 'finished' %}
-                                    <span class="badge bg-success border border-success px-3 py-2 rounded-pill">{{ _('Завершен') }}</span>
+                            <div class="task-preview-list">
+                                {% for task in project.tasks.exclude(status='done')[:3] %}
+                                    <div class="d-flex align-items-center mb-2 p-2 rounded-3 bg-light-hover transition-base">
+                                        <i class="bi bi-circle-fill text-primary me-2" style="font-size: 6px;"></i>
+                                        <span class="small text-dark text-truncate">{{ task.title }}</span>
+                                    </div>
+                                {% endfor %}
+                                {% if remaining_tasks > 3 %}
+                                    <div class="small text-muted ps-3 mt-1">
+                                        {{ _('и еще') }} {{ remaining_tasks - 3 }}...
+                                    </div>
                                 {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    {% set finance = project.get_financial_summary() %}
+                    <div class="card-footer bg-light border-0 p-4 pt-0">
+                        <div class="bg-white rounded-4 p-3 shadow-sm border d-flex justify-content-around text-center">
+                            <div class="flex-grow-1">
+                                <div class="text-muted text-uppercase" style="font-size: 0.6rem;">{{ _('Доход') }}</div>
+                                <div class="fw-bold text-success small">
+                                    {{ "{:,.0f}".format(finance.income|default(0)).replace(',', ' ') }}</div>
+                            </div>
+                            <div class="vr mx-2 opacity-25"></div>
+                            <div class="flex-grow-1">
+                                <div class="text-muted text-uppercase"
+                                     style="font-size: 0.6rem;">{{ _('Расход') }}</div>
+                                <div class="fw-bold text-danger small">
+                                    {{ "{:,.0f}".format(finance.expense|default(0)).replace(',', ' ') }}</div>
+                            </div>
+                            <div class="vr mx-2 opacity-25"></div>
+                            <div class="flex-grow-1">
+                                <div class="text-muted text-uppercase"
+                                     style="font-size: 0.6rem;">{{ _('Остаток') }}</div>
+                                <div class="fw-bold text-primary small">
+                                    {{ "{:,.0f}".format(finance.balance|default(0)).replace(',', ' ') }}</div>
                             </div>
                         </div>
                     </div>
@@ -154,10 +190,9 @@
             </div>
             {% else %}
             <div class="col-12 w-100">
-                <div class="text-center py-5 text-muted bg-white rounded-4 shadow-sm">
-                    <i class="bi bi-folder-x display-1 mb-3 text-secondary opacity-50"></i>
-                    <h5 class="fw-bold">{{ _('Проекты не найдены') }}</h5>
-                    <p class="mb-0">{{ _('Попробуйте изменить параметры фильтрации или создайте новый проект.') }}</p>
+                <div class="text-center py-5 bg-white rounded-4 shadow-sm border">
+                    <i class="bi bi-folder2-open display-1 text-light"></i>
+                    <h5 class="text-muted mt-3">{{ _('Проекты не найдены') }}</h5>
                 </div>
             </div>
         {% endfor %}
@@ -165,38 +200,29 @@
 
     {% if is_paginated %}
         <nav class="mt-5">
-            <ul class="pagination justify-content-center border-0 gap-2">
+            <ul class="pagination justify-content-center gap-2">
                 {% if page_obj.has_previous %}
                     <li class="page-item">
-                        <a class="page-link shadow-sm border-0 rounded-pill px-3"
-                           href="?page=1&q={{ request.GET.get('q','') }}&status=
-                                   {{ request.GET.get('status','') }}&owner=
-                                   {{ request.GET.get('owner','') }}">{{ _('Первая') }}</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link shadow-sm border-0 rounded-pill px-3"
+                        <a class="page-link shadow-sm border-0 rounded-circle d-flex align-items-center justify-content-center"
+                           style="width: 40px; height: 40px;"
                            href="?page={{ page_obj.previous_page_number }}&q={{ request.GET.get('q','') }}&status=
-                                   {{ request.GET.get('status','') }}&owner=
-                                   {{ request.GET.get('owner','') }}">{{ _('Назад') }}</a>
+                                   {{ request.GET.get('status','') }}&owner={{ request.GET.get('owner','') }}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
                     </li>
                 {% endif %}
-
                 <li class="page-item active">
-                    <span class="page-link shadow-sm border-0 rounded-pill px-4 fw-bold">{{ page_obj.number }} {{ _('из') }} {{ page_obj.paginator.num_pages }}</span>
+                    <span class="page-link shadow-sm border-0 rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                          style="width: 40px; height: 40px;">{{ page_obj.number }}</span>
                 </li>
-
                 {% if page_obj.has_next %}
                     <li class="page-item">
-                        <a class="page-link shadow-sm border-0 rounded-pill px-3"
+                        <a class="page-link shadow-sm border-0 rounded-circle d-flex align-items-center justify-content-center"
+                           style="width: 40px; height: 40px;"
                            href="?page={{ page_obj.next_page_number }}&q={{ request.GET.get('q','') }}&status=
-                                   {{ request.GET.get('status','') }}&owner=
-                                   {{ request.GET.get('owner','') }}">{{ _('Далее') }}</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link shadow-sm border-0 rounded-pill px-3"
-                           href="?page={{ page_obj.paginator.num_pages }}&q={{ request.GET.get('q','') }}&status=
-                                   {{ request.GET.get('status','') }}&owner=
-                                   {{ request.GET.get('owner','') }}">{{ _('Последняя') }}</a>
+                                   {{ request.GET.get('status','') }}&owner={{ request.GET.get('owner','') }}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
                     </li>
                 {% endif %}
             </ul>
@@ -204,13 +230,34 @@
     {% endif %}
 
     <style>
-        .transition-hover {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        .project-card {
+            transition: all 0.3s ease;
         }
 
-        .transition-hover:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+        .project-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 1rem 3rem rgba(0, 0, 0, .1) !important;
+        }
+
+        .bg-gradient-project {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .bg-light-hover:hover {
+            background-color: #f8f9fa !important;
+        }
+
+        .transition-base {
+            transition: all 0.2s ease;
+        }
+
+        .avatar-pill {
+            padding: 2px;
+        }
+
+        .vr {
+            width: 1px;
+            background-color: #000;
         }
     </style>
 {% endblock %}
