@@ -7,8 +7,45 @@
         <h1 class="h2 fw-bold text-dark mb-0">
             <i class="bi bi-grid-1x2-fill text-primary me-2"></i>{{ _('Проекты') }}
         </h1>
-        {% if user.is_superuser %}
-            <div class="d-flex gap-2">
+        <div class="d-flex gap-2">
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary rounded-pill px-4 shadow-sm border-2 dropdown-toggle"
+                        type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                    <i class="bi bi-sliders me-2"></i>{{ _('Вид') }}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end p-3 shadow-sm border-0 rounded-4" style="min-width: 240px;">
+                    <li><h6 class="dropdown-header px-0 text-dark fw-bold">{{ _('Отображать:') }}</h6></li>
+                    <li>
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input view-toggle" type="checkbox" role="switch" id="togglePhoto"
+                                   data-target=".project-photo">
+                            <label class="form-check-label small" for="togglePhoto">{{ _('Фото') }}</label>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input view-toggle" type="checkbox" role="switch" id="toggleOwners"
+                                   data-target=".project-owners">
+                            <label class="form-check-label small" for="toggleOwners">{{ _('Участников') }}</label>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input view-toggle" type="checkbox" role="switch" id="toggleTasks"
+                                   data-target=".task-preview-list">
+                            <label class="form-check-label small" for="toggleTasks">{{ _('Список задач') }}</label>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input view-toggle" type="checkbox" role="switch" id="toggleFinance"
+                                   data-target=".project-finance">
+                            <label class="form-check-label small" for="toggleFinance">{{ _('Финансы') }}</label>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            {% if user.is_superuser %}
                 <a href="{{ url('projects:super_structure') }}"
                    class="btn btn-outline-dark rounded-pill px-4 shadow-sm border-2">
                     <i class="bi bi-diagram-3-fill me-2"></i>{{ _('Супер-структура') }}
@@ -16,8 +53,8 @@
                 <a href="{{ url('projects:project_create') }}" class="btn btn-primary rounded-pill px-4 shadow-sm">
                     <i class="bi bi-plus-lg me-2"></i>{{ _('Создать') }}
                 </a>
-            </div>
-        {% endif %}
+            {% endif %}
+        </div>
     </div>
 
     <div class="card mb-5 border-0 shadow-sm rounded-4 bg-white overflow-hidden">
@@ -75,7 +112,8 @@
                 <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden project-card transition-hover bg-white"
                      style="cursor: pointer;"
                      onclick="window.location='{{ url('projects:project_detail', pk=project.id) }}'">
-                    <div class="position-relative" style="height: 180px;">
+
+                    <div class="position-relative project-photo" style="height: 180px;">
                         {% if project.logo %}
                             <img src="{{ project.logo.url }}" class="card-img-top h-100 w-100"
                                  style="object-fit: cover;" alt="{{ project.name }}">
@@ -84,26 +122,11 @@
                                 <span class="display-3 fw-bold opacity-50">{{ project.name[0]|upper }}</span>
                             </div>
                         {% endif %}
-
-                        <div class="position-absolute top-0 end-0 m-3">
-                            {% set status_badges = {
-                            'in_progress': 'bg-success',
-                            'planned': 'bg-info',
-                            'idle': 'bg-warning text-dark',
-                            'sleep': 'bg-secondary',
-                            'finished': 'bg-primary'
-                            } %}
-                            <span class="badge
-
-                                    {{ status_badges.get(project.status, 'bg-dark') }} shadow-sm px-3 py-2 rounded-pill">
-                                {{ _(project.get_status_display()) if project.get_status_display else project.status }}
-                            </span>
-                        </div>
                     </div>
 
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div class="d-flex flex-wrap gap-2">
+                            <div class="d-flex flex-wrap gap-2 project-owners">
                                 {% for membership in project.get_owners() %}
                                     <div class="avatar-pill d-flex align-items-center bg-light border rounded-pill pe-3"
                                          title="{{ membership.user.username }}" onclick="event.stopPropagation();">
@@ -113,18 +136,33 @@
                                     </div>
                                 {% endfor %}
                             </div>
-                            {% if user.is_superuser %}
-                                <div class="dropdown" onclick="event.stopPropagation();">
-                                    <button class="btn btn-link text-muted p-0" type="button" data-bs-toggle="dropdown">
-                                        <i class="bi bi-three-dots-vertical fs-5"></i>
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
-                                        <li><a class="dropdown-item py-2"
-                                               href="{{ url('projects:project_edit', pk=project.id) }}">
-                                            <i class="bi bi-pencil me-2"></i>{{ _('Изменить') }}</a></li>
-                                    </ul>
-                                </div>
-                            {% endif %}
+                            <div class="d-flex align-items-center gap-2">
+                                {% set status_badges = {
+                                'in_progress': 'bg-success',
+                                'planned': 'bg-info',
+                                'idle': 'bg-warning text-dark',
+                                'sleep': 'bg-secondary',
+                                'finished': 'bg-primary'
+                                } %}
+                                <span class="badge
+
+                                        {{ status_badges.get(project.status, 'bg-dark') }} shadow-sm px-3 py-2 rounded-pill">
+                                    {{ _(project.get_status_display()) if project.get_status_display else project.status }}
+                                </span>
+                                {% if user.is_superuser %}
+                                    <div class="dropdown" onclick="event.stopPropagation();">
+                                        <button class="btn btn-link text-muted p-0" type="button"
+                                                data-bs-toggle="dropdown">
+                                            <i class="bi bi-three-dots-vertical fs-5"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+                                            <li><a class="dropdown-item py-2"
+                                                   href="{{ url('projects:project_edit', pk=project.id) }}">
+                                                <i class="bi bi-pencil me-2"></i>{{ _('Изменить') }}</a></li>
+                                        </ul>
+                                    </div>
+                                {% endif %}
+                            </div>
                         </div>
 
                         <h5 class="fw-bold text-dark mb-1 text-truncate">#{{ project.id }} {{ project.name }}</h5>
@@ -163,7 +201,7 @@
                     </div>
 
                     {% set finance = project.get_financial_summary() %}
-                    <div class="card-footer bg-light border-0 p-4 pt-0">
+                    <div class="card-footer bg-light border-0 p-4 pt-0 project-finance">
                         <div class="bg-white rounded-4 p-3 shadow-sm border d-flex justify-content-around text-center">
                             <div class="flex-grow-1">
                                 <div class="text-muted text-uppercase" style="font-size: 0.6rem;">{{ _('Доход') }}</div>
@@ -260,4 +298,32 @@
             background-color: #000;
         }
     </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggles = document.querySelectorAll('.view-toggle');
+
+            toggles.forEach(toggle => {
+                const state = localStorage.getItem(toggle.id);
+
+                if (state === 'hidden') {
+                    toggle.checked = false;
+                    document.querySelectorAll(toggle.dataset.target).forEach(el => el.classList.add('d-none'));
+                } else {
+                    toggle.checked = true;
+                }
+
+                toggle.addEventListener('change', function () {
+                    const targetElements = document.querySelectorAll(this.dataset.target);
+                    if (this.checked) {
+                        targetElements.forEach(el => el.classList.remove('d-none'));
+                        localStorage.setItem(this.id, 'visible');
+                    } else {
+                        targetElements.forEach(el => el.classList.add('d-none'));
+                        localStorage.setItem(this.id, 'hidden');
+                    }
+                });
+            });
+        });
+    </script>
 {% endblock %}

@@ -47,7 +47,7 @@
                                     <div class="text-danger small mt-1">{{ field.errors[0] }}</div>
                                 {% endif %}
                                 {% if field.help_text %}
-                                    <div class="form-text small">{{ field.help_text }}</div>
+                                    <div class="form-text small">{{ field.help_text|safe }}</div>
                                 {% endif %}
                             </div>
                         {% endfor %}
