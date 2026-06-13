@@ -2,6 +2,7 @@ from django.urls import reverse
 from django.templatetags.static import static
 from django.utils.translation import get_language
 from django.utils.translation import gettext as django_gettext
+from django.middleware.csrf import get_token
 from jinja2 import Environment
 
 TRANSLATIONS = {
@@ -474,5 +475,6 @@ def environment(**options):
         'url': url,
         'get_global_settings': get_global_settings,
         '_': _,
+        'csrf_token': get_token,
     })
     return env

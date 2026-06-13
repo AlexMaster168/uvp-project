@@ -1,56 +1,211 @@
-{% extends "base.html" %}
+{% set global_settings = get_global_settings() %}
+<!DOCTYPE html>
+<html lang="{{ global_settings.language }}" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ _('Вход в систему') }}{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 2rem;
+        }
 
-{% block title %}{{ _('Войти') }}{% endblock %}
+        .login-wrapper {
+            width: 100%;
+            max-width: 440px;
+        }
 
-{% block content %}
-    <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
-        <div class="col-md-5 col-lg-4">
-            <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-body p-4 p-md-5">
-                    <div class="text-center mb-4">
-                        <h3 class="fw-bold">{{ _('Вход в систему') }}</h3>
-                        <p class="text-muted">{{ _('Для продолжения работы необходимо авторизоваться') }}</p>
-                    </div>
+        .login-card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            overflow: hidden;
+        }
 
-                    <form method="post">
-                        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+        .login-header {
+            background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+            color: white;
+            padding: 2rem 2rem 1.5rem;
+            text-align: center;
+        }
 
-                        {% if form.non_field_errors() %}
-                            <div class="alert alert-danger mb-4 small">
-                                {% for error in form.non_field_errors() %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% elif form.errors %}
-                            <div class="alert alert-danger mb-4 small">
-                                {{ _('Пожалуйста, исправьте ошибки ниже.') }}
-                            </div>
-                        {% endif %}
+        .login-header .logo-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
 
-                        {% for field in form %}
-                            <div class="mb-3">
-                                <label class="form-label fw-bold small text-muted text-uppercase">{{ field.label }}</label>
-                                {{ field }}
-                                {% if field.errors %}
-                                    <div class="text-danger small">{{ field.errors[0] }}</div>
-                                {% endif %}
-                            </div>
-                        {% endfor %}
+        .login-header h3 {
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
 
-                        <div class="d-grid gap-2 mb-4">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                {{ _('Войти') }}
-                            </button>
+        .login-header p {
+            opacity: 0.85;
+            font-size: 0.9rem;
+            margin-bottom: 0;
+        }
+
+        .login-body {
+            padding: 2rem;
+        }
+
+        .login-body .form-control {
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            border: 1.5px solid #e0e0e0;
+            background-color: #f8f9fa;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .login-body .form-control:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+            background-color: #fff;
+        }
+
+        .login-body .form-label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #495057;
+            margin-bottom: 0.35rem;
+        }
+
+        .btn-login {
+            border-radius: 10px;
+            padding: 0.75rem;
+            font-weight: 600;
+            font-size: 1rem;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-google {
+            border-radius: 10px;
+            padding: 0.75rem;
+            font-weight: 600;
+            border: 1.5px solid #dee2e6;
+            color: #495057;
+            background: #fff;
+            transition: all 0.2s;
+        }
+
+        .btn-google:hover {
+            background: #f8f9fa;
+            border-color: #adb5bd;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: #adb5bd;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e9ecef;
+        }
+
+        .login-footer {
+            text-align: center;
+            padding-top: 1rem;
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-wrapper">
+        <div class="login-card card">
+            <div class="login-header">
+                <div class="logo-icon"><i class="bi bi-kanban"></i></div>
+                <h3>{{ _('УВП') }}</h3>
+                <p>{{ _('Система управления проектами') }}</p>
+            </div>
+            <div class="login-body">
+                <form method="post" novalidate>
+                    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+                    {% if form.non_field_errors() %}
+                        <div class="alert alert-danger mb-3">
+                            {% for error in form.non_field_errors() %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
                         </div>
-                    </form>
+                    {% endif %}
 
-                    <div class="d-grid gap-2 mt-2 border-top pt-4">
-                        <a href="/accounts/google/login/" class="btn btn-lg btn-outline-danger">
-                            <i class="bi bi-google me-2"></i> {{ _('Войти через Google') }}
-                        </a>
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {% if field.name == 'password' %}
+                                <div class="position-relative">
+                                    {{ field }}
+                                    <button type="button" class="btn position-absolute top-50 end-0 translate-middle-y me-2 p-0 border-0 bg-transparent text-muted" onclick="togglePassword()" tabindex="-1">
+                                        <i class="bi bi-eye" id="toggle-icon"></i>
+                                    </button>
+                                </div>
+                            {% else %}
+                                {{ field }}
+                            {% endif %}
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">{{ field.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary btn-login">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>{{ _('Войти') }}
+                        </button>
                     </div>
+                </form>
+
+                <div class="divider mb-3">{{ _('или') }}</div>
+
+                <div class="d-grid">
+                    <a href="/accounts/google/login/" class="btn btn-google">
+                        <svg width="18" height="18" viewBox="0 0 18 18" class="me-2" style="vertical-align: -3px;">
+                            <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z"/>
+                            <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z"/>
+                            <path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332Z"/>
+                            <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 7.294C4.672 5.166 6.656 3.58 9 3.58Z"/>
+                        </svg>
+                        {{ _('Войти через Google') }}
+                    </a>
+                </div>
+
+                <div class="login-footer">
+                    <small class="text-muted">&copy; {{ _('УВП, 2026') }}</small>
                 </div>
             </div>
         </div>
     </div>
-{% endblock %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function togglePassword() {
+            const input = document.getElementById('password-input');
+            const icon = document.getElementById('toggle-icon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'bi bi-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'bi bi-eye';
+            }
+        }
+    </script>
+</body>
+</html>

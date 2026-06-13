@@ -20,20 +20,25 @@ body {
     color: #555;
 }
 
-.form-control {
+.form-control, .form-select {
     border-radius: 8px;
-    padding: 0.75rem 1rem;
+    padding: 0.65rem 0.9rem;
     border: 1px solid #ced4da;
 }
 
-.form-control:focus {
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+.form-control:focus, .form-select:focus {
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
     border-color: #86b7fe;
+}
+
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
 }
 
 .btn-primary {
     border-radius: 8px;
-    padding: 0.75rem 1.5rem;
+    padding: 0.65rem 1.5rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -44,3 +49,79 @@ body {
     border: none;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
+
+/* ===== RESPONSIVE TABLE ===== */
+@media (max-width: 767.98px) {
+    .table-responsive {
+        border: none;
+    }
+
+    .table thead { display: none; }
+
+    .table tbody tr {
+        display: block;
+        margin-bottom: 0.75rem;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        padding: 0.75rem;
+        background: white;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+
+    .table tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.4rem 0.25rem;
+        border: none;
+        text-align: right;
+        font-size: 0.9rem;
+    }
+
+    .table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #6c757d;
+        text-align: left;
+        margin-right: auto;
+        padding-right: 1rem;
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .table tbody td:last-child { border-top: 1px solid #e9ecef; margin-top: 0.25rem; padding-top: 0.5rem; }
+}
+
+/* ===== RESPONSIVE CARD GRID ===== */
+@media (max-width: 575.98px) {
+    .card-body { padding: 1rem !important; }
+    .btn-lg { padding: 0.6rem 1rem; font-size: 0.95rem; }
+    h3, h4, h5 { font-size: 1.1rem; }
+}
+
+/* ===== MOBILE-FRIENDLY BUTTONS ===== */
+@media (max-width: 767.98px) {
+    .d-grid .btn { padding: 0.7rem; }
+    .btn-group-mobile {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .btn-group-mobile .btn { flex: 1 1 auto; min-width: 0; }
+}
+
+/* ===== BETTER LINKS ON MOBILE ===== */
+@media (max-width: 767.98px) {
+    a.list-group-item {
+        padding: 0.85rem 1rem;
+    }
+}
+
+/* ===== SCROLLBAR GLOBAL ===== */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #aaa; }
+
+/* ===== BADGE FIX ===== */
+.badge { font-weight: 500; }

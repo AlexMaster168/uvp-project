@@ -6,7 +6,7 @@ from django.urls import reverse_lazy, reverse
 from rest_framework import viewsets
 from django.contrib.auth import get_user_model
 
-from .forms import CustomUserCreationForm, AddUserToProjectForm, GlobalSettingsForm, UserProfileForm
+from .forms import CustomUserCreationForm, AddUserToProjectForm, GlobalSettingsForm, UserProfileForm, CustomLoginForm
 from apps.projects.models import ProjectMembership
 from .serializers import UserSerializer
 from .models import GlobalSettings
@@ -20,6 +20,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class UserLoginView(LoginView):
+    form_class = CustomLoginForm
     template_name = 'users/login.html'
     redirect_authenticated_user = True
 

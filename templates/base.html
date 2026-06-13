@@ -10,123 +10,226 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/styles.css">
     <style>
-        .light {
-            background-color: #f8f9fa;
+        .light { background-color: #f8f9fa; }
+        .bg-gradient-1 { background: linear-gradient(135deg, #74ebd5 0%, #acb6e5 100%); }
+        .bg-gradient-2 { background: linear-gradient(135deg, #f12711 0%, #f5af19 100%); }
+        .bg-gradient-3 { background: linear-gradient(135deg, #654ea3 0%, #eaafc8 100%); }
+        .bg-gradient-4 { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .bg-gradient-5 { background: linear-gradient(135deg, #141e30 0%, #243b55 100%); }
+        .bg-gradient-6 { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%); }
+        .bg-gradient-7 { background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%); }
+        .bg-gradient-8 { background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%); }
+        .bg-gradient-9 { background: linear-gradient(135deg, #f83600 0%, #f9d423 100%); }
+        .bg-gradient-10 { background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); }
+        .bg-gradient-11 { background: linear-gradient(135deg, #00dbde 0%, #fc00ff 100%); }
+        .bg-gradient-12 { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); }
+
+        body { min-height: 100vh; }
+
+        /* ===== TOP NAVBAR (mobile) ===== */
+        .top-navbar {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 56px;
+            background: #212529;
+            color: white;
+            z-index: 1050;
+            padding: 0 1rem;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .top-navbar .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .top-navbar .btn-toggle {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.4rem;
+            padding: 0.4rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .top-navbar .btn-toggle:hover { background: rgba(255,255,255,0.1); }
+        .top-navbar .user-chip {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: white;
+            text-decoration: none;
+        }
+        .top-navbar .user-chip img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            object-fit: cover;
         }
 
-        .bg-gradient-1 {
-            background: linear-gradient(135deg, #74ebd5 0%, #acb6e5 100%);
-        }
-
-        .bg-gradient-2 {
-            background: linear-gradient(135deg, #f12711 0%, #f5af19 100%);
-        }
-
-        .bg-gradient-3 {
-            background: linear-gradient(135deg, #654ea3 0%, #eaafc8 100%);
-        }
-
-        .bg-gradient-4 {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        }
-
-        .bg-gradient-5 {
-            background: linear-gradient(135deg, #141e30 0%, #243b55 100%);
-        }
-
-        .bg-gradient-6 {
-            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
-        }
-
-        .bg-gradient-7 {
-            background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%);
-        }
-
-        .bg-gradient-8 {
-            background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
-        }
-
-        .bg-gradient-9 {
-            background: linear-gradient(135deg, #f83600 0%, #f9d423 100%);
-        }
-
-        .bg-gradient-10 {
-            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
-        }
-
-        .bg-gradient-11 {
-            background: linear-gradient(135deg, #00dbde 0%, #fc00ff 100%);
-        }
-
-        .bg-gradient-12 {
-            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
-        }
-
-        body {
-            min-height: 100vh;
-        }
-
+        /* ===== SIDEBAR ===== */
         .sidebar {
-            width: 280px;
+            width: 260px;
             height: 100vh;
             position: fixed;
             top: 0;
             left: 0;
-            z-index: 1000;
-            padding: 1rem;
+            z-index: 1100;
+            padding: 1rem 0.75rem;
             background-color: #212529;
             color: white;
             display: flex;
             flex-direction: column;
             overflow-y: auto;
+            transition: transform 0.3s ease;
         }
 
-        .main-content {
-            margin-left: 280px;
-            padding: 2rem;
-            width: calc(100% - 280px);
-            min-height: 100vh;
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1040;
+            opacity: 0;
+            transition: opacity 0.3s;
         }
+        .sidebar-overlay.show { opacity: 1; }
 
-        .nav-link {
-            color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 0.2rem;
+        .sidebar .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.25rem 0.5rem 0.75rem;
         }
-
-        .nav-link:hover, .nav-link.active {
+        .sidebar .sidebar-header .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
             color: white;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.2rem;
         }
-
-        .nav-link i {
-            width: 24px;
-            text-align: center;
-            display: inline-block;
-        }
-
-        .dropdown-menu-dark {
-            background-color: #343a40;
-        }
-
-        .nav-tabs .nav-link {
+        .sidebar .btn-close-sidebar {
+            display: none;
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.6);
+            font-size: 1.2rem;
+            padding: 0.25rem;
             cursor: pointer;
+            border-radius: 6px;
         }
+        .sidebar .btn-close-sidebar:hover { color: white; background: rgba(255,255,255,0.1); }
+
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+            margin-bottom: 2px;
+            padding: 0.6rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.92rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            transition: all 0.15s;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.12);
+        }
+        .sidebar .nav-link i { width: 20px; text-align: center; font-size: 1.05rem; }
+
+        .sidebar .user-section {
+            padding: 0.75rem 0.5rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin-top: auto;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            margin-left: 260px;
+            padding: 1.5rem 2rem;
+            min-height: 100vh;
+            transition: margin-left 0.3s;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 991.98px) {
+            .top-navbar { display: flex; }
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar .btn-close-sidebar { display: block; }
+            .main-content {
+                margin-left: 0;
+                padding: 72px 1rem 1.5rem;
+            }
+            .sidebar-overlay.active { display: block; }
+        }
+
+        @media (max-width: 575.98px) {
+            .main-content { padding: 68px 0.75rem 1rem; }
+            .container-fluid { padding-left: 0; padding-right: 0; }
+        }
+
+        /* ===== SCROLLBAR ===== */
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+
+        .nav-tabs .nav-link { cursor: pointer; }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body class="{{ global_settings.theme }}">
-<div class="sidebar">
-    <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-        <i class="bi bi-kanban fs-4 me-2"></i>
-        <span class="fs-4">{{ _('УВП') }}</span>
+
+<!-- TOP NAVBAR (mobile only) -->
+<div class="top-navbar" id="topNavbar">
+    <button class="btn-toggle" onclick="toggleSidebar()" aria-label="Menu">
+        <i class="bi bi-list"></i>
+    </button>
+    <a href="/" class="brand">
+        <i class="bi bi-kanban"></i>
+        <span>УВП</span>
     </a>
-    <hr>
+    {% if user.is_authenticated %}
+        <a href="{{ url('users:profile') }}" class="user-chip">
+            <img src="{{ user.get_avatar_url() }}" alt="{{ user.username }}">
+        </a>
+    {% else %}
+        <a href="{{ url('users:login') }}" class="user-chip">
+            <i class="bi bi-person-circle fs-4"></i>
+        </a>
+    {% endif %}
+</div>
+
+<!-- SIDEBAR OVERLAY -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <a href="/" class="brand">
+            <i class="bi bi-kanban fs-4"></i>
+            <span>УВП</span>
+        </a>
+        <button class="btn-close-sidebar" onclick="toggleSidebar()" aria-label="Close">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    <hr class="mt-0 mb-2" style="border-color: rgba(255,255,255,0.1);">
     <ul class="nav nav-pills flex-column mb-auto">
-        <li class="nav-item">
+        <li>
             <a href="{{ url('projects:project_list') }}"
                class="nav-link {% if request.resolver_match.app_name == 'projects' and request.resolver_match.url_name != 'dashboard' %}active{% endif %}">
-                <i class="bi bi-folder me-2"></i> {{ _('Проекты') }}
+                <i class="bi bi-folder"></i> {{ _('Проекты') }}
             </a>
         </li>
         {% set is_customer = user.is_authenticated and user.project_memberships.filter(role='customer').exists() and not user.is_superuser %}
@@ -134,88 +237,90 @@
             <li>
                 <a href="{{ url('tasks:task_list') }}"
                    class="nav-link {% if request.resolver_match.app_name == 'tasks' %}active{% endif %}">
-                    <i class="bi bi-check2-square me-2"></i> {{ _('Задачи') }}
+                    <i class="bi bi-check2-square"></i> {{ _('Задачи') }}
                 </a>
             </li>
         {% endif %}
         <li>
             <a href="{{ url('billing:billing_list') }}"
                class="nav-link {% if request.resolver_match.app_name == 'billing' %}active{% endif %}">
-                <i class="bi bi-currency-dollar me-2"></i> {{ _('Финансы') }}
+                <i class="bi bi-currency-dollar"></i> {{ _('Финансы') }}
             </a>
         </li>
         {% if not is_customer %}
             <li>
                 <a href="{{ url('access:access_list') }}"
                    class="nav-link {% if request.resolver_match.app_name == 'access' %}active{% endif %}">
-                    <i class="bi bi-key me-2"></i> {{ _('Доступы') }}
+                    <i class="bi bi-key"></i> {{ _('Доступы') }}
                 </a>
             </li>
             <li>
                 <a href="{{ url('media_files:media_list') }}"
                    class="nav-link {% if request.resolver_match.app_name == 'media_files' %}active{% endif %}">
-                    <i class="bi bi-images me-2"></i> {{ _('Медиа') }}
+                    <i class="bi bi-images"></i> {{ _('Медиа') }}
                 </a>
             </li>
         {% endif %}
         {% if user.is_superuser %}
-            <hr class="text-white-50">
+            <li><hr class="text-white-50 my-2"></li>
             <li>
                 <a href="{{ url('projects:dashboard') }}"
                    class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-                    <i class="bi bi-speedometer2 me-2"></i> {{ _('Дашборд') }}
+                    <i class="bi bi-speedometer2"></i> {{ _('Дашборд') }}
                 </a>
             </li>
             <li>
                 <a href="{{ url('users:user_list') }}"
                    class="nav-link {% if request.resolver_match.app_name == 'users' and request.resolver_match.url_name != 'settings' %}active{% endif %}">
-                    <i class="bi bi-people me-2"></i> {{ _('Пользователи') }}
+                    <i class="bi bi-people"></i> {{ _('Пользователи') }}
                 </a>
             </li>
             <li>
                 <a href="{{ url('users:settings') }}"
                    class="nav-link {% if request.resolver_match.url_name == 'settings' %}active{% endif %}">
-                    <i class="bi bi-gear me-2"></i> {{ _('Настройки') }}
+                    <i class="bi bi-gear"></i> {{ _('Настройки') }}
                 </a>
             </li>
         {% endif %}
     </ul>
-    <hr>
-    <div class="dropdown">
-        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1"
-           data-bs-toggle="dropdown" aria-expanded="false">
-            {% if user.is_authenticated %}
-                <img src="{{ user.get_avatar_url() }}" alt="{{ user.username }}" width="32" height="32"
-                     class="rounded-circle me-2" style="object-fit: cover;">
-                <strong>{{ user.username }}</strong>
-            {% else %}
-                <i class="bi bi-person-circle fs-5 me-2"></i>
-                <strong>{{ _('Гость') }}</strong>
-            {% endif %}
-        </a>
-        <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
-            {% if user.is_authenticated %}
-                <li><a class="dropdown-item" href="{{ url('users:profile') }}">{{ _('Мой профиль') }}</a></li>
-                {% if user.is_superuser %}
-                    <li><a class="dropdown-item"
-                           href="{{ url('users:user_detail', pk=user.id) }}">{{ _('Управление пользователем') }}</a>
-                    </li>
+    <div class="user-section">
+        <div class="dropdown">
+            <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1"
+               data-bs-toggle="dropdown" aria-expanded="false">
+                {% if user.is_authenticated %}
+                    <img src="{{ user.get_avatar_url() }}" alt="{{ user.username }}" width="34" height="34"
+                         class="rounded-circle me-2" style="object-fit: cover;">
+                    <div class="d-flex flex-column">
+                        <strong class="small">{{ user.username }}</strong>
+                        <small class="text-white-50" style="font-size:0.72rem;">{{ user.email }}</small>
+                    </div>
+                {% else %}
+                    <i class="bi bi-person-circle fs-4 me-2"></i>
+                    <strong>{{ _('Гость') }}</strong>
                 {% endif %}
-                <li>
-                    <hr class="dropdown-divider">
-                </li>
-                <li>
-                    <form action="{{ url('users:logout') }}" method="post">
-                        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-                        <button type="submit" class="dropdown-item">{{ _('Выйти') }}</button>
-                    </form>
-                </li>
-            {% else %}
-                <li><a class="dropdown-item" href="{{ url('users:login') }}">{{ _('Войти') }}</a></li>
-            {% endif %}
-        </ul>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
+                {% if user.is_authenticated %}
+                    <li><a class="dropdown-item" href="{{ url('users:profile') }}"><i class="bi bi-person me-2"></i>{{ _('Мой профиль') }}</a></li>
+                    {% if user.is_superuser %}
+                        <li><a class="dropdown-item" href="{{ url('users:user_detail', pk=user.id) }}"><i class="bi bi-pencil-square me-2"></i>{{ _('Управление пользователем') }}</a></li>
+                    {% endif %}
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form action="{{ url('users:logout') }}" method="post">
+                            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                            <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right me-2"></i>{{ _('Выйти') }}</button>
+                        </form>
+                    </li>
+                {% else %}
+                    <li><a class="dropdown-item" href="{{ url('users:login') }}"><i class="bi bi-box-arrow-in-right me-2"></i>{{ _('Войти') }}</a></li>
+                {% endif %}
+            </ul>
+        </div>
     </div>
 </div>
+
+<!-- MAIN CONTENT -->
 <div class="main-content">
     <div class="container-fluid">
         {% if messages %}
@@ -230,6 +335,7 @@
     </div>
 </div>
 
+<!-- CROP MODAL -->
 <div class="modal fade" id="globalCropModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
      aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -257,6 +363,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <script src="/static/js/scripts.js"></script>
 <script>
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+        setTimeout(() => overlay.classList.toggle('show'), 10);
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         let cropper = null;
         let currentFileInput = null;
@@ -301,7 +415,6 @@
 
         cropBtn.addEventListener('click', function () {
             if (!cropper || !currentFileInput) return;
-
             cropper.getCroppedCanvas({
                 width: 512,
                 height: 512,
@@ -313,7 +426,6 @@
                 const dataTransfer = new DataTransfer();
                 dataTransfer.items.add(croppedFile);
                 currentFileInput.files = dataTransfer.files;
-
                 const previewTargetSelector = currentFileInput.getAttribute('data-preview-target');
                 if (previewTargetSelector) {
                     const previewTargets = document.querySelectorAll(previewTargetSelector);

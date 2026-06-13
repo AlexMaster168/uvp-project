@@ -1,10 +1,15 @@
 Django>=4.2
 psycopg2-binary
 Pillow
-django-allauth
+django-allauth[socialaccount]
 djangorestframework
 django-filter
-python-dotenv
+python-decouple
 django-cors-headers
 dj-rest-auth
 djangorestframework-simplejwt
+gunicorn
+requests
+cryptography
+Jinja2
+whitenoise

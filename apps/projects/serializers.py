@@ -46,7 +46,8 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
 class ProjectCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ['name', 'description', 'start_date', 'end_date', 'status', 'logo', 'u_tags']
+        fields = ['id', 'name', 'description', 'start_date', 'end_date', 'status', 'logo', 'u_tags']
+        read_only_fields = ['id']
     
     def validate(self, data):
         if data.get('start_date') and data.get('end_date'):
