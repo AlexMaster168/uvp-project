@@ -3,15 +3,15 @@
 {% block title %}{{ _('Проекты') }} - {{ _('УВП') }}{% endblock %}
 
 {% block content %}
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3">
         <h1 class="h2 fw-bold text-dark mb-0">
             <i class="bi bi-grid-1x2-fill text-primary me-2"></i>{{ _('Проекты') }}
         </h1>
-        <div class="d-flex gap-2">
+        <div class="d-flex flex-wrap gap-2">
             <div class="dropdown">
-                <button class="btn btn-outline-secondary rounded-pill px-4 shadow-sm border-2 dropdown-toggle"
+                <button class="btn btn-outline-secondary rounded-pill px-3 px-sm-4 shadow-sm border-2 dropdown-toggle"
                         type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
-                    <i class="bi bi-sliders me-2"></i>{{ _('Вид') }}
+                    <i class="bi bi-sliders me-1 me-sm-2"></i>{{ _('Вид') }}
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end p-3 shadow-sm border-0 rounded-4" style="min-width: 240px;">
                     <li><h6 class="dropdown-header px-0 text-dark fw-bold">{{ _('Отображать:') }}</h6></li>
@@ -47,20 +47,20 @@
             </div>
             {% if user.is_superuser %}
                 <a href="{{ url('projects:super_structure') }}"
-                   class="btn btn-outline-dark rounded-pill px-4 shadow-sm border-2">
-                    <i class="bi bi-diagram-3-fill me-2"></i>{{ _('Супер-структура') }}
+                   class="btn btn-outline-dark rounded-pill px-3 px-sm-4 shadow-sm border-2">
+                    <i class="bi bi-diagram-3-fill me-1 me-sm-2"></i>{{ _('Супер-структура') }}
                 </a>
-                <a href="{{ url('projects:project_create') }}" class="btn btn-primary rounded-pill px-4 shadow-sm">
-                    <i class="bi bi-plus-lg me-2"></i>{{ _('Создать') }}
+                <a href="{{ url('projects:project_create') }}" class="btn btn-primary rounded-pill px-3 px-sm-4 shadow-sm">
+                    <i class="bi bi-plus-lg me-1 me-sm-2"></i>{{ _('Создать') }}
                 </a>
             {% endif %}
         </div>
     </div>
 
     <div class="card mb-5 border-0 shadow-sm rounded-4 bg-white overflow-hidden">
-        <div class="card-body p-4">
+        <div class="card-body p-3 p-md-4">
             <form method="get" class="row g-3">
-                <div class="col-md-4">
+                <div class="col-12 col-md-4">
                     <label class="form-label text-muted small fw-bold text-uppercase ms-1">{{ _('Поиск') }}</label>
                     <div class="input-group">
                         <span class="input-group-text bg-light border-0"><i class="bi bi-search"></i></span>
@@ -69,7 +69,7 @@
                                value="{{ request.GET.get('q', '') }}">
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-6 col-md-3">
                     <label class="form-label text-muted small fw-bold text-uppercase ms-1">{{ _('Статус') }}</label>
                     <select name="status" class="form-select bg-light border-0 py-2">
                         <option value="">{{ _('Все') }}</option>
@@ -87,7 +87,7 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-6 col-md-3">
                     <label class="form-label text-muted small fw-bold text-uppercase ms-1">{{ _('Владелец') }}</label>
                     <select name="owner" class="form-select bg-light border-0 py-2">
                         <option value="">{{ _('Все') }}</option>
@@ -97,7 +97,7 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
+                <div class="col-12 col-md-2 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary w-100 py-2 rounded-3 shadow-sm fw-bold">
                         {{ _('Поиск') }}
                     </button>

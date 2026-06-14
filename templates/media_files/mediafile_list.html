@@ -3,8 +3,8 @@
 {% block title %}{{ _('Медиафайлы') }}{% endblock %}
 
 {% block content %}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>{{ _('Медиафайлы') }}</h2>
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3">
+        <h2 class="h3">{{ _('Медиафайлы') }}</h2>
         {% if user.is_superuser %}
             <a href="{{ url('media_files:media_create') }}" class="btn btn-primary">
                 <i class="bi bi-cloud-upload"></i> {{ _('Загрузить файл') }}
@@ -14,7 +14,7 @@
 
     <div class="row g-3">
         {% for media in media_files %}
-            <div class="col-md-3">
+            <div class="col-6 col-md-4 col-lg-3">
                 <div class="card h-100">
                     <div class="card-body text-center d-flex flex-column justify-content-between">
                         {% if media.file.url.endswith('.jpg') or media.file.url.endswith('.png') or media.file.url.endswith('.jpeg') %}

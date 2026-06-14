@@ -4,7 +4,7 @@
 
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="bi bi-currency-dollar"></i> {{ _('Финансы') }}</h1>
+        <h1 class="h2"><i class="bi bi-currency-dollar"></i> {{ _('Финансы') }}</h1>
     </div>
 
     <div class="card">
@@ -12,30 +12,28 @@
             <table class="table table-hover mb-0">
                 <thead class="table-light">
                 <tr>
-                    <th>{{ _('Дата') }}</th>
-                    <th>{{ _('Проект') }}</th>
-                    <th>{{ _('Сумма') }}</th>
-                    <th>{{ _('Тип') }}</th>
-                    <th>{{ _('Описание') }}</th>
+                    <th data-label="{{ _('Дата') }}">{{ _('Дата') }}</th>
+                    <th data-label="{{ _('Проект') }}">{{ _('Проект') }}</th>
+                    <th data-label="{{ _('Сумма') }}">{{ _('Сумма') }}</th>
+                    <th data-label="{{ _('Тип') }}">{{ _('Тип') }}</th>
+                    <th data-label="{{ _('Описание') }}">{{ _('Описание') }}</th>
                 </tr>
                 </thead>
                 <tbody>
                 {% for billing in billings %}
                     <tr>
-                        <td>{{ billing.date }}</td>
-                        <td><a href="
-
-                                {{ url('projects:project_detail', pk=billing.project.id) }}">{{ billing.project.name }}</a>
+                        <td data-label="{{ _('Дата') }}">{{ billing.date }}</td>
+                        <td data-label="{{ _('Проект') }}"><a href="{{ url('projects:project_detail', pk=billing.project.id) }}">{{ billing.project.name }}</a>
                         </td>
-                        <td>
+                        <td data-label="{{ _('Сумма') }}">
                             {% if billing.operation == 'income' %}
                                 <span class="text-success">+{{ billing.amount }}</span>
                             {% else %}
                                 <span class="text-danger">-{{ billing.amount }}</span>
                             {% endif %}
                         </td>
-                        <td><span class="badge bg-secondary">{{ billing.get_tag_display() }}</span></td>
-                        <td>{{ billing.description }}</td>
+                        <td data-label="{{ _('Тип') }}"><span class="badge bg-secondary">{{ billing.get_tag_display() }}</span></td>
+                        <td data-label="{{ _('Описание') }}">{{ billing.description }}</td>
                     </tr>
                     {% else %}
                     <tr>

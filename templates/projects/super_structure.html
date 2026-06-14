@@ -34,6 +34,46 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        @media (max-width: 767.98px) {
+            #toolbar {
+                padding: 8px 10px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            #toolbar > div {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                justify-content: center;
+            }
+            #toolbar .btn {
+                font-size: 0.78rem;
+                padding: 0.35rem 0.6rem;
+            }
+            #rete-container {
+                top: 0 !important;
+            }
+            .node {
+                width: 180px !important;
+            }
+            .node-header {
+                font-size: 0.78rem;
+                padding: 6px 8px;
+            }
+            .node-content {
+                font-size: 0.75rem;
+                padding: 8px;
+            }
+            .modal-dialog {
+                margin: 0.5rem;
+            }
+            .modal-body {
+                padding: 1rem !important;
+            }
         }
 
         #rete-container {
@@ -610,6 +650,12 @@
                     this.drag = {active: true, node: n, offX: e.offsetX, offY: e.offsetY};
                 };
 
+                el.ontouchstart = (e) => {
+                    if (e.touches.length === 1) {
+                        e.stopPropagation();
+                    }
+                };
+
                 el.onclick = (e) => {
                     if (n.type === 'project') {
                         window.location.href = `/projects/${n.data.db_id}/structure/`;
@@ -685,6 +731,95 @@
                 this.scale *= (e.deltaY > 0 ? 0.9 : 1.1);
                 this.render();
             };
+
+            // Touch events
+            this.lastTouchDist = 0;
+            this.lastTouchCenter = null;
+
+            container.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    const t = e.touches[0];
+                    const target = document.elementFromPoint(t.clientX, t.clientY);
+                    const nodeEl = target ? target.closest('.node') : null;
+                    if (nodeEl) {
+                        const nodeData = this.nodes.find(n => {
+                            const rect = nodeEl.getBoundingClientRect();
+                            return t.clientX >= rect.left && t.clientX <= rect.right && t.clientY >= rect.top && t.clientY <= rect.bottom;
+                        });
+                        if (nodeData) {
+                            e.preventDefault();
+                            this.drag = {
+                                active: true,
+                                node: nodeData,
+                                offX: (t.clientX - nodeData.x * this.scale - this.panX) / this.scale,
+                                offY: (t.clientY - nodeData.y * this.scale - this.panY) / this.scale
+                            };
+                            return;
+                        }
+                    }
+                    if (target === container || target === svgLayer || !nodeEl) {
+                        e.preventDefault();
+                        this.isPanning = true;
+                        this.panStart = {x: t.clientX - this.panX, y: t.clientY - this.panY};
+                    }
+                } else if (e.touches.length === 2) {
+                    e.preventDefault();
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    this.lastTouchDist = Math.hypot(dx, dy);
+                    this.lastTouchCenter = {
+                        x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+                        y: (e.touches[0].clientY + e.touches[1].clientY) / 2
+                    };
+                }
+            }, {passive: false});
+
+            container.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 1) {
+                    e.preventDefault();
+                    const t = e.touches[0];
+                    if (this.drag.active && this.drag.node) {
+                        this.drag.node.x = (t.clientX - container.getBoundingClientRect().left - this.panX) / this.scale - this.drag.offX;
+                        this.drag.node.y = (t.clientY - container.getBoundingClientRect().top - this.panY) / this.scale - this.drag.offY;
+                        this.render();
+                    } else if (this.isPanning) {
+                        this.panX = t.clientX - this.panStart.x;
+                        this.panY = t.clientY - this.panStart.y;
+                        this.render();
+                    }
+                } else if (e.touches.length === 2) {
+                    e.preventDefault();
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    const dist = Math.hypot(dx, dy);
+                    const center = {
+                        x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+                        y: (e.touches[0].clientY + e.touches[1].clientY) / 2
+                    };
+                    if (this.lastTouchDist > 0) {
+                        const rect = container.getBoundingClientRect();
+                        const mx = center.x - rect.left;
+                        const my = center.y - rect.top;
+                        const nodeX = (mx - this.panX) / this.scale;
+                        const nodeY = (my - this.panY) / this.scale;
+                        const newScale = Math.min(Math.max(0.1, this.scale * (dist / this.lastTouchDist)), 5);
+                        this.panX = mx - nodeX * newScale;
+                        this.panY = my - nodeY * newScale;
+                        this.scale = newScale;
+                        this.render();
+                    }
+                    this.lastTouchDist = dist;
+                    this.lastTouchCenter = center;
+                }
+            }, {passive: false});
+
+            container.addEventListener('touchend', (e) => {
+                this.drag.active = false;
+                this.isPanning = false;
+                this.lastTouchDist = 0;
+                this.lastTouchCenter = null;
+            });
+
             document.getElementById('save-btn').onclick = async () => {
                 await fetch(`/api/projects/projects/super-structure/`, {
                     method: 'POST',
