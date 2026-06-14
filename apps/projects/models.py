@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from apps.utils import translit_upload_to
 
 User = get_user_model()
 
@@ -34,7 +35,7 @@ class Project(models.Model):
     start_date = models.DateField(null=True, blank=True, verbose_name='Дата начала')
     end_date = models.DateField(null=True, blank=True, verbose_name='Дата окончания')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='planned', verbose_name='Статус')
-    logo = models.ImageField(upload_to='project_logos/', null=True, blank=True, verbose_name='Логотип')
+    logo = models.ImageField(upload_to=translit_upload_to('project_logos'), null=True, blank=True, verbose_name='Логотип')
     u_creator = models.ForeignKey(User, on_delete=models.PROTECT, related_name='created_projects',
                                   verbose_name='Создатель')
     u_tags = models.ManyToManyField(Tag, related_name='projects', blank=True, verbose_name='Теги')

@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from apps.utils import translit_upload_to
 
 
 class GroupUsers(models.Model):
@@ -24,7 +25,7 @@ class User(AbstractUser):
     u_group = models.ForeignKey(GroupUsers, on_delete=models.PROTECT, related_name='users', null=True, blank=True)
     global_x = models.FloatField(default=0)
     global_y = models.FloatField(default=0)
-    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
+    avatar = models.ImageField(upload_to=translit_upload_to('avatars'), null=True, blank=True)
 
     class Meta:
         db_table = 'users'

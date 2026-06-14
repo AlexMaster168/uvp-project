@@ -1,13 +1,14 @@
 """Media files models."""
 
 from django.db import models
+from apps.utils import translit_upload_to
 
 
 class MediaFile(models.Model):
     """Media file model."""
     
     file = models.FileField(
-        upload_to='project_media/',
+        upload_to=translit_upload_to('project_media'),
         verbose_name='Файл'
     )
     uploaded_at = models.DateTimeField(
