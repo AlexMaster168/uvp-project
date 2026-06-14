@@ -128,9 +128,10 @@ TIME_ZONE = 'Europe/Kyiv'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -139,6 +140,8 @@ STORAGES = {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_MANIFEST_STRICT = False
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'

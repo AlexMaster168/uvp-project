@@ -2,106 +2,115 @@
 
 ## Описание
 
-УВП (Управление Временем Проектов) — это мощная и современная веб-платформа для комплексного управления проектами, задачами, финансовыми потоками, медиафайлами и доступами. Ключевая особенность системы заключается в наглядной визуализации связей между всеми элементами проекта с помощью интерактивных графов, а также наличии глобальной карты мониторинга («Супер-структура») для администраторов.
+УВП — современная веб-платформа для управления проектами, задачами, финансами и доступами с интерактивной визуализацией связей.
 
-## Основные возможности
+## Скриншоты
 
-### 1. Управление проектами
-* Полный цикл CRUD-операций с расширенной фильтрацией и поиском.
-* Динамически настраиваемый интерфейс (переключатели отображения фото, списков задач, финансов и участников).
-* Гибкая система статусов: «Запланирован», «В работе», «Простой», «Заморожен», «Завершен».
-* Управление проектными командами с разграничением прав доступа (Владелец, Участник, Заказчик).
-* Категоризация проектов через настраиваемую систему тегов.
+### Вход в систему
+![Login](docs/image/00_login.png)
 
-### 2. Задачи и подзадачи
-* Создание многоуровневых задач и подзадач с назначением ответственных исполнителей.
-* Точный учет планируемого и фактически затраченного времени.
-* Мониторинг прогресса в реальном времени с помощью визуальных индикаторов (прогресс-баров).
-* Визуализация зависимостей и иерархии между задачами.
+### Список проектов
+![Projects](docs/image/01_projects.png)
 
-### 3. Финансовый учет (Биллинг)
-* Фиксация и мониторинг доходов и расходов в привязке к конкретным проектам.
-* Автоматический расчет текущего финансового баланса.
-* Структурирование и категоризация транзакций.
+### Супер-структура (глобальная карта проектов)
+![Super Structure](docs/image/02_super_structure.png)
 
-### 4. Менеджер доступов и медиа
-* Безопасное хранение URL-адресов, логинов и паролей к внешним ресурсам проекта.
-* Маскирование конфиденциальных данных (паролей) в интерфейсе для защиты от утечек.
-* Интеграция ссылок на облачные хранилища (Google Drive) и загрузка локальных медиафайлов.
+### Детали проекта (вкладки: задачи, финансы, доступы, медиа, структура)
+![Project Detail](docs/image/03_project_detail.png)
 
-### 5. Интерактивная визуализация (Rete.js)
-* **Структура проекта:** Интерактивный drag-and-drop редактор графа для каждого проекта, объединяющий задачи, финансы, доступы и медиафайлы в единую визуальную сеть.
-* **Супер-структура:** Глобальная визуализация всех проектов системы и их владельцев, предоставляющая администраторам полную картину загрузки и связей.
+### Структура проекта (интерактивный граф)
+![Structure](docs/image/04_project_structure.png)
 
-## Технологический стек
+### Дашборд (статистика)
+![Dashboard](docs/image/05_dashboard.png)
 
-* **Backend**: Python, Django 5.x, Django REST Framework.
-* **Frontend**: Jinja2 Templates, Bootstrap 5, HTMX, Alpine.js.
-* **База данных**: PostgreSQL (Production), SQLite (Development).
-* **Визуализация**: Rete.js.
-* **Контейнеризация и деплой**: Docker, Docker Compose.
+### Задачи
+![Tasks](docs/image/07_tasks.png)
 
-## Быстрый старт
+### Финансы (Биллинг)
+![Billing](docs/image/08_billing.png)
 
-### Вариант 1: Локальный запуск
+### Доступы
+![Access](docs/image/09_access.png)
 
-1. **Подготовка окружения**
+### Медиафайлы
+![Media](docs/image/10_media.png)
 
-```bash
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
+### Админ-панель Django
+![Admin](docs/image/06_admin.png)
 
-2. **Настройка БД и запуск**
+## Схема базы данных
 
-```bash
-python manage.py migrate
-python manage.py createsuperuser
-python manage.py runserver
+![DB Schema](docs/db-schema.png)
 
-```
+> Интерактивная схема: `docs/db-schema.excalidraw` в [excalidraw.com](https://excalidraw.com)
 
-### Вариант 2: Запуск через Docker
+## REST API
 
-1. **Сборка и запуск**
+Базовый URL: `http://<host>/api/`
 
-```bash
-docker-compose up -d --build
+> Все эндпоинты требуют аутентификации (Session Auth + CSRF-токен).
 
-```
+| Модуль | Endpoints | Описание |
+|--------|-----------|----------|
+| Projects | `GET/POST /api/projects/projects/` | CRUD проектов |
+| Projects | `GET/POST /api/projects/projects/super-structure/` | Супер-структура |
+| Projects | `GET/POST /api/projects/projects/{id}/structure/` | Структура проекта |
+| Tags | `GET/POST /api/projects/tags/` | Управление тегами |
+| Users | `GET/POST /api/users/users/` | Пользователи |
+| Tasks | `GET/POST /api/tasks/tasks/` | CRUD задач |
+| SubTasks | `GET/POST /api/tasks/subtasks/` | CRUD подзадач |
+| Billing | `GET/POST /api/billing/billing/` | Транзакции |
+| Access | `GET/POST /api/access/access/` | Записи доступов |
+| Media | `GET/POST /api/media/media_files/` | Медиафайлы |
 
-2. **Применение миграций и создание администратора**
+![API](docs/image/11_api_projects.png)
+
+### Примеры
 
 ```bash
-docker-compose exec web python manage.py migrate
-docker-compose exec web python manage.py createsuperuser
+# Создание проекта
+curl -X POST http://host/api/projects/projects/ \
+  -H "X-CSRFToken: <token>" \
+  -F "name=My Project" -F "status=planned" -F "owner_ids=[1]"
 
+# Создание задачи
+curl -X POST http://host/api/tasks/tasks/ \
+  -H "X-CSRFToken: <token>" -H "Content-Type: application/json" \
+  -d '{"title":"Task","status":"todo","project":1}'
+
+# Создание биллинга
+curl -X POST http://host/api/billing/billing/ \
+  -H "X-CSRFToken: <token>" -H "Content-Type: application/json" \
+  -d '{"project":1,"amount":"1500.00","operation":"income","tag":"actual_income","date":"2026-06-14"}'
 ```
 
-Приложение будет доступно по адресу: `http://127.0.0.1:8000`.
+## Возможности
 
-## Роли в системе
+1. **Проекты** — CRUD, статусы (planned/in_progress/idle/sleep/finished), теги, команды (Owner/Member/Customer)
+2. **Задачи/подзадачи** — зависимости (M2M self), время, прогресс
+3. **Биллинг** — доходы/расходы по проектам
+4. **Доступы** — хранение логинов/паролей с маскировкой
+5. **Визуализация** — drag-and-drop граф структуры + супер-структура
 
-### Глобальные роли (Группы):
+## Стек
 
-* **Admin**: Полный доступ ко всем разделам, управлению пользователями и "Супер-структуре".
-* **Guest**: Ограниченный доступ (только чтение или базовые функции).
+- **Backend**: Python, Django 5.x, DRF
+- **Frontend**: Jinja2, Bootstrap 5, HTMX, Alpine.js
+- **БД**: PostgreSQL
+- **Деплой**: Docker, Coolify
 
-### Проектные роли:
+## Деплой
 
-* **Владелец (Owner)**: Полный контроль над настройками, составом проекта и его структурой.
-* **Участник (Member)**: Работа с задачами, изменение статусов, загрузка файлов.
-* **Заказчик (Customer)**: Просмотр общего прогресса (Progress Bar) и финансовой сводки, без доступа к деталям задач.
+- **Приложение**: http://167.233.82.147/
+- **Coolify**: http://167.233.82.147:8000
+- **GitHub**: https://github.com/AlexMaster168/uvp-project
 
 ## Документация
 
-Подробную информацию можно найти в файлах:
-
-* `ARCHITECTURE.md` — детальное описание архитектуры.
-* `API_DOCUMENTATION.md` — спецификация всех REST API endpoints.
-* `DEPLOYMENT.md` — инструкции по развертыванию на сервер.
-
-```
-
-```
+- `ARCHITECTURE.md` — архитектура
+- `API_DOCUMENTATION.md` — REST API
+- `DEPLOYMENT.md` — развёртывание
+- `docs/db-schema.png` — схема БД
+- `docs/db-schema.excalidraw` — интерактивная схема
+- `docs/image/` — скриншоты
