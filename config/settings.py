@@ -170,8 +170,11 @@ ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = [
     'https://birthday-rpg-movies-improved.trycloudflare.com',
     'http://167.233.82.147:8000',
+    'http://167.233.82.147',
     'http://localhost:8000',
 ]
+
+DEBUG = False
 
 SECURE_SSL_REDIRECT = False
 SESSION_COOKIE_SECURE = False

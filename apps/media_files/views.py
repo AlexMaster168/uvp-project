@@ -3,6 +3,7 @@ from django.views.generic import CreateView, UpdateView, DeleteView, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, parsers
+from rest_framework.permissions import IsAuthenticated
 
 from .models import MediaFile
 from .forms import MediaFileForm
@@ -13,6 +14,7 @@ from apps.projects.models import Project
 class MediaFileViewSet(viewsets.ModelViewSet):
     queryset = MediaFile.objects.all()
     serializer_class = MediaFileSerializer
+    permission_classes = [IsAuthenticated]
     parser_classes = (parsers.MultiPartParser, parsers.FormParser)
 
 

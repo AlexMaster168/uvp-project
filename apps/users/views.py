@@ -4,6 +4,7 @@ from django.views.generic import ListView, CreateView, DetailView, View, UpdateV
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy, reverse
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
 
 from .forms import CustomUserCreationForm, AddUserToProjectForm, GlobalSettingsForm, UserProfileForm, CustomLoginForm
@@ -17,6 +18,7 @@ User = get_user_model()
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class UserLoginView(LoginView):

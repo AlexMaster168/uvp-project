@@ -2,6 +2,7 @@ from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from rest_framework import viewsets, filters
+from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .form import BillingForm
@@ -48,6 +49,7 @@ class BillingDeleteView(LoginRequiredMixin, DeleteView):
 class BillingViewSet(viewsets.ModelViewSet):
     queryset = Billing.objects.all()
     serializer_class = BillingSerializer
+    permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['project', 'operation', 'tag', 'date']
     ordering_fields = ['date', 'amount']
