@@ -1,0 +1,20 @@
+        <article class="portfolio-card {{ 'is-risk' if report.risks or (report.overdue_days and project.status != 'finished') else '' }}" data-report-project="{{ project.id }}">
+            <div class="project-photo d-none portfolio-photo">{% if project.logo %}<img src="{{ project.logo.url }}" alt="{{ project.name }}">{% else %}<span>{{ project.name[:1]|upper }}</span>{% endif %}</div>
+            <div class="portfolio-top"><span class="portfolio-meta">ПРОЄКТ #{{ project.id }}</span><span class="portfolio-status">{{ _(project.get_status_display()) }}</span></div>
+            <h3><a href="{{ url('projects:project_detail', pk=project.id) }}?mode={{ '3' if list_mode == '3' else ('5' if list_mode == '7' else '4') }}">{{ project.name }}</a></h3>
+            <div class="project-owners portfolio-owners">Власники: {{ item.owners|join(', ') or 'Не призначено' }}</div>
+            <div class="portfolio-progress"><div class="portfolio-track" role="progressbar" aria-label="Прогрес проєкту" aria-valuenow="{{ report.progress }}" aria-valuemin="0" aria-valuemax="100"><span style="width:{{ report.progress }}%"></span></div><strong>{{ report.progress }}%</strong></div>
+            <dl class="portfolio-metrics">
+                <div><dt>Виконано робіт</dt><dd>{{ report.done }} / {{ report.done + report.pending }}</dd></div>
+                <div><dt>Залишок роботи</dt><dd>{{ '%g'|format(report.remaining_days) }} люд.-дн.</dd></div>
+                <div class="portfolio-deadlines"><dt>До дедлайну</dt><dd class="{{ 'portfolio-danger' if report.overdue_days and project.status != 'finished' else '' }}">{% if project.status == 'finished' %}Завершено{% elif report.deadline_days is none %}Не вказано{% elif report.overdue_days %}Прострочено {{ report.overdue_days }} дн.{% elif report.deadline_days == 0 %}Сьогодні{% else %}{{ report.deadline_days }} дн.{% endif %}</dd></div>
+                <div class="portfolio-deadlines"><dt>До зміни статусу</dt><dd>Не визначено</dd></div>
+            </dl>
+            <div class="portfolio-result-section"><div class="portfolio-results">Виконано / ризики / невиконано <strong class="d-block mt-1"><span class="portfolio-good">{{ report.done }}</span> / <span class="portfolio-danger">{{ report.risks }}</span> / {{ report.pending }}</strong></div>
+            {% if report.unestimated or report.risks %}<p class="portfolio-note">Без оцінки: {{ report.unestimated }} задач. Потребують переоцінки: {{ report.risks }}. Залишок цих задач може бути неповним.</p>{% endif %}
+            </div>
+            <div class="task-preview-list portfolio-task-preview d-none">{% if item.show_tasks %}<strong>Задачі</strong>{% for row in report.rows[:3] %}<a href="{{ url('tasks:task_detail', pk=row.task.id) }}">{{ row.task.title }}</a>{% else %}<p class="portfolio-note">Немає задач.</p>{% endfor %}{% else %}<p class="portfolio-note">Заказчику доступний загальний прогрес.</p>{% endif %}</div>
+            <div class="portfolio-load {{ 'd-none' if list_mode not in ('4', '7') else '' }}"><strong>Навантаження по людям</strong>{% for name, days in report.workload %}<div class="portfolio-load-line"><span>{{ name }}</span><strong>{{ '%g'|format(days) }} люд.-дн.</strong></div>{% else %}<p class="portfolio-note">Виконавців не призначено.</p>{% endfor %}{% if report.unassigned_days %}<div class="portfolio-load-line"><span>Не призначено</span><strong>{{ '%g'|format(report.unassigned_days) }} люд.-дн.</strong></div>{% endif %}</div>
+            <div class="project-finance d-none">{% include 'projects/project_finance_report.html' %}</div>
+            <div class="portfolio-actions"><a href="{{ url('projects:project_detail', pk=project.id) }}?mode=3">Зведення проєкту</a><a href="{{ url('projects:project_detail', pk=project.id) }}?mode=4">Деталі задач →</a></div>
+        </article>

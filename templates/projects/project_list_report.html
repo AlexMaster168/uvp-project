@@ -5,30 +5,35 @@
 @media(max-width:1000px){.portfolio-grid{grid-template-columns:1fr}}
 @media(max-width:575px){.portfolio-report{padding:14px 10px;border-radius:16px}.portfolio-card{padding:22px 18px}.portfolio-card h3{font-size:21px}.portfolio-heading{font-size:20px}.is-dark .portfolio-metrics{grid-template-columns:1fr 1fr}.portfolio-top{align-items:start}.portfolio-status{white-space:normal;text-align:right}.portfolio-metrics dd{font-size:16px}}
 </style>
-<section class="portfolio-report {{ 'is-dark' if list_mode == '3' else '' }}" aria-label="Зведення проєктів для керівництва">
+<style>
+.portfolio-photo{height:130px;background:linear-gradient(135deg,#3467bb,#75bbcf);border-radius:14px;margin-bottom:16px;overflow:hidden;align-items:center;justify-content:center;text-align:center;color:white;font-size:55px;line-height:130px}.portfolio-photo img{width:100%;height:100%;object-fit:cover}.portfolio-task-preview{border-top:1px solid var(--report-border);padding-top:14px;margin-top:14px;font-size:13px}.portfolio-task-preview a,.portfolio-task-link{display:block;margin-top:8px;color:var(--report-text);text-decoration:none;overflow-wrap:anywhere}.portfolio-task-preview a:hover,.portfolio-task-link:hover{text-decoration:underline}.portfolio-finance-summary{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--report-border);padding-top:14px;margin-top:14px;font-size:13px}.portfolio-finance-summary span,.portfolio-finance-summary strong{display:block}.portfolio-finance-summary span{font-size:11px;color:var(--report-muted)}
+.portfolio-board{display:flex;gap:18px;overflow-x:auto;align-items:flex-start;padding-bottom:18px;scroll-snap-type:x proximity}.portfolio-column{flex:0 0 310px;min-width:0;scroll-snap-align:start}.portfolio-column-heading{display:flex;justify-content:space-between;align-items:center;font-size:16px;font-weight:700;border-bottom:3px solid var(--report-border);padding:0 0 14px;margin-bottom:18px}.portfolio-column-heading span{font-size:13px;background:var(--report-card);border:1px solid var(--report-border);border-radius:20px;padding:3px 10px}.portfolio-column .portfolio-card{padding:18px;border-radius:18px;margin-bottom:16px}.portfolio-column .portfolio-card h3{font-size:20px}
+.portfolio-table-scroll{overflow-x:auto;border:1px solid var(--report-border);border-radius:16px;background:var(--report-card)}.portfolio-table{border-collapse:collapse;width:100%;font-size:14px;color:var(--report-text)}.portfolio-table th,.portfolio-table td{text-align:left;padding:18px 16px;border-bottom:1px solid var(--report-border);vertical-align:middle;min-width:115px;max-width:260px}.portfolio-table th{font-size:12px;color:var(--report-muted);font-weight:600;background:var(--report-bg)}.portfolio-table tbody tr:last-child td{border-bottom:0}.portfolio-table tbody tr:hover{background:var(--report-bg)}.portfolio-table .portfolio-table-title{display:block;min-width:180px;font-weight:650;color:var(--report-text);text-decoration:none;overflow-wrap:anywhere}.portfolio-table .portfolio-table-title:hover{text-decoration:underline}.portfolio-table .portfolio-progress{display:table-cell;margin:0}.portfolio-table .portfolio-track{min-width:90px;margin-bottom:6px}.portfolio-table .portfolio-load{border-top:0;padding:18px 16px;margin:0}.portfolio-table .portfolio-finance-summary{margin:0;padding:0;border:0;min-width:230px}.portfolio-table-photo{width:52px;height:52px;border-radius:12px;overflow:hidden;background:#3265ba;display:flex;align-items:center;justify-content:center;color:white;font-size:22px}.portfolio-table-photo img{width:100%;height:100%;object-fit:cover}
+@media(max-width:575px){.portfolio-column{flex-basis:calc(100vw - 84px)}.portfolio-table th,.portfolio-table td{padding:14px 12px}}
+</style>
+<section class="portfolio-report {{ 'is-dark' if list_mode == '3' else '' }} {{ 'portfolio-medusa' if list_mode == '7' else '' }}" aria-label="Зведення проєктів для керівництва">
     <h2 class="portfolio-heading">Проєкти · Зведення для керівництва</h2>
+    {% if list_presentation == 'table' %}
+        {% include 'projects/project_table.html' %}
+    {% elif list_presentation == 'board' %}
+        <div class="portfolio-board" aria-label="Дошка проєктів за статусами">
+        {% for status, label, items in project_columns %}
+            <section class="portfolio-column" data-project-status="{{ status }}">
+                <h3 class="portfolio-column-heading">{{ _(label) }} <span>{{ items|length }}</span></h3>
+                {% for item in items %}
+                    {% set project = item.project %}{% set report = item.report %}
+                    {% include 'projects/project_report_card.html' %}
+                {% else %}<p class="portfolio-note">Проєктів немає.</p>{% endfor %}
+            </section>
+        {% endfor %}
+        </div>
+    {% else %}
     <div class="portfolio-grid">
     {% for item in project_reports %}
         {% set project = item.project %}{% set report = item.report %}
-        <article class="portfolio-card {{ 'is-risk' if report.risks or (report.overdue_days and project.status != 'finished') else '' }}" data-report-project="{{ project.id }}">
-            <div class="portfolio-top"><span class="portfolio-meta">ПРОЄКТ #{{ project.id }}</span><span class="portfolio-status">{{ _(project.get_status_display()) }}</span></div>
-            <h3><a href="{{ url('projects:project_detail', pk=project.id) }}?mode={{ list_mode }}">{{ project.name }}</a></h3>
-            <div class="project-owners portfolio-owners">Власники: {{ item.owners|join(', ') or 'Не призначено' }}</div>
-            <div class="portfolio-progress"><div class="portfolio-track" role="progressbar" aria-label="Прогрес проєкту" aria-valuenow="{{ report.progress }}" aria-valuemin="0" aria-valuemax="100"><span style="width:{{ report.progress }}%"></span></div><strong>{{ report.progress }}%</strong></div>
-            <dl class="portfolio-metrics">
-                <div><dt>Виконано робіт</dt><dd>{{ report.done }} / {{ report.done + report.pending }}</dd></div>
-                <div><dt>Залишок роботи</dt><dd>{{ '%g'|format(report.remaining_days) }} люд.-дн.</dd></div>
-                <div><dt>До дедлайну</dt><dd class="{{ 'portfolio-danger' if report.overdue_days and project.status != 'finished' else '' }}">{% if project.status == 'finished' %}Завершено{% elif report.deadline_days is none %}Не вказано{% elif report.overdue_days %}Прострочено {{ report.overdue_days }} дн.{% elif report.deadline_days == 0 %}Сьогодні{% else %}{{ report.deadline_days }} дн.{% endif %}</dd></div>
-                <div><dt>До зміни статусу</dt><dd>Не визначено</dd></div>
-            </dl>
-            <div class="portfolio-results">Виконано / ризики / невиконано <strong class="d-block mt-1"><span class="portfolio-good">{{ report.done }}</span> / <span class="portfolio-danger">{{ report.risks }}</span> / {{ report.pending }}</strong></div>
-            {% if report.unestimated or report.risks %}<p class="portfolio-note">Без оцінки: {{ report.unestimated }} задач. Потребують переоцінки: {{ report.risks }}. Залишок цих задач може бути неповним.</p>{% endif %}
-            {% if list_mode == '4' %}
-            <div class="portfolio-load"><strong>Навантаження по людям</strong>{% for name, days in report.workload %}<div class="portfolio-load-line"><span>{{ name }}</span><strong>{{ '%g'|format(days) }} люд.-дн.</strong></div>{% else %}<p class="portfolio-note">Виконавців не призначено.</p>{% endfor %}{% if report.unassigned_days %}<div class="portfolio-load-line"><span>Не призначено</span><strong>{{ '%g'|format(report.unassigned_days) }} люд.-дн.</strong></div>{% endif %}</div>
-            {% endif %}
-            <div class="portfolio-actions"><a href="{{ url('projects:project_detail', pk=project.id) }}?mode=3">Зведення проєкту</a><a href="{{ url('projects:project_detail', pk=project.id) }}?mode=4">Деталі задач →</a></div>
-        </article>
+        {% include 'projects/project_report_card.html' %}
     {% else %}<p class="portfolio-empty">{{ _('Проекты не найдены') }}</p>{% endfor %}
     </div>
+    {% endif %}
     <p class="portfolio-note">1 люд.-дн. = 8 годин. Прогрес — частка виконаних робіт. Ризик — планові години вичерпано, задача ще відкрита. Залишок розподілено між виконавцями порівну. Показано проєкти поточної сторінки з урахуванням фільтрів.</p>
 </section>

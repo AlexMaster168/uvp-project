@@ -1,0 +1,53 @@
+<script>
+(() => {
+    const root = document.getElementById('medusaView');
+    const prefix = 'uvp-project-report:{{ project.id }}:modern:';
+    const read = key => { try { return localStorage.getItem(prefix + key); } catch (_) { return null; } };
+    const save = (key, value) => { try { localStorage.setItem(prefix + key, value); } catch (_) {} };
+    const theme = document.getElementById('medusaTheme');
+    const layout = document.getElementById('medusaLayout');
+    const setTheme = value => {
+        theme.value = [...theme.options].some(option => option.value === value) ? value : 'default';
+        root.dataset.theme = theme.value;
+    };
+    const setLayout = value => {
+        if (!layout) return;
+        layout.value = [...layout.options].some(option => option.value === value) ? value : 'cards';
+        root.dataset.layout = layout.value;
+    };
+    setLayout('{{ "rows" if report_mode == "6" else "cards" }}');
+    const scopedKey = key => root.dataset.layout + ':' + key;
+    theme.addEventListener('change', () => { setTheme(theme.value); save(scopedKey('theme'), theme.value); });
+    const toggles = [...root.querySelectorAll('.medusa-toggle')];
+    const apply = toggle => root.querySelectorAll('[data-medusa-section="' + toggle.dataset.section + '"]').forEach(el => el.classList.toggle('d-none', !toggle.checked));
+    const restore = () => {
+        setTheme(read(scopedKey('theme')));
+        toggles.forEach(toggle => { toggle.checked = read(scopedKey(toggle.dataset.section)) !== 'hidden'; apply(toggle); });
+    };
+    restore();
+    if (layout) layout.addEventListener('change', () => {
+        setLayout(layout.value); save('layout', layout.value); restore();
+        const mode = layout.value === 'rows' ? '6' : '5';
+        const current = new URL(location.href); current.searchParams.set('mode', mode);
+        history.replaceState(null, '', current.href);
+        try { localStorage.setItem('uvp-project-mode-{{ project.id }}', mode); } catch (_) {}
+        document.querySelectorAll('.uvp-mode-switch [data-mode]').forEach(link => {
+            link.classList.toggle('btn-primary', link.dataset.mode === mode);
+            link.classList.toggle('btn-outline-primary', link.dataset.mode !== mode);
+            if (link.dataset.mode === mode) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
+        });
+    });
+    toggles.forEach(toggle => toggle.addEventListener('change', () => { apply(toggle); save(scopedKey(toggle.dataset.section), toggle.checked ? 'visible' : 'hidden'); }));
+    document.getElementById('medusaReset').addEventListener('click', () => {
+        setTheme('default'); save(scopedKey('theme'), 'default');
+        toggles.forEach(toggle => { toggle.checked = true; apply(toggle); save(scopedKey(toggle.dataset.section), 'visible'); });
+    });
+    const search = document.getElementById('medusaSearch');
+    if (search) search.addEventListener('input', () => {
+        const query = search.value.trim().toLocaleLowerCase();
+        const tasks = [...root.querySelectorAll('[data-task-search]')];
+        tasks.forEach(task => task.classList.toggle('d-none', !task.dataset.taskSearch.toLocaleLowerCase().includes(query)));
+        document.getElementById('medusaNoMatches').classList.toggle('d-none', !tasks.length || tasks.some(task => !task.classList.contains('d-none')));
+    });
+})();
+</script>

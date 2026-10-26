@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}{{ project.name }} · Сучасний огляд{% endblock %}
+{% block extra_css %}
+{% include 'projects/project_themes.html' %}
+{% include 'projects/medusa_styles.html' %}
+{% endblock %}
+{% block content %}
+{% include 'projects/mode_switch.html' %}
+<main id="medusaView" class="project-list-surface" data-theme="default" data-layout="cards">
+<section class="portfolio-report medusa-dashboard">
+    <div class="medusa-header">
+        <div><div class="medusa-subtitle">ОГЛЯД ПРОЄКТУ #{{ project.id }}</div><h1>{{ project.name }}</h1><p class="medusa-subtitle">ВИКОНАВЦІ · РЕЗУЛЬТАТИ · НАВАНТАЖЕННЯ</p></div>
+        <div class="dropdown medusa-controls"><button class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" type="button">Вигляд</button>
+            <div class="dropdown-menu dropdown-menu-end p-3" style="min-width:260px">
+                <label for="medusaTheme" class="form-label small fw-bold">Тема цього режиму</label>
+                <select id="medusaTheme" class="form-select form-select-sm mb-3"><option value="default">Стандартна</option><option value="ocean">Океан</option><option value="forest">Ліс</option><option value="graphite">Графіт</option><option value="sand">Пісок</option></select>
+                {% for key, label in [('participants','Виконавці'),('progress','Прогрес'),('deadlines','Строки'),('results','Результати'),('estimates','Залишок роботи'),('workload','Навантаження по людям')] %}
+                <div class="form-check form-switch mb-2"><input id="medusa-{{ key }}" class="form-check-input medusa-toggle" type="checkbox" data-section="{{ key }}" checked><label class="form-check-label small" for="medusa-{{ key }}">{{ label }}</label></div>
+                {% endfor %}
+                {% if report_show_tasks %}<div class="form-check form-switch mb-2"><input id="medusa-tasks" class="form-check-input medusa-toggle" type="checkbox" data-section="tasks" checked><label class="form-check-label small" for="medusa-tasks">Задачі</label></div>{% endif %}
+                <button id="medusaReset" type="button" class="btn btn-sm btn-outline-secondary w-100 mt-2">Скинути налаштування</button>
+            </div>
+        </div>
+    </div>
+    <div class="medusa-summary">
+        <div class="medusa-tile" data-medusa-section="progress"><span>Прогрес проєкту</span><strong class="medusa-positive">{{ report.progress }}%</strong><div class="medusa-track"><span style="width:{{ report.progress }}%"></span></div></div>
+        <div class="medusa-tile" data-medusa-section="deadlines"><span>До зміни статусу</span><strong>Не визначено</strong></div>
+        <div class="medusa-tile" data-medusa-section="deadlines"><span>До дедлайну</span><strong class="{{ 'medusa-negative' if report.overdue_days and project.status != 'finished' else '' }}">{% if project.status == 'finished' %}Завершено{% elif report.deadline_days is none %}Не вказано{% elif report.overdue_days %}Прострочено {{ report.overdue_days }} дн.{% elif report.deadline_days == 0 %}Сьогодні{% else %}{{ report.deadline_days }} дн.{% endif %}</strong></div>
+        <div class="medusa-tile" data-medusa-section="results"><span>Виконано / ризики</span><strong><span class="medusa-positive">{{ report.done }}</span> / <span class="medusa-negative">{{ report.risks }}</span></strong></div>
+        <div class="medusa-tile" data-medusa-section="results"><span>Невиконано робіт</span><strong>{{ report.pending }}</strong></div>
+        <div class="medusa-tile" data-medusa-section="estimates"><span>Залишок роботи</span><strong>{{ '%g'|format(report.remaining_days) }} люд.-дн.</strong>{% if report.unestimated or report.risks %}<small>Є задачі без актуальної оцінки</small>{% endif %}</div>
+    </div>
+    {% if report_show_tasks %}
+    <section data-medusa-section="tasks">
+        <div class="medusa-toolbar"><input id="medusaSearch" class="form-control" type="search" aria-label="Пошук по задачах та виконавцях" placeholder="Пошук по задачах та виконавцях…"><select id="medusaLayout" class="form-select" aria-label="Вид задач">{% for value, label in report_layouts %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select><button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()">Друк / PDF</button></div>
+        <div class="medusa-task-grid">
+        {% for row in report.rows %}
+        <article class="medusa-task {{ 'is-risk' if row.risk else '' }}" data-task-search="{{ row.task.title|lower }} {{ row.people|map(attribute='username')|join(' ')|lower }}">
+            <div class="medusa-task-main"><div class="medusa-task-title"><h3>{{ loop.index }}. {{ row.task.title }}</h3><span class="medusa-badge">{{ 'Ризик' if row.risk else ('Завершено' if row.task.status == 'done' else ('В роботі' if row.task.status == 'in_progress' else 'Не розпочато')) }}</span></div><div class="medusa-people" data-medusa-section="participants">{% for person in row.people %}<span><b>{{ person.username[:1]|upper }}</b>{{ person.username }}</span>{% else %}<small>Виконавця не призначено</small>{% endfor %}</div></div>
+            <div class="medusa-task-progress" data-medusa-section="progress"><strong>{{ row.progress }}%</strong><div class="medusa-track"><span style="width:{{ row.progress }}%"></span></div><div class="medusa-scale"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div></div>
+            <div class="medusa-task-metrics"><div data-medusa-section="results"><span>Виконано / невиконано</span><strong><span class="medusa-positive">{{ row.done }}</span> / {{ row.pending }}</strong></div><div data-medusa-section="estimates"><span>Залишок роботи</span><strong>{% if row.risk %}Переоцінити{% elif row.unestimated %}Не оцінено{% else %}{{ '%g'|format(row.remaining_days) }} люд.-дн.{% endif %}</strong></div></div>
+        </article>
+        {% else %}<p class="medusa-note">У проєкті ще немає задач.</p>{% endfor %}
+        </div>
+        <p id="medusaNoMatches" class="medusa-note d-none" role="status">Задач за цим запитом не знайдено.</p>
+    </section>
+    {% endif %}
+    <section class="medusa-workload" data-medusa-section="workload"><h2>Залишок навантаження за людьми</h2><div>{% for name, days in report.workload %}<span><b>{{ name[:1]|upper }}</b>{{ name }} <strong>{{ '%g'|format(days) }} люд.-дн.</strong></span>{% else %}<p class="medusa-note">Виконавців не призначено.</p>{% endfor %}{% if report.unassigned_days %}<span>Не призначено <strong>{{ '%g'|format(report.unassigned_days) }} люд.-дн.</strong></span>{% endif %}</div></section>
+    <p class="medusa-note">1 люд.-дн. = 8 годин. Прогрес — виконані роботи / усі роботи. Ризик — план годин вичерпано, задача ще відкрита. Залишок між виконавцями ділиться порівну. Дата зміни статусу й окремі позитивні/негативні результати не ведуться.</p>
+</section>
+</main>
+{% include 'projects/medusa_controls.html' %}
+{% endblock %}

@@ -1,0 +1,27 @@
+<div class="portfolio-table-scroll" tabindex="0" role="region" aria-label="Таблиця проєктів · прокрутка по горизонталі">
+<table class="portfolio-table">
+    <thead><tr>
+        <th class="project-photo d-none">Фото</th><th>Проєкт</th><th>Статус</th>
+        <th class="project-owners">Власники</th><th class="portfolio-progress">Прогрес</th>
+        <th>Залишок роботи</th><th class="portfolio-deadlines">Дедлайн</th>
+        <th class="portfolio-result-section">Виконано / ризики / невиконано</th>
+        <th class="task-preview-list d-none">Задачі</th><th class="portfolio-load d-none">Навантаження</th>
+        <th class="project-finance d-none">Фінанси</th>
+    </tr></thead>
+    <tbody>{% for item in project_reports %}{% set project = item.project %}{% set report = item.report %}
+    <tr data-report-project="{{ project.id }}">
+        <td class="project-photo d-none"><div class="portfolio-table-photo">{% if project.logo %}<img src="{{ project.logo.url }}" alt="{{ project.name }}">{% else %}<span>{{ project.name[:1]|upper }}</span>{% endif %}</div></td>
+        <td><a class="portfolio-table-title" href="{{ url('projects:project_detail', pk=project.id) }}?mode=4">#{{ project.id }} {{ project.name }}</a></td>
+        <td><span class="portfolio-status">{{ _(project.get_status_display()) }}</span></td>
+        <td class="project-owners">{{ item.owners|join(', ') or 'Не призначено' }}</td>
+        <td class="portfolio-progress"><div class="portfolio-track"><span style="width:{{ report.progress }}%"></span></div><strong>{{ report.progress }}%</strong></td>
+        <td>{{ '%g'|format(report.remaining_days) }} люд.-дн.{% if report.risks or report.unestimated %}<div class="portfolio-note">Оцінка неповна</div>{% endif %}</td>
+        <td class="portfolio-deadlines {{ 'portfolio-danger' if report.overdue_days and project.status != 'finished' else '' }}">{% if project.status == 'finished' %}Завершено{% elif not project.end_date %}Не вказано{% else %}{{ project.end_date.strftime('%d.%m.%Y') }}{% if report.overdue_days %}<div>Прострочено {{ report.overdue_days }} дн.</div>{% endif %}{% endif %}</td>
+        <td class="portfolio-result-section"><span class="portfolio-good">{{ report.done }}</span> / <span class="portfolio-danger">{{ report.risks }}</span> / {{ report.pending }}</td>
+        <td class="task-preview-list d-none">{% if item.show_tasks %}{% for row in report.rows[:3] %}<a class="portfolio-task-link" href="{{ url('tasks:task_detail', pk=row.task.id) }}">{{ row.task.title }}</a>{% else %}Немає задач{% endfor %}{% else %}Загальний прогрес{% endif %}</td>
+        <td class="portfolio-load d-none">{% for name, days in report.workload %}<div class="portfolio-load-line">{{ name }} · {{ '%g'|format(days) }} люд.-дн.</div>{% else %}Не призначено{% endfor %}{% if report.unassigned_days %}<div>Не призначено · {{ '%g'|format(report.unassigned_days) }} люд.-дн.</div>{% endif %}</td>
+        <td class="project-finance d-none">{% include 'projects/project_finance_report.html' %}</td>
+    </tr>
+    {% else %}<tr><td colspan="11" class="portfolio-empty">{{ _('Проекты не найдены') }}</td></tr>{% endfor %}</tbody>
+</table>
+</div>

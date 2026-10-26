@@ -1,0 +1,7 @@
+{% set income = item.finance.get('income') or 0 %}
+{% set expense = item.finance.get('expense') or 0 %}
+<div class="portfolio-finance-summary">
+    <div><span>Дохід</span><strong class="portfolio-good">{{ '%g'|format(income) }}</strong></div>
+    <div><span>Витрата</span><strong class="portfolio-danger">{{ '%g'|format(expense) }}</strong></div>
+    <div><span>Залишок</span><strong>{{ '%g'|format(income - expense) }}</strong></div>
+</div>

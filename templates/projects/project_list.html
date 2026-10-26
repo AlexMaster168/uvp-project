@@ -13,41 +13,31 @@
                         type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
                     <i class="bi bi-sliders me-1 me-sm-2"></i>{{ _('Вид') }} · {{ list_mode }}
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end p-3 shadow-sm border-0 rounded-4" style="min-width: 240px;">
+                <ul class="dropdown-menu dropdown-menu-end p-3 shadow-sm border-0 rounded-4" style="min-width:240px;max-height:75vh;overflow-y:auto;">
                     <li><h6 class="dropdown-header px-0 text-dark fw-bold">Режим перегляду</h6></li>
                     {% for value, label, href in list_modes %}
                     <li><a class="dropdown-item rounded-2 px-2 {{ 'active' if list_mode == value else '' }}" href="{{ href }}" data-list-mode="{{ value }}" {% if list_mode == value %}aria-current="page"{% endif %}>{{ value }} · {{ label }}</a></li>
                     {% endfor %}
                     <li><hr class="dropdown-divider"></li>
+                    <li><label for="projectTheme" class="dropdown-header px-0 text-dark fw-bold">Тема проєктів</label></li>
+                    <li class="mb-3"><select id="projectTheme" class="form-select form-select-sm" aria-label="Тема проєктів">
+                        <option value="default">Стандартна</option>
+                        <option value="ocean">Океан · прохолодна блакитна</option>
+                        <option value="forest">Ліс · м’яка зелена</option>
+                        <option value="graphite">Графіт · темна</option>
+                        <option value="sand">Пісок · тепла світла</option>
+                    </select></li>
                     <li><h6 class="dropdown-header px-0 text-dark fw-bold">{{ _('Отображать:') }}</h6></li>
+                    {% for control_id, label, target, default in list_controls %}
                     <li>
                         <div class="form-check form-switch mb-2">
-                            <input class="form-check-input view-toggle" type="checkbox" role="switch" id="togglePhoto"
-                                   data-target=".project-photo">
-                            <label class="form-check-label small" for="togglePhoto">{{ _('Фото') }}</label>
+                            <input class="form-check-input view-toggle" type="checkbox" role="switch" id="{{ control_id }}"
+                                   data-target="{{ target }}" data-default="{{ 'visible' if default else 'hidden' }}" {% if default %}checked{% endif %}>
+                            <label class="form-check-label small" for="{{ control_id }}">{{ _(label) }}</label>
                         </div>
                     </li>
-                    <li>
-                        <div class="form-check form-switch mb-2">
-                            <input class="form-check-input view-toggle" type="checkbox" role="switch" id="toggleOwners"
-                                   data-target=".project-owners">
-                            <label class="form-check-label small" for="toggleOwners">{{ _('Участников') }}</label>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="form-check form-switch mb-2">
-                            <input class="form-check-input view-toggle" type="checkbox" role="switch" id="toggleTasks"
-                                   data-target=".task-preview-list">
-                            <label class="form-check-label small" for="toggleTasks">{{ _('Список задач') }}</label>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input view-toggle" type="checkbox" role="switch" id="toggleFinance"
-                                   data-target=".project-finance">
-                            <label class="form-check-label small" for="toggleFinance">{{ _('Финансы') }}</label>
-                        </div>
-                    </li>
+                    {% endfor %}
+                    <li><button class="btn btn-sm btn-outline-secondary w-100 mt-2" type="button" id="resetViewSettings">Скинути налаштування цього режиму</button></li>
                 </ul>
             </div>
             {% if user.is_superuser %}
@@ -112,7 +102,8 @@
         </div>
     </div>
 
-    {% if list_mode in ('3', '4') %}
+    <div id="projectListSurface" class="project-list-surface" data-theme="default">
+    {% if list_presentation != 'cards' %}
         {% include 'projects/project_list_report.html' %}
     {% else %}
     <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4 {{ 'projects-compact-cards' if list_mode == '2' else '' }}">
@@ -245,6 +236,7 @@
         {% endfor %}
     </div>
     {% endif %}
+    </div>
 
     {% if is_paginated %}
         <nav class="mt-5">
@@ -275,8 +267,8 @@
         </nav>
     {% endif %}
 
+    {% include 'projects/project_themes.html' %}
     <style>
-        .projects-compact-cards .project-photo { display: none !important; }
         .projects-compact-cards .card-body { padding: 18px !important; }
         .project-card {
             transition: all 0.3s ease;
@@ -326,26 +318,47 @@
             }));
             const toggles = document.querySelectorAll('.view-toggle');
 
+            const viewMode = '{{ list_mode }}';
+            const themeControl = document.getElementById('projectTheme');
+            const surface = document.getElementById('projectListSurface');
+            const themeKey = `uvp-project-list-theme:${viewMode}`;
+            const applyTheme = value => {
+                themeControl.value = [...themeControl.options].some(option => option.value === value) ? value : 'default';
+                surface.dataset.theme = themeControl.value;
+            };
+            try { applyTheme(localStorage.getItem(themeKey)); } catch (_) { applyTheme('default'); }
+            themeControl.addEventListener('change', () => {
+                applyTheme(themeControl.value);
+                try { localStorage.setItem(themeKey, themeControl.value); } catch (_) {}
+            });
+            const storageKey = toggle => `uvp-project-list-view:${viewMode}:${toggle.id}`;
+            const apply = toggle => {
+                document.querySelectorAll(toggle.dataset.target).forEach(el => el.classList.toggle('d-none', !toggle.checked));
+            };
             toggles.forEach(toggle => {
                 let state;
-                try { state = localStorage.getItem(toggle.id); } catch (_) {}
-
-                if (state === 'hidden') {
-                    toggle.checked = false;
-                    document.querySelectorAll(toggle.dataset.target).forEach(el => el.classList.add('d-none'));
-                } else {
-                    toggle.checked = true;
-                }
-
-                toggle.addEventListener('change', function () {
-                    const targetElements = document.querySelectorAll(this.dataset.target);
-                    if (this.checked) {
-                        targetElements.forEach(el => el.classList.remove('d-none'));
-                        try { localStorage.setItem(this.id, 'visible'); } catch (_) {}
-                    } else {
-                        targetElements.forEach(el => el.classList.add('d-none'));
-                        try { localStorage.setItem(this.id, 'hidden'); } catch (_) {}
-                    }
+                try {
+                    state = localStorage.getItem(storageKey(toggle));
+                    // Keep the previous card preferences when upgrading mode 1.
+                    if (state === null && viewMode === '1') state = localStorage.getItem(toggle.id);
+                } catch (_) {}
+                toggle.checked = (state || toggle.dataset.default) === 'visible';
+                apply(toggle);
+                toggle.addEventListener('change', () => {
+                    apply(toggle);
+                    try { localStorage.setItem(storageKey(toggle), toggle.checked ? 'visible' : 'hidden'); } catch (_) {}
+                });
+            });
+            document.getElementById('resetViewSettings').addEventListener('click', () => {
+                applyTheme('default');
+                try { localStorage.removeItem(themeKey); } catch (_) {}
+                toggles.forEach(toggle => {
+                    try {
+                        localStorage.removeItem(storageKey(toggle));
+                        if (viewMode === '1') localStorage.removeItem(toggle.id);
+                    } catch (_) {}
+                    toggle.checked = toggle.dataset.default === 'visible';
+                    apply(toggle);
                 });
             });
         });

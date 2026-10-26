@@ -13,6 +13,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from .forms import ProjectForm
 from .models import Tag, Project, ProjectMembership
+from .presentation import PROJECT_LIST_MODES, REPORT_TASK_LAYOUTS, project_list_mode
 from .serializers import ProjectListSerializer, ProjectCreateUpdateSerializer, ProjectDetailSerializer, TagSerializer
 from apps.tasks.models import Task, SubTask
 from apps.access.models import Access
@@ -52,7 +53,21 @@ class ProjectListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['owners'] = User.objects.filter(project_memberships__role='owner').distinct()
         mode = self.request.GET.get('mode', '1')
-        context['list_mode'] = mode if mode in ('1', '2', '3', '4') else '1'
+        context['list_mode'], _, context['list_presentation'] = project_list_mode(mode)
+        report_mode = context['list_presentation'] != 'cards'
+        context['list_controls'] = [
+            ('togglePhoto', 'Фото', '.project-photo', context['list_mode'] == '1'),
+            ('toggleOwners', 'Участников', '.project-owners', True),
+            ('toggleTasks', 'Список задач', '.task-preview-list', not report_mode),
+            ('toggleFinance', 'Финансы', '.project-finance', not report_mode),
+        ]
+        if report_mode:
+            context['list_controls'] += [
+                ('toggleProgress', 'Прогрес', '.portfolio-progress', True),
+                ('toggleDeadlines', 'Строки', '.portfolio-deadlines', True),
+                ('toggleResults', 'Результати та ризики', '.portfolio-result-section', True),
+                ('toggleWorkload', 'Навантаження по людям', '.portfolio-load', context['list_mode'] in ('4', '7')),
+            ]
         def query_url(**changes):
             params = self.request.GET.copy()
             for key, value in changes.items():
@@ -60,20 +75,31 @@ class ProjectListView(LoginRequiredMixin, ListView):
             return '?' + params.urlencode()
         context['list_modes'] = [
             (value, label, query_url(mode=value))
-            for value, label in [('1', 'Картки'), ('2', 'Компактні картки'),
-                                 ('3', 'Для керівництва · темний'), ('4', 'Для керівництва · світлий')]
+            for value, label, _ in PROJECT_LIST_MODES
         ]
         if context['page_obj'].has_previous():
             context['previous_page_url'] = query_url(page=context['page_obj'].previous_page_number())
         if context['page_obj'].has_next():
             context['next_page_url'] = query_url(page=context['page_obj'].next_page_number())
-        if context['list_mode'] in ('3', '4'):
+        if report_mode:
             from .reporting import management_report
+            finance_rows = Billing.objects.filter(project_id__in=[p.pk for p in context['projects']]).values('project_id').annotate(
+                income=Sum('amount', filter=Q(operation='income')),
+                expense=Sum('amount', filter=Q(operation='expense')),
+            )
+            finances = {row['project_id']: row for row in finance_rows}
             context['project_reports'] = [
                 {'project': project, 'report': management_report(project, project.management_tasks),
-                 'owners': [m.user.username for m in project.members.all() if m.role == 'owner']}
+                 'owners': [m.user.username for m in project.members.all() if m.role == 'owner'],
+                 'finance': finances.get(project.pk, {}),
+                 'show_tasks': not any(m.user_id == self.request.user.pk and m.role == 'customer' for m in project.members.all())}
                 for project in context['projects']
             ]
+            if context['list_mode'] == '6':
+                context['project_columns'] = [
+                    (status, label, [item for item in context['project_reports'] if item['project'].status == status])
+                    for status, label in Project.STATUS_CHOICES
+                ]
         return context
 
     def get_queryset(self):
@@ -99,7 +125,7 @@ class ProjectListView(LoginRequiredMixin, ListView):
         if owner_id:
             qs = qs.filter(members__user_id=owner_id, members__role='owner')
 
-        if self.request.GET.get('mode') in ('3', '4'):
+        if project_list_mode(self.request.GET.get('mode'))[2] != 'cards':
             qs = qs.prefetch_related(
                 Prefetch('tasks', queryset=Task.objects.prefetch_related('subtasks', 'u_users').order_by('created_at', 'pk'), to_attr='management_tasks'),
                 'members__user',
@@ -114,6 +140,8 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'project'
 
     def get_template_names(self):
+        if self.request.GET.get('mode') in ('5', '6'):
+            return ['projects/medusa_report.html']
         if self.request.GET.get('mode') in ('3', '4'):
             return ['projects/management_report.html']
         return [self.template_name]
@@ -131,10 +159,11 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
         context['current_membership'] = membership
         context['is_owner'] = user.is_superuser or (membership and membership.role == 'owner')
         context['report_mode'] = self.request.GET.get('mode', '1')
-        if context['report_mode'] in ('3', '4'):
+        context['report_layouts'] = REPORT_TASK_LAYOUTS
+        if context['report_mode'] in ('3', '4', '5', '6'):
             from .reporting import management_report
             context['report'] = management_report(project)
-            context['report_detailed'] = context['report_mode'] == '4' and not (membership and membership.role == 'customer')
+            context['report_detailed'] = context['report_mode'] in ('4', '5', '6') and not (membership and membership.role == 'customer')
             context['report_show_tasks'] = not (membership and membership.role == 'customer')
         return context
 
