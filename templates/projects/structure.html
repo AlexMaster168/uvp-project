@@ -60,7 +60,7 @@
                 display: none;
             }
             #rete-container {
-                top: 0 !important;
+                top: var(--project-toolbar-height, 160px) !important;
             }
             .node {
                 min-width: 160px !important;
@@ -90,7 +90,7 @@
 
         #rete-container {
             position: absolute;
-            top: 60px;
+            top: var(--project-toolbar-height, 120px);
             left: 0;
             right: 0;
             bottom: 0;
@@ -304,8 +304,9 @@
 </head>
 <body>
 <div id="toolbar">
+    <div style="flex-basis:100%">{% include 'projects/mode_switch.html' %}</div>
     <div class="d-flex align-items-center gap-2">
-        <a href="{{ url('projects:project_detail', pk=project.id) }}" class="btn btn-outline-secondary btn-sm"><i
+        <a href="{{ url('projects:project_detail', pk=project.id) }}?mode=1" class="btn btn-outline-secondary btn-sm"><i
                 class="bi bi-arrow-left"></i> {{ _('Назад') }}</a>
         <div class="vr"></div>
         <button class="btn btn-sm text-white" style="background: var(--color-task); border-color: var(--color-task);"

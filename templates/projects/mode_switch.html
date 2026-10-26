@@ -1,0 +1,37 @@
+<nav class="uvp-mode-switch d-flex flex-wrap gap-2 mb-3" aria-label="Режим перегляду" data-project="{{ project.id }}">
+    <a class="btn btn-sm btn-outline-primary" data-mode="1" href="{{ url('projects:project_detail', pk=project.id) }}?mode=1">1 · Робочий огляд</a>
+    <a class="btn btn-sm btn-outline-primary" data-mode="2" href="{{ url('projects:structure', pk=project.id) }}">2 · Структура</a>
+    <a class="btn btn-sm btn-outline-primary" data-mode="3" href="{{ url('projects:project_detail', pk=project.id) }}?mode=3">3 · Для керівництва</a>
+    <a class="btn btn-sm btn-outline-primary" data-mode="4" href="{{ url('projects:project_detail', pk=project.id) }}?mode=4">4 · Детальний звіт</a>
+</nav>
+<script>
+(() => {
+    const nav = document.currentScript.previousElementSibling;
+    const links = [...nav.querySelectorAll('[data-mode]')];
+    const params = new URLSearchParams(location.search);
+    const structure = location.pathname.endsWith('/structure/');
+    const mode = structure ? '2' : (params.get('mode') || '1');
+    const key = 'uvp-project-mode-' + nav.dataset.project;
+    if (structure) {
+        const toolbar = document.getElementById('toolbar');
+        if (toolbar && window.ResizeObserver) {
+            new ResizeObserver(() => {
+                document.documentElement.style.setProperty('--project-toolbar-height', toolbar.offsetHeight + 'px');
+            }).observe(toolbar);
+        }
+    }
+    links.forEach(link => {
+        if (link.dataset.mode === mode) {
+            link.classList.replace('btn-outline-primary', 'btn-primary');
+            link.setAttribute('aria-current', 'page');
+        }
+        link.addEventListener('click', () => { try { localStorage.setItem(key, link.dataset.mode); } catch (_) {} });
+    });
+    try {
+        const saved = localStorage.getItem(key);
+        if (!structure && !params.has('mode') && links.some(link => link.dataset.mode === saved) && saved !== '1') {
+            location.replace(links.find(link => link.dataset.mode === saved).href);
+        }
+    } catch (_) {}
+})();
+</script>

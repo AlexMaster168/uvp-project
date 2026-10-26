@@ -1,5 +1,5 @@
 import json
-from django.db.models import Q, Count, Sum
+from django.db.models import Q, Count, Sum, Prefetch
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -51,6 +51,29 @@ class ProjectListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['owners'] = User.objects.filter(project_memberships__role='owner').distinct()
+        mode = self.request.GET.get('mode', '1')
+        context['list_mode'] = mode if mode in ('1', '2', '3', '4') else '1'
+        def query_url(**changes):
+            params = self.request.GET.copy()
+            for key, value in changes.items():
+                params[key] = value
+            return '?' + params.urlencode()
+        context['list_modes'] = [
+            (value, label, query_url(mode=value))
+            for value, label in [('1', 'Картки'), ('2', 'Компактні картки'),
+                                 ('3', 'Для керівництва · темний'), ('4', 'Для керівництва · світлий')]
+        ]
+        if context['page_obj'].has_previous():
+            context['previous_page_url'] = query_url(page=context['page_obj'].previous_page_number())
+        if context['page_obj'].has_next():
+            context['next_page_url'] = query_url(page=context['page_obj'].next_page_number())
+        if context['list_mode'] in ('3', '4'):
+            from .reporting import management_report
+            context['project_reports'] = [
+                {'project': project, 'report': management_report(project, project.management_tasks),
+                 'owners': [m.user.username for m in project.members.all() if m.role == 'owner']}
+                for project in context['projects']
+            ]
         return context
 
     def get_queryset(self):
@@ -76,6 +99,12 @@ class ProjectListView(LoginRequiredMixin, ListView):
         if owner_id:
             qs = qs.filter(members__user_id=owner_id, members__role='owner')
 
+        if self.request.GET.get('mode') in ('3', '4'):
+            qs = qs.prefetch_related(
+                Prefetch('tasks', queryset=Task.objects.prefetch_related('subtasks', 'u_users').order_by('created_at', 'pk'), to_attr='management_tasks'),
+                'members__user',
+            )
+
         return qs
 
 
@@ -83,6 +112,11 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
     model = Project
     template_name = 'projects/project_detail.html'
     context_object_name = 'project'
+
+    def get_template_names(self):
+        if self.request.GET.get('mode') in ('3', '4'):
+            return ['projects/management_report.html']
+        return [self.template_name]
 
     def get_queryset(self):
         return Project.objects.filter(
@@ -96,6 +130,12 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
         membership = ProjectMembership.objects.filter(project=project, user=user).first()
         context['current_membership'] = membership
         context['is_owner'] = user.is_superuser or (membership and membership.role == 'owner')
+        context['report_mode'] = self.request.GET.get('mode', '1')
+        if context['report_mode'] in ('3', '4'):
+            from .reporting import management_report
+            context['report'] = management_report(project)
+            context['report_detailed'] = context['report_mode'] == '4' and not (membership and membership.role == 'customer')
+            context['report_show_tasks'] = not (membership and membership.role == 'customer')
         return context
 
 

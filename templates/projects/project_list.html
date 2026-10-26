@@ -11,9 +11,14 @@
             <div class="dropdown">
                 <button class="btn btn-outline-secondary rounded-pill px-3 px-sm-4 shadow-sm border-2 dropdown-toggle"
                         type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
-                    <i class="bi bi-sliders me-1 me-sm-2"></i>{{ _('Вид') }}
+                    <i class="bi bi-sliders me-1 me-sm-2"></i>{{ _('Вид') }} · {{ list_mode }}
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end p-3 shadow-sm border-0 rounded-4" style="min-width: 240px;">
+                    <li><h6 class="dropdown-header px-0 text-dark fw-bold">Режим перегляду</h6></li>
+                    {% for value, label, href in list_modes %}
+                    <li><a class="dropdown-item rounded-2 px-2 {{ 'active' if list_mode == value else '' }}" href="{{ href }}" data-list-mode="{{ value }}" {% if list_mode == value %}aria-current="page"{% endif %}>{{ value }} · {{ label }}</a></li>
+                    {% endfor %}
+                    <li><hr class="dropdown-divider"></li>
                     <li><h6 class="dropdown-header px-0 text-dark fw-bold">{{ _('Отображать:') }}</h6></li>
                     <li>
                         <div class="form-check form-switch mb-2">
@@ -60,6 +65,7 @@
     <div class="card mb-5 border-0 shadow-sm rounded-4 bg-white overflow-hidden">
         <div class="card-body p-3 p-md-4">
             <form method="get" class="row g-3">
+                <input type="hidden" name="mode" value="{{ list_mode }}">
                 <div class="col-12 col-md-4">
                     <label class="form-label text-muted small fw-bold text-uppercase ms-1">{{ _('Поиск') }}</label>
                     <div class="input-group">
@@ -106,7 +112,10 @@
         </div>
     </div>
 
-    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+    {% if list_mode in ('3', '4') %}
+        {% include 'projects/project_list_report.html' %}
+    {% else %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4 {{ 'projects-compact-cards' if list_mode == '2' else '' }}">
         {% for project in projects %}
             <div class="col">
                 <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden project-card transition-hover bg-white"
@@ -235,6 +244,7 @@
             </div>
         {% endfor %}
     </div>
+    {% endif %}
 
     {% if is_paginated %}
         <nav class="mt-5">
@@ -243,8 +253,7 @@
                     <li class="page-item">
                         <a class="page-link shadow-sm border-0 rounded-circle d-flex align-items-center justify-content-center"
                            style="width: 40px; height: 40px;"
-                           href="?page={{ page_obj.previous_page_number }}&q={{ request.GET.get('q','') }}&status=
-                                   {{ request.GET.get('status','') }}&owner={{ request.GET.get('owner','') }}">
+                           href="{{ previous_page_url }}">
                             <i class="bi bi-chevron-left"></i>
                         </a>
                     </li>
@@ -257,8 +266,7 @@
                     <li class="page-item">
                         <a class="page-link shadow-sm border-0 rounded-circle d-flex align-items-center justify-content-center"
                            style="width: 40px; height: 40px;"
-                           href="?page={{ page_obj.next_page_number }}&q={{ request.GET.get('q','') }}&status=
-                                   {{ request.GET.get('status','') }}&owner={{ request.GET.get('owner','') }}">
+                           href="{{ next_page_url }}">
                             <i class="bi bi-chevron-right"></i>
                         </a>
                     </li>
@@ -268,6 +276,8 @@
     {% endif %}
 
     <style>
+        .projects-compact-cards .project-photo { display: none !important; }
+        .projects-compact-cards .card-body { padding: 18px !important; }
         .project-card {
             transition: all 0.3s ease;
         }
@@ -301,10 +311,24 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            const modeKey = 'uvp-project-list-mode';
+            const modes = [...document.querySelectorAll('[data-list-mode]')];
+            const currentURL = new URL(location.href);
+            try {
+                const saved = localStorage.getItem(modeKey);
+                if (!currentURL.searchParams.has('mode') && modes.some(link => link.dataset.listMode === saved) && saved !== '1') {
+                    currentURL.searchParams.set('mode', saved);
+                    location.replace(currentURL.href);
+                }
+            } catch (_) {}
+            modes.forEach(link => link.addEventListener('click', () => {
+                try { localStorage.setItem(modeKey, link.dataset.listMode); } catch (_) {}
+            }));
             const toggles = document.querySelectorAll('.view-toggle');
 
             toggles.forEach(toggle => {
-                const state = localStorage.getItem(toggle.id);
+                let state;
+                try { state = localStorage.getItem(toggle.id); } catch (_) {}
 
                 if (state === 'hidden') {
                     toggle.checked = false;
@@ -317,10 +341,10 @@
                     const targetElements = document.querySelectorAll(this.dataset.target);
                     if (this.checked) {
                         targetElements.forEach(el => el.classList.remove('d-none'));
-                        localStorage.setItem(this.id, 'visible');
+                        try { localStorage.setItem(this.id, 'visible'); } catch (_) {}
                     } else {
                         targetElements.forEach(el => el.classList.add('d-none'));
-                        localStorage.setItem(this.id, 'hidden');
+                        try { localStorage.setItem(this.id, 'hidden'); } catch (_) {}
                     }
                 });
             });
