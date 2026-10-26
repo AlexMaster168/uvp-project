@@ -9,6 +9,8 @@
 </style>
 <style>
 .medusa-header>:first-child{min-width:0;flex:1}.medusa-header h1{overflow-wrap:anywhere}.medusa-task-main,.medusa-task-progress,.medusa-task-metrics{min-width:0}.medusa-task-title h3{min-width:0}
+.medusa-summary{grid-template-columns:repeat(4,minmax(0,1fr))}.medusa-task-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.medusa-task-metrics>div{min-width:0;overflow-wrap:anywhere}.medusa-edit-estimate{grid-column:1/-1;font-size:11px;color:var(--report-muted);text-decoration:none}.medusa-edit-estimate:hover{text-decoration:underline}
+@media(max-width:850px){.medusa-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:850px){[data-layout="rows"] .medusa-task{grid-template-columns:minmax(0,1fr)}.medusa-toolbar select{min-width:0;width:auto}}
 @media(max-width:575px){.medusa-header{flex-wrap:wrap}.medusa-controls{margin-left:auto}}
 </style>

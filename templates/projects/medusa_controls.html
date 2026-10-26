@@ -31,11 +31,7 @@
         const current = new URL(location.href); current.searchParams.set('mode', mode);
         history.replaceState(null, '', current.href);
         try { localStorage.setItem('uvp-project-mode-{{ project.id }}', mode); } catch (_) {}
-        document.querySelectorAll('.uvp-mode-switch [data-mode]').forEach(link => {
-            link.classList.toggle('btn-primary', link.dataset.mode === mode);
-            link.classList.toggle('btn-outline-primary', link.dataset.mode !== mode);
-            if (link.dataset.mode === mode) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
-        });
+        document.querySelector('.uvp-mode-switch').dispatchEvent(new CustomEvent('uvp-mode-change', {detail: {mode}}));
     });
     toggles.forEach(toggle => toggle.addEventListener('change', () => { apply(toggle); save(scopedKey(toggle.dataset.section), toggle.checked ? 'visible' : 'hidden'); }));
     document.getElementById('medusaReset').addEventListener('click', () => {

@@ -24,6 +24,8 @@ def management_report(project, tasks=None):
             'task': task, 'people': people, 'progress': progress,
             'segments': (progress * 4 + 50) // 100,
             'remaining_days': remaining / 8, 'risk': risk,
+            'planned_days': max(task.estimated_time, 0) / 8,
+            'spent_days': max(task.actual_time, 0) / 8,
             'done': completed if subtasks else int(task.status == 'done'),
             'pending': len(subtasks) - completed if subtasks else int(task.status != 'done'),
             'unestimated': task.status != 'done' and task.estimated_time <= 0,
@@ -36,6 +38,8 @@ def management_report(project, tasks=None):
     return {
         'rows': rows, 'progress': progress, 'segments': (progress * 4 + 50) // 100,
         'remaining_days': sum(r['remaining_days'] for r in rows),
+        'planned_days': sum(r['planned_days'] for r in rows),
+        'spent_days': sum(r['spent_days'] for r in rows),
         'done': done, 'risks': sum(r['risk'] for r in rows),
         'pending': pending,
         'unestimated': sum(r['unestimated'] for r in rows),

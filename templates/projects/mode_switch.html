@@ -1,15 +1,19 @@
-<nav class="uvp-mode-switch d-flex flex-wrap gap-2 mb-3" aria-label="Режим перегляду" data-project="{{ project.id }}">
-    <a class="btn btn-sm btn-outline-primary" data-mode="1" href="{{ url('projects:project_detail', pk=project.id) }}?mode=1">1 · Робочий огляд</a>
-    <a class="btn btn-sm btn-outline-primary" data-mode="2" href="{{ url('projects:structure', pk=project.id) }}">2 · Структура</a>
-    <a class="btn btn-sm btn-outline-primary" data-mode="3" href="{{ url('projects:project_detail', pk=project.id) }}?mode=3">3 · Для керівництва</a>
-    <a class="btn btn-sm btn-outline-primary" data-mode="4" href="{{ url('projects:project_detail', pk=project.id) }}?mode=4">4 · Детальний звіт</a>
-    <a class="btn btn-sm btn-outline-primary" data-mode="5" href="{{ url('projects:project_detail', pk=project.id) }}?mode=5">5 · Сучасні картки</a>
-    <a class="btn btn-sm btn-outline-primary" data-mode="6" href="{{ url('projects:project_detail', pk=project.id) }}?mode=6">6 · Сучасні рядки</a>
+<nav class="uvp-mode-switch d-flex align-items-center gap-2 mb-3" aria-label="Режим перегляду" data-project="{{ project.id }}">
+    <label for="projectModeSelect" class="small text-muted mb-0">Вид проєкту</label>
+    <select id="projectModeSelect" class="form-select form-select-sm" style="width:auto;max-width:100%;" aria-label="Вид проєкту">
+        <option data-mode="1" value="{{ url('projects:project_detail', pk=project.id) }}?mode=1">1 · Робочий огляд</option>
+        <option data-mode="2" value="{{ url('projects:structure', pk=project.id) }}">2 · Структура</option>
+        <option data-mode="3" value="{{ url('projects:project_detail', pk=project.id) }}?mode=3">3 · Для керівництва</option>
+        <option data-mode="4" value="{{ url('projects:project_detail', pk=project.id) }}?mode=4">4 · Детальний звіт</option>
+        <option data-mode="5" value="{{ url('projects:project_detail', pk=project.id) }}?mode=5">5 · Сучасні картки</option>
+        <option data-mode="6" value="{{ url('projects:project_detail', pk=project.id) }}?mode=6">6 · Сучасні рядки</option>
+    </select>
 </nav>
 <script>
 (() => {
     const nav = document.currentScript.previousElementSibling;
-    const links = [...nav.querySelectorAll('[data-mode]')];
+    const select = nav.querySelector('select');
+    const links = [...select.options];
     const params = new URLSearchParams(location.search);
     const structure = location.pathname.endsWith('/structure/');
     const mode = structure ? '2' : (params.get('mode') || '1');
@@ -22,17 +26,18 @@
             }).observe(toolbar);
         }
     }
-    links.forEach(link => {
-        if (link.dataset.mode === mode) {
-            link.classList.replace('btn-outline-primary', 'btn-primary');
-            link.setAttribute('aria-current', 'page');
-        }
-        link.addEventListener('click', () => { try { localStorage.setItem(key, link.dataset.mode); } catch (_) {} });
+    const activate = value => links.forEach(option => { option.selected = option.dataset.mode === value; });
+    activate(links.some(option => option.dataset.mode === mode) ? mode : '1');
+    nav.addEventListener('uvp-mode-change', event => activate(event.detail.mode));
+    select.addEventListener('change', () => {
+        const option = select.selectedOptions[0];
+        try { localStorage.setItem(key, option.dataset.mode); } catch (_) {}
+        location.assign(option.value);
     });
     try {
         const saved = localStorage.getItem(key);
         if (!structure && !params.has('mode') && links.some(link => link.dataset.mode === saved) && saved !== '1') {
-            location.replace(links.find(link => link.dataset.mode === saved).href);
+            location.replace(links.find(link => link.dataset.mode === saved).value);
         }
     } catch (_) {}
 })();

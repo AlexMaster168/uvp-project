@@ -11,24 +11,28 @@
                     <form method="post">
                         <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
                         <div class="d-none">{{ form.project }}</div>
+                        {{ form.non_field_errors() }}
 
                         <div class="mb-3">
                             <label class="form-label">{{ _('Название задачи') }}</label>
                             {{ form.title }}
                         </div>
 
+                        <div class="mb-3"><label for="id_time_unit" class="form-label">Одиниця часу</label>{{ form.time_unit }}<div class="form-text">1 люд.-дн. = 8 робочих годин. Дробові значення дозволені.</div>{{ form.time_unit.errors }}</div>
                         <div class="row mb-3">
                             <div class="col-12 col-md-4 mb-3 mb-md-0">
                                 <label class="form-label">{{ _('Статус') }}</label>
                                 {{ form.status }}
                             </div>
                             <div class="col-6 col-md-4 mb-3 mb-md-0">
-                                <label class="form-label">{{ _('План (ч)') }}</label>
+                                <label class="form-label" id="taskPlanLabel" for="id_estimated_time">{{ _('План (ч)') }}</label>
                                 {{ form.estimated_time }}
+                                {{ form.estimated_time.errors }}
                             </div>
                             <div class="col-6 col-md-4">
-                                <label class="form-label">{{ _('Факт (ч)') }}</label>
+                                <label class="form-label" id="taskSpentLabel" for="id_actual_time">{{ _('Факт (ч)') }}</label>
                                 {{ form.actual_time }}
+                                {{ form.actual_time.errors }}
                             </div>
                         </div>
 
@@ -52,4 +56,26 @@
             </div>
         </div>
     </div>
+{% endblock %}
+{% block extra_js %}
+<script>
+(() => {
+    const unit = document.getElementById('id_time_unit');
+    let previous = unit.value || 'hours';
+    const label = () => {
+        const suffix = unit.value === 'days' ? 'люд.-дн.' : 'год.';
+        document.getElementById('taskPlanLabel').textContent = `План (${suffix})`;
+        document.getElementById('taskSpentLabel').textContent = `Факт (${suffix})`;
+    };
+    label();
+    unit.addEventListener('change', () => {
+        const factor = previous === 'days' && unit.value === 'hours' ? 8 : (previous === 'hours' && unit.value === 'days' ? 1 / 8 : 1);
+        ['id_estimated_time', 'id_actual_time'].forEach(id => {
+            const field = document.getElementById(id);
+            if (field.value !== '' && Number.isFinite(Number(field.value))) field.value = Number((Number(field.value) * factor).toFixed(6));
+        });
+        previous = unit.value; label();
+    });
+})();
+</script>
 {% endblock %}

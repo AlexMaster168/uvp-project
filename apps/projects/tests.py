@@ -158,3 +158,45 @@ class ManagementReportTests(TestCase):
         response = self.client.get(self.url, {'mode': '6'})
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, 'Internal task')
+
+    def test_project_view_dropdown(self):
+        response = self.client.get(self.url, {'mode': '6'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="projectModeSelect"')
+        self.assertContains(response, '<option data-mode=', count=6)
+
+    def test_task_form_days_conversion_and_report(self):
+        from apps.tasks.forms import TaskForm
+        form = TaskForm(data={
+            'title': 'Day estimate', 'status': 'in_progress', 'project': self.project.pk,
+            'time_unit': 'days', 'estimated_time': '2.5', 'actual_time': '0.75',
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+        task = form.save()
+        self.assertEqual(task.estimated_time, 20)
+        self.assertEqual(task.actual_time, 6)
+        report = management_report(self.project)
+        self.assertEqual(report['planned_days'], 2.5)
+        self.assertEqual(report['spent_days'], 0.75)
+        self.assertEqual(report['remaining_days'], 1.75)
+        self.assertEqual(report['rows'][0]['planned_days'], 2.5)
+
+    def test_task_form_legacy_hours_and_negative_values(self):
+        from apps.tasks.forms import TaskForm
+        data = {'title': 'Hours', 'status': 'todo', 'project': self.project.pk,
+                'estimated_time': '16', 'actual_time': '4'}
+        form = TaskForm(data=data)
+        self.assertTrue(form.is_valid(), form.errors)
+        task = form.save()
+        self.assertEqual(task.estimated_time, 16)
+        self.assertEqual(task.actual_time, 4)
+        form = TaskForm(data={**data, 'time_unit': 'days', 'actual_time': '-1'})
+        self.assertFalse(form.is_valid())
+        self.assertIn('actual_time', form.errors)
+
+    def test_completed_task_days_keep_actual_time(self):
+        Task.objects.create(project=self.project, title='Done', status='done', estimated_time=8, actual_time=16)
+        report = management_report(self.project)
+        self.assertEqual(report['planned_days'], 1)
+        self.assertEqual(report['spent_days'], 2)
+        self.assertEqual(report['remaining_days'], 0)
