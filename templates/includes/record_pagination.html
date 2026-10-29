@@ -1,0 +1,7 @@
+{% if is_paginated %}
+<nav class="d-flex flex-wrap justify-content-center align-items-center gap-3 mt-4" aria-label="Сторінки записів">
+    {% if page_obj.has_previous() %}<a class="btn btn-outline-primary" href="?page={{ page_obj.previous_page_number() }}">Назад</a>{% endif %}
+    <span>{{ page_obj.number }} / {{ paginator.num_pages }}</span>
+    {% if page_obj.has_next() %}<a class="btn btn-outline-primary" href="?page={{ page_obj.next_page_number() }}">Далі</a>{% endif %}
+</nav>
+{% endif %}

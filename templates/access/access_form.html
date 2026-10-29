@@ -10,7 +10,7 @@
                 <div class="card-body">
                     <form method="post">
                         <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-                        <div class="d-none">{{ form.project }}</div>
+                        {% include 'includes/record_project_field.html' %}
 
                         <div class="row mb-3 g-3">
                             <div class="col-md-6">
@@ -54,12 +54,7 @@
                     </form>
                     {% if object %}
                         <div class="text-end mt-3">
-                            <form action="{{ url('access:access_delete', pk=object.pk) }}" method="post">
-                                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-                                <button type="submit" class="btn btn-outline-danger btn-sm">
-                                    <i class="bi bi-trash me-1"></i>{{ _('Удалить') }}
-                                </button>
-                            </form>
+                            <a class="btn btn-outline-danger btn-sm" href="{{ url('access:access_delete', pk=object.pk) }}">{{ _('Удалить') }}</a>
                         </div>
                     {% endif %}
                 </div>

@@ -9,6 +9,8 @@
                     </div>
                     <h3 class="mb-4">{{ _('Удалить доступ к') }} <br><span
                             class="text-primary">{{ object.url or object.description }}</span>?</h3>
+                    <p>{{ _('Проект') }}: <strong>{{ object.project.name }}</strong></p>
+                    <p>{{ _('Логин') }}: {{ object.login }}</p>
                     <form method="post" class="d-flex justify-content-center gap-3 mt-4">
                         <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
                         <a href="{{ url('projects:project_detail', pk=object.project.pk) }}"

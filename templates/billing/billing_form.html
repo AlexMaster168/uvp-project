@@ -10,7 +10,7 @@
                 <div class="card-body">
                     <form method="post">
                         <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-                        <div class="d-none">{{ form.project }}</div>
+                        {% include 'includes/record_project_field.html' %}
 
                         <div class="row mb-3">
                             <div class="col-md-6">
@@ -36,6 +36,10 @@
                             <label class="form-label">{{ _('Описание') }}</label>
                             {{ form.description }}
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ form.users.id_for_label }}">{{ _('Участники') }}</label>
+                            {{ form.users }}
+                        </div>
                         <div class="d-flex justify-content-between mt-4">
                             <button type="button" class="btn btn-secondary"
                                     onclick="history.back()">{{ _('Назад') }}</button>
@@ -44,10 +48,7 @@
                     </form>
                     {% if object %}
                         <div class="text-end mt-3 border-top pt-3">
-                            <form action="{{ url('billing:billing_delete', pk=object.pk) }}" method="post">
-                                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-                                <button type="submit" class="btn btn-outline-danger btn-sm">{{ _('Удалить') }}</button>
-                            </form>
+                            <a class="btn btn-outline-danger btn-sm" href="{{ url('billing:billing_delete', pk=object.pk) }}">{{ _('Удалить') }}</a>
                         </div>
                     {% endif %}
                 </div>

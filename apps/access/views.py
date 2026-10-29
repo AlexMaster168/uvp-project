@@ -1,6 +1,6 @@
+from apps.project_records import ProjectRecordMixin
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy
 from rest_framework import viewsets, filters
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
@@ -17,7 +17,7 @@ class AccessListView(LoginRequiredMixin, ListView):
     paginate_by = 20
 
 
-class AccessCreateView(LoginRequiredMixin, CreateView):
+class AccessCreateView(LoginRequiredMixin, ProjectRecordMixin, CreateView):
     model = Access
     form_class = AccessForm
     template_name = 'access/access_form.html'
@@ -26,24 +26,24 @@ class AccessCreateView(LoginRequiredMixin, CreateView):
         return {'project': self.request.GET.get('project')}
 
     def get_success_url(self):
-        return reverse_lazy('projects:project_detail', kwargs={'pk': self.object.project.pk})
+        return super().get_success_url()
 
 
-class AccessUpdateView(LoginRequiredMixin, UpdateView):
+class AccessUpdateView(LoginRequiredMixin, ProjectRecordMixin, UpdateView):
     model = Access
     form_class = AccessForm
     template_name = 'access/access_form.html'
 
     def get_success_url(self):
-        return reverse_lazy('projects:project_detail', kwargs={'pk': self.object.project.pk})
+        return super().get_success_url()
 
 
-class AccessDeleteView(LoginRequiredMixin, DeleteView):
+class AccessDeleteView(LoginRequiredMixin, ProjectRecordMixin, DeleteView):
     model = Access
     template_name = 'access/access_confirm_delete.html'
 
     def get_success_url(self):
-        return reverse_lazy('projects:project_detail', kwargs={'pk': self.object.project.pk})
+        return super().get_success_url()
 
 
 class AccessViewSet(viewsets.ModelViewSet):

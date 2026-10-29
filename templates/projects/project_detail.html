@@ -27,6 +27,9 @@
         }
 
         @media (max-width: 767.98px) {
+            .project-task-table td::before { flex: 0 0 90px; }
+            .project-task-table td { column-gap: 8px; }
+            .project-task-table .task-table-progress { flex: 1; min-width: 0; }
             .nav-tabs {
                 flex-wrap: nowrap;
                 overflow-x: auto;
@@ -263,20 +266,24 @@
                 {% endif %}
             </div>
             <div class="table-responsive">
-                <table class="table table-hover mb-0 align-middle">
+                <table class="table table-hover mb-0 align-middle project-task-table">
                     <thead class="table-light">
                     <tr>
                         <th>{{ _('Статус') }}</th>
                         <th>{{ _('Название') }}</th>
                         <th>{{ _('Исполнители') }}</th>
                         <th>{{ _('Время (План/Факт)') }}</th>
-                        <th style="width: 100px;"></th>
+                        <th>Прогрес</th>
+                        <th>Підзадачі</th>
+                        <th>Залишок роботи</th>
+                        <th>Дії</th>
                     </tr>
                     </thead>
                     <tbody>
-                    {% for task in project.tasks.all() %}
+                    {% for row in task_table_report.rows %}
+                        {% set task = row.task %}
                         <tr>
-                            <td>
+                            <td data-label="Статус">
                                 {% if task.status == 'done' %}
                                     <span class="badge bg-success">{{ _('Готово') }}</span>
                                 {% elif task.status == 'in_progress' %}
@@ -285,19 +292,32 @@
                                     <span class="badge bg-secondary">{{ task.get_status_display() }}</span>
                                 {% endif %}
                             </td>
-                            <td>
+                            <td data-label="Назва" style="min-width:200px;max-width:380px;overflow-wrap:anywhere;">
                                 <a href="{{ url('tasks:task_detail', pk=task.id) }}"
                                    class="text-decoration-none fw-bold">{{ task.title }}</a>
                             </td>
-                            <td>
-                                {% for user in task.u_users.all() %}
+                            <td data-label="Виконавці">
+                                {% for user in row.people %}
                                     <span class="badge bg-light text-dark border">{{ user.username }}</span>
+                                {% else %}<span class="small text-muted">Не призначено</span>
                                 {% endfor %}
                             </td>
-                            <td class="small">{{ task.estimated_time }} / {{ task.actual_time }}</td>
-                            <td>
+                            <td class="small" data-label="План / Факт">{{ task.estimated_time }} / {{ task.actual_time }} {{ _('ч.') }}</td>
+                            <td data-label="Прогрес" style="min-width:110px;">
+                                <div class="task-table-progress">
+                                <strong>{{ row.progress }}%</strong>
+                                <div class="progress mt-1" style="height:7px;" role="progressbar" aria-label="Прогрес завдання" aria-valuenow="{{ row.progress }}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar {{ 'bg-danger' if row.risk else 'bg-success' }}" style="width:{{ row.progress }}%"></div></div>
+                                </div>
+                            </td>
+                            <td data-label="Підзадачі"><a href="{{ url('tasks:task_detail', pk=task.pk) }}">{{ task.subtasks.count() }}</a></td>
+                            <td data-label="Залишок роботи">
+                                {% if row.unestimated %}<span class="text-muted">Не оцінено</span>{% else %}{{ '%g'|format(row.remaining_days) }} люд.-дн.{% endif %}
+                                {% if row.risk %}<span class="badge bg-danger">Ризик</span>{% endif %}
+                            </td>
+                            <td data-label="Дії">
                                 {% if is_owner %}
-                                    <div class="btn-group">
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <a href="{{ url('tasks:subtask_create') }}?task={{ task.pk }}" class="btn btn-sm btn-outline-primary" title="Додати підзадачу">+ Підзадача</a>
                                         <a href="{{ url('tasks:task_edit', pk=task.id) }}"
                                            class="btn btn-sm btn-outline-secondary" title="{{ _('Редактировать') }}">
                                             <i class="bi bi-pencil"></i>
@@ -312,7 +332,7 @@
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">{{ _('Задач пока нет') }}</td>
+                            <td colspan="8" class="text-center py-4 text-muted">{{ _('Задач пока нет') }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>

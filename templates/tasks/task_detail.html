@@ -17,6 +17,7 @@
                         {% if can_manage_task %}
                             <a href="{{ url('tasks:task_edit', pk=task.id) }}"
                                class="btn btn-sm btn-outline-primary ms-2">{{ _('Изменить') }}</a>
+                            <a href="{{ url('tasks:task_delete', pk=task.pk) }}" class="btn btn-sm btn-outline-danger ms-2">{{ _('Удалить') }}</a>
                         {% endif %}
                     </div>
                 </div>

@@ -164,7 +164,9 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
         project = self.object
         membership = ProjectMembership.objects.filter(project=project, user=user).first()
         context['current_membership'] = membership
-        context['is_owner'] = user.is_superuser or (membership and membership.role == 'owner')
+        context['is_owner'] = user.is_superuser or project.u_creator_id == user.pk or (membership and membership.role == 'owner')
+        from .reporting import management_report
+        context['task_table_report'] = management_report(project)
         context['report_mode'] = self.request.GET.get('mode', '1')
         context['report_layouts'] = REPORT_TASK_LAYOUTS
         if context['report_mode'] in ('3', '4', '5', '6'):

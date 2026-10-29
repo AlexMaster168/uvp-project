@@ -1,6 +1,6 @@
+from apps.project_records import ProjectRecordMixin
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy
 from rest_framework import viewsets, filters
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
@@ -17,7 +17,7 @@ class BillingListView(LoginRequiredMixin, ListView):
     paginate_by = 20
 
 
-class BillingCreateView(LoginRequiredMixin, CreateView):
+class BillingCreateView(LoginRequiredMixin, ProjectRecordMixin, CreateView):
     model = Billing
     form_class = BillingForm
     template_name = 'billing/billing_form.html'
@@ -26,24 +26,24 @@ class BillingCreateView(LoginRequiredMixin, CreateView):
         return {'project': self.request.GET.get('project')}
 
     def get_success_url(self):
-        return reverse_lazy('projects:project_detail', kwargs={'pk': self.object.project.pk})
+        return super().get_success_url()
 
 
-class BillingUpdateView(LoginRequiredMixin, UpdateView):
+class BillingUpdateView(LoginRequiredMixin, ProjectRecordMixin, UpdateView):
     model = Billing
     form_class = BillingForm
     template_name = 'billing/billing_form.html'
 
     def get_success_url(self):
-        return reverse_lazy('projects:project_detail', kwargs={'pk': self.object.project.pk})
+        return super().get_success_url()
 
 
-class BillingDeleteView(LoginRequiredMixin, DeleteView):
+class BillingDeleteView(LoginRequiredMixin, ProjectRecordMixin, DeleteView):
     model = Billing
     template_name = 'billing/billing_confirm_delete.html'
 
     def get_success_url(self):
-        return reverse_lazy('projects:project_detail', kwargs={'pk': self.object.project.pk})
+        return super().get_success_url()
 
 
 class BillingViewSet(viewsets.ModelViewSet):

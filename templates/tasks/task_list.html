@@ -55,7 +55,7 @@
                             {% else %}<span class="small text-muted">Не призначено</span>{% endfor %}
                         </td>
                         <td data-label="{{ _('Время') }}">{{ task.estimated_time }} / {{ task.actual_time }} {{ _('ч.') }}</td>
-                        <td data-label="Дії"><div class="d-flex gap-2"><a class="btn btn-sm btn-outline-primary" href="{{ url('tasks:task_edit', pk=task.pk) }}">Змінити</a><a class="btn btn-sm btn-outline-secondary" href="{{ url('tasks:subtask_create') }}?task={{ task.pk }}">+ Підзадача</a></div></td>
+                        <td data-label="Дії"><div class="d-flex flex-wrap gap-2"><a class="btn btn-sm btn-outline-primary" href="{{ url('tasks:task_edit', pk=task.pk) }}">Змінити</a><a class="btn btn-sm btn-outline-secondary" href="{{ url('tasks:subtask_create') }}?task={{ task.pk }}">+ Підзадача</a><a class="btn btn-sm btn-outline-danger" href="{{ url('tasks:task_delete', pk=task.pk) }}">{{ _('Удалить') }}</a></div></td>
                     </tr>
                     {% else %}
                     <tr>
