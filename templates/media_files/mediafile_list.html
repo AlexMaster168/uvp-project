@@ -18,10 +18,10 @@
                 <div class="card h-100">
                     <div class="card-body text-center d-flex flex-column justify-content-between">
                         {% if media.file.url.endswith('.jpg') or media.file.url.endswith('.png') or media.file.url.endswith('.jpeg') %}
-                            <img src="{{ media.file.url }}" class="img-fluid mb-2" alt="{{ media.description }}"
+                            <img src="{{ media.file.url }}" class="img-fluid mb-2" data-custom-section="media-preview" data-custom-label="Попередній перегляд" alt="{{ media.description }}"
                                  style="max-height: 100px; object-fit: contain;">
                         {% else %}
-                            <div class="mb-2"><i class="bi bi-file-earmark fs-1"></i></div>
+                            <div class="mb-2" data-custom-section="media-preview" data-custom-label="Попередній перегляд"><i class="bi bi-file-earmark fs-1"></i></div>
                         {% endif %}
 
                         <div>
@@ -29,7 +29,7 @@
                                class="text-decoration-none text-truncate d-block">
                                 {{ media.file.name.split('/')[-1] }}
                             </a>
-                            <small class="text-muted d-block mt-1">{{ media.description|truncate(20) }}</small>
+                            <small class="text-muted d-block mt-1" data-custom-section="media-description" data-custom-label="Описи файлів">{{ media.description|truncate(20) }}</small>
                             {% if user.is_superuser %}
                                 <div class="mt-2 btn-group">
                                     <a href="{{ url('media_files:media_edit', pk=media.id) }}"
@@ -44,7 +44,7 @@
                             {% endif %}
                         </div>
                     </div>
-                    <div class="card-footer text-muted small text-center">
+                    <div class="card-footer text-muted small text-center" data-custom-section="media-project" data-custom-label="Прив’язка до проєкту">
                         {{ _('Проект') }}: <a href="
                             {{ url('projects:project_detail', pk=media.project.id) }}">{{ media.project.name }}</a>
                     </div>

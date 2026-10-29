@@ -3,9 +3,16 @@
 {% block title %}{{ _('Задачи') }} - {{ _('УВП') }}{% endblock %}
 
 {% block content %}
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-4">
         <h1 class="h2"><i class="bi bi-check2-square"></i> {{ _('Задачи') }}</h1>
+        {% if task_projects.exists() %}<a class="btn btn-primary" href="{{ url('tasks:task_create') }}{% if request.GET.get('project') %}?project={{ request.GET.get('project')|urlencode }}{% endif %}"><i class="bi bi-plus-lg"></i> Нове завдання</a>{% endif %}
     </div>
+    <form class="row g-2 mb-3" method="get" data-custom-section="task-filters" data-custom-label="Пошук і фільтри">
+        <div class="col-12 col-md-4"><label class="visually-hidden" for="taskSearch">Пошук</label><input id="taskSearch" name="q" class="form-control" placeholder="Пошук завдань…" value="{{ request.GET.get('q','') }}"></div>
+        <div class="col-6 col-md-3"><label class="visually-hidden" for="taskProject">Проєкт</label><select id="taskProject" class="form-select" name="project"><option value="">Усі проєкти</option>{% for project in task_projects %}<option value="{{ project.pk }}" {{ 'selected' if request.GET.get('project') == project.pk|string else '' }}>{{ project.name }}</option>{% endfor %}</select></div>
+        <div class="col-6 col-md-3"><label class="visually-hidden" for="taskStatus">Статус</label><select id="taskStatus" class="form-select" name="status"><option value="">Усі статуси</option>{% for value,label in task_statuses %}<option value="{{ value }}" {{ 'selected' if request.GET.get('status') == value else '' }}>{{ _(label) }}</option>{% endfor %}</select></div>
+        <div class="col-md-2"><button class="btn btn-outline-primary w-100" type="submit">Пошук</button></div>
+    </form>
 
     <div class="card">
         <div class="table-responsive">
@@ -17,6 +24,7 @@
                     <th data-label="{{ _('Проект') }}">{{ _('Проект') }}</th>
                     <th data-label="{{ _('Исполнители') }}">{{ _('Исполнители') }}</th>
                     <th data-label="{{ _('Время') }}">{{ _('Время (План/Факт)') }}</th>
+                    <th>Дії</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -32,21 +40,26 @@
                             {% endif %}
                         </td>
                         <td data-label="{{ _('Название') }}">
+                            <div style="min-width:0;overflow-wrap:anywhere;">
                             <a href="{{ url('tasks:task_detail', pk=task.id) }}">{{ task.title }}</a>
+                            <div class="small text-muted">Підзадачі: {{ task.subtasks.count() }}</div>
+                            </div>
                         </td>
                         <td data-label="{{ _('Проект') }}">
                             <a href="{{ url('projects:project_detail', pk=task.project.id) }}">{{ task.project.name }}</a>
+                            {% if user.is_superuser or task.project_id in editable_project_ids %}<a class="btn btn-sm btn-link p-0 ms-1" href="{{ url('projects:project_edit', pk=task.project_id) }}" aria-label="Редагувати проєкт"><i class="bi bi-pencil"></i></a>{% endif %}
                         </td>
                         <td data-label="{{ _('Исполнители') }}">
                             {% for user in task.u_users.all() %}
                                 <span class="badge bg-secondary">{{ user.username }}</span>
-                            {% endfor %}
+                            {% else %}<span class="small text-muted">Не призначено</span>{% endfor %}
                         </td>
                         <td data-label="{{ _('Время') }}">{{ task.estimated_time }} / {{ task.actual_time }} {{ _('ч.') }}</td>
+                        <td data-label="Дії"><div class="d-flex gap-2"><a class="btn btn-sm btn-outline-primary" href="{{ url('tasks:task_edit', pk=task.pk) }}">Змінити</a><a class="btn btn-sm btn-outline-secondary" href="{{ url('tasks:subtask_create') }}?task={{ task.pk }}">+ Підзадача</a></div></td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="5" class="text-center py-3">{{ _('Нет задач') }}</td>
+                        <td colspan="6" class="text-center py-3">{{ _('Нет задач') }}</td>
                     </tr>
                 {% endfor %}
                 </tbody>
@@ -59,12 +72,12 @@
             <ul class="pagination justify-content-center">
                 {% if page_obj.has_previous %}
                     <li class="page-item"><a class="page-link"
-                                             href="?page={{ page_obj.previous_page_number }}">{{ _('Назад') }}</a></li>
+                                             href="?{{ task_filter_query }}&page={{ page_obj.previous_page_number }}">{{ _('Назад') }}</a></li>
                 {% endif %}
                 <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
                 {% if page_obj.has_next %}
                     <li class="page-item"><a class="page-link"
-                                             href="?page={{ page_obj.next_page_number }}">{{ _('Далее') }}</a>
+                                             href="?{{ task_filter_query }}&page={{ page_obj.next_page_number }}">{{ _('Далее') }}</a>
                     </li>
                 {% endif %}
             </ul>

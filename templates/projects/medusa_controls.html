@@ -7,6 +7,7 @@
     const theme = document.getElementById('medusaTheme');
     const layout = document.getElementById('medusaLayout');
     const setTheme = value => {
+        if (!theme) { root.dataset.theme = 'default'; return; }
         theme.value = [...theme.options].some(option => option.value === value) ? value : 'default';
         root.dataset.theme = theme.value;
     };
@@ -17,7 +18,7 @@
     };
     setLayout('{{ "rows" if report_mode == "6" else "cards" }}');
     const scopedKey = key => root.dataset.layout + ':' + key;
-    theme.addEventListener('change', () => { setTheme(theme.value); save(scopedKey('theme'), theme.value); });
+    if (theme) theme.addEventListener('change', () => { setTheme(theme.value); save(scopedKey('theme'), theme.value); });
     const toggles = [...root.querySelectorAll('.medusa-toggle')];
     const apply = toggle => root.querySelectorAll('[data-medusa-section="' + toggle.dataset.section + '"]').forEach(el => el.classList.toggle('d-none', !toggle.checked));
     const restore = () => {
@@ -34,7 +35,7 @@
         document.querySelector('.uvp-mode-switch').dispatchEvent(new CustomEvent('uvp-mode-change', {detail: {mode}}));
     });
     toggles.forEach(toggle => toggle.addEventListener('change', () => { apply(toggle); save(scopedKey(toggle.dataset.section), toggle.checked ? 'visible' : 'hidden'); }));
-    document.getElementById('medusaReset').addEventListener('click', () => {
+    document.getElementById('medusaReset')?.addEventListener('click', () => {
         setTheme('default'); save(scopedKey('theme'), 'default');
         toggles.forEach(toggle => { toggle.checked = true; apply(toggle); save(scopedKey(toggle.dataset.section), 'visible'); });
     });

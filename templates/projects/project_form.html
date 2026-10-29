@@ -86,6 +86,9 @@
                             <div class="form-text">{{ _('Введите названия новых тегов через запятую. Они будут созданы и добавлены к проекту.') }}</div>
                         </div>
 
+                        {% if not form.instance.pk %}
+                        <fieldset class="border rounded-3 p-3 mb-4"><legend class="h6 float-none w-auto px-2">Перша задача та підзадачі (необов’язково)</legend><div class="mb-3"><label class="form-label" for="id_initial_task_title">Назва першої задачі</label>{{ form.initial_task_title }}{{ form.initial_task_title.errors }}</div><div><label class="form-label" for="id_initial_subtasks">Підзадачі — кожна з нового рядка</label>{{ form.initial_subtasks }}{{ form.initial_subtasks.errors }}</div></fieldset>
+                        {% endif %}
                         <hr class="my-4 text-muted opacity-25">
 
                         <div class="d-flex justify-content-end gap-2">

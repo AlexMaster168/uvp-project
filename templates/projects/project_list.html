@@ -19,6 +19,7 @@
                     <li><a class="dropdown-item rounded-2 px-2 {{ 'active' if list_mode == value else '' }}" href="{{ href }}" data-list-mode="{{ value }}" {% if list_mode == value %}aria-current="page"{% endif %}>{{ value }} · {{ label }}</a></li>
                     {% endfor %}
                     <li><hr class="dropdown-divider"></li>
+                    {% if user.is_superuser or user.is_admin() %}
                     <li><label for="projectTheme" class="dropdown-header px-0 text-dark fw-bold">Тема проєктів</label></li>
                     <li class="mb-3"><select id="projectTheme" class="form-select form-select-sm" aria-label="Тема проєктів">
                         <option value="default">Стандартна</option>
@@ -38,6 +39,7 @@
                     </li>
                     {% endfor %}
                     <li><button class="btn btn-sm btn-outline-secondary w-100 mt-2" type="button" id="resetViewSettings">Скинути налаштування цього режиму</button></li>
+                    {% endif %}
                 </ul>
             </div>
             {% if user.is_superuser %}
@@ -113,7 +115,7 @@
                      style="cursor: pointer;"
                      onclick="window.location='{{ url('projects:project_detail', pk=project.id) }}'">
 
-                    <div class="position-relative project-photo" style="height: 180px;">
+                    <div class="position-relative project-photo {{ 'd-none' if list_mode == '2' else '' }}" style="height: 180px;">
                         {% if project.logo %}
                             <img src="{{ project.logo.url }}" class="card-img-top h-100 w-100"
                                  style="object-fit: cover;" alt="{{ project.name }}">
@@ -175,16 +177,17 @@
                                 <span class="text-muted small fw-bold">
                                     <i class="bi bi-list-check me-1"></i> {{ _('Задачи') }} {{ total_tasks }} ({{ remaining_tasks }} {{ _('осталось') }})
                                 </span>
-                                <span class="text-primary small fw-bold">{{ project.progress }}%</span>
+                                <span class="text-primary small fw-bold">{{ project.execution_report.progress }}%</span>
                             </div>
 
                             <div class="progress rounded-pill mb-4" style="height: 8px; background-color: #f0f0f0;">
                                 <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
                                      role="progressbar"
-                                     style="width: {{ project.progress }}%"></div>
+                                     style="width: {{ project.execution_report.progress }}%"></div>
                             </div>
 
                             <div class="task-preview-list">
+                                {% if project.can_view_tasks %}
                                 {% for task in project.tasks.exclude(status='done')[:3] %}
                                     <div class="d-flex align-items-center mb-2 p-2 rounded-3 bg-light-hover transition-base">
                                         <i class="bi bi-circle-fill text-primary me-2" style="font-size: 6px;"></i>
@@ -196,12 +199,22 @@
                                         {{ _('и еще') }} {{ remaining_tasks - 3 }}...
                                     </div>
                                 {% endif %}
+                                {% else %}<div class="small text-muted">Доступний загальний прогрес проєкту.</div>{% endif %}
                             </div>
                         </div>
                     </div>
 
                     {% set finance = project.get_financial_summary() %}
-                    <div class="card-footer bg-light border-0 p-4 pt-0 project-finance">
+                    {% set execution = project.execution_report %}
+                    <div class="card-footer bg-light border-0 p-4 pt-0 project-execution">
+                        <div class="bg-white rounded-4 p-3 border">
+                            <div class="d-flex justify-content-between gap-2 mb-2"><strong class="small">Прогрес робіт</strong><strong class="text-primary">{{ execution.progress }}%</strong></div>
+                            <div class="progress mb-3" role="progressbar" aria-label="Прогрес робіт" aria-valuenow="{{ execution.progress }}" aria-valuemin="0" aria-valuemax="100" style="height:12px"><div class="progress-bar bg-success" style="width:{{ execution.progress }}%"></div></div>
+                            <div class="row g-2 small"><div class="col-6"><span class="text-muted">Виконано</span><strong class="d-block">{{ execution.done }} / {{ execution.done + execution.pending }} робіт</strong></div><div class="col-6"><span class="text-muted">Ще робити</span><strong class="d-block">{{ '%g'|format(execution.remaining_days) }} люд.-дн.</strong></div><div class="col-6"><span class="text-muted">Ризики</span><strong class="d-block {{ 'text-danger' if execution.risks else 'text-success' }}">{{ execution.risks }} задач</strong></div><div class="col-6"><span class="text-muted">Дедлайн</span><strong class="d-block {{ 'text-danger' if execution.overdue_days and project.status != 'finished' else '' }}">{% if project.status == 'finished' %}Завершено{% elif execution.deadline_days is none %}Не вказано{% elif execution.overdue_days %}Прострочено {{ execution.overdue_days }} дн.{% else %}{{ execution.deadline_days }} дн.{% endif %}</strong></div></div>
+                            {% if execution.unestimated or execution.risks %}<div class="small text-muted mt-2">Є роботи без актуальної оцінки залишку.</div>{% endif %}
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light border-0 p-4 pt-0 project-finance d-none">
                         <div class="bg-white rounded-4 p-3 shadow-sm border d-flex justify-content-around text-center">
                             <div class="flex-grow-1">
                                 <div class="text-muted text-uppercase" style="font-size: 0.6rem;">{{ _('Доход') }}</div>
@@ -320,6 +333,7 @@
 
             const viewMode = '{{ list_mode }}';
             const themeControl = document.getElementById('projectTheme');
+            if (!themeControl) return;
             const surface = document.getElementById('projectListSurface');
             const themeKey = `uvp-project-list-theme:${viewMode}`;
             const applyTheme = value => {

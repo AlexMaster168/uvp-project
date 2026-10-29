@@ -8,7 +8,7 @@
     </div>
 
     <div class="row">
-        <div class="col-12 col-md-4 mb-4">
+        <div class="col-12 col-md-4 mb-4" data-custom-section="profile-summary" data-custom-label="Картка профілю">
             <div class="card shadow-sm border-0 rounded-4 text-center p-4">
                 <div class="mb-3 position-relative d-inline-block mx-auto">
                     <img id="avatar-preview" src="{{ user.get_avatar_url() }}" alt="{{ user.username }}"
@@ -20,7 +20,7 @@
                 <div class="d-flex justify-content-center gap-2 mb-2">
                     {% if user.is_superuser %}
                         <span class="badge bg-danger rounded-pill px-3 py-2">{{ _('Суперпользователь') }}</span>
-                    {% elif user.is_admin %}
+                    {% elif user.is_admin() %}
                         <span class="badge bg-primary rounded-pill px-3 py-2">{{ _('Администратор') }}</span>
                     {% else %}
                         <span class="badge bg-secondary rounded-pill px-3 py-2">{{ _('Пользователь') }}</span>

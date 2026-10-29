@@ -205,7 +205,9 @@
     </style>
 </head>
 <body>
+<link rel="stylesheet" href="/static/css/page_preferences.css"><script src="/static/js/page_preferences.js" defer></script>
 <div id="toolbar">
+    <div>{% include 'includes/page_preferences.html' %}</div>
     <div class="d-flex align-items-center gap-2">
         <a href="{{ url('projects:project_list') }}" class="btn btn-outline-light btn-sm"><i
                 class="bi bi-arrow-left"></i> {{ _('Список') }}</a>
@@ -221,9 +223,9 @@
         </button>
     </div>
     <div class="d-flex align-items-center gap-2">
-        <button class="btn btn-info btn-sm text-white" data-bs-toggle="modal" data-bs-target="#colorsModal">
+        {% if user.is_superuser or user.is_admin() %}<button class="btn btn-info btn-sm text-white" data-bs-toggle="modal" data-bs-target="#colorsModal">
             <i class="bi bi-palette"></i> {{ _('Цвета') }}
-        </button>
+        </button>{% endif %}
         <button id="save-btn" class="btn btn-success btn-sm"><i
                 class="bi bi-cloud-upload"></i> {{ _('Сохранить позицию') }}
         </button>

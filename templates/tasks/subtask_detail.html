@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block title %}{{ subtask.title }}{% endblock %}
+{% block content %}
+<div class="card"><div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between"><h1 class="h4 mb-0">{{ subtask.title }}</h1><a class="btn btn-primary btn-sm" href="{{ url('tasks:subtask_edit',pk=subtask.pk) }}">Змінити підзадачу</a></div>
+<div class="card-body"><p><strong>Задача:</strong> <a href="{{ url('tasks:task_detail',pk=subtask.task_id) }}">{{ subtask.task.title }}</a></p><p><strong>Проєкт:</strong> <a href="{{ url('projects:project_detail',pk=subtask.task.project_id) }}">{{ subtask.task.project.name }}</a></p><p><strong>Статус:</strong> {{ _(subtask.get_status_display()) }}</p><div data-custom-section="subtask-people" data-custom-label="Виконавці"><strong>Виконавці:</strong> {% for person in subtask.u_users.all() %}<span class="badge bg-secondary">{{ person.username }}</span>{% else %}<span class="text-muted">Не призначено</span>{% endfor %}</div></div>
+<div class="card-footer d-flex flex-wrap gap-2"><a class="btn btn-secondary" href="{{ url('tasks:task_detail',pk=subtask.task_id) }}">Назад до задачі</a><a class="btn btn-outline-danger" href="{{ url('tasks:subtask_delete',pk=subtask.pk) }}">Видалити</a></div></div>
+{% endblock %}

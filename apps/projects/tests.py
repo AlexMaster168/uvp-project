@@ -108,6 +108,8 @@ class ManagementReportTests(TestCase):
         self.assertNotContains(response, 'Report &lt;safe&gt;')
 
     def test_each_personalization_control_has_a_visible_section(self):
+        self.owner.is_superuser = True
+        self.owner.save(update_fields=['is_superuser'])
         class Classes(HTMLParser):
             def __init__(self):
                 super().__init__()

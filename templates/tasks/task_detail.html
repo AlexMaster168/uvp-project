@@ -4,17 +4,17 @@
     <div class="row">
         <div class="col-md-8 offset-md-2">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
                     <h4>{{ task.title }}</h4>
                     <div>
                         {% if task.status == 'done' %}
-                            <span class="badge bg-success">{{ task.get_status_display() }}</span>
+                            <span class="badge bg-success">{{ {'todo':'До виконання','in_progress':'В роботі','done':'Готово'}.get(task.status, task.get_status_display()) }}</span>
                         {% elif task.status == 'in_progress' %}
-                            <span class="badge bg-warning text-dark">{{ task.get_status_display() }}</span>
+                            <span class="badge bg-warning text-dark">{{ {'todo':'До виконання','in_progress':'В роботі','done':'Готово'}.get(task.status, task.get_status_display()) }}</span>
                         {% else %}
-                            <span class="badge bg-secondary">{{ task.get_status_display() }}</span>
+                            <span class="badge bg-secondary">{{ {'todo':'До виконання','in_progress':'В роботі','done':'Готово'}.get(task.status, task.get_status_display()) }}</span>
                         {% endif %}
-                        {% if user.is_superuser %}
+                        {% if can_manage_task %}
                             <a href="{{ url('tasks:task_edit', pk=task.id) }}"
                                class="btn btn-sm btn-outline-primary ms-2">{{ _('Изменить') }}</a>
                         {% endif %}
@@ -23,44 +23,41 @@
                 <div class="card-body">
                     <p><strong>{{ _('Проект') }}:</strong> <a
                             href="{{ url('projects:project_detail', pk=task.project.id) }}">{{ task.project.name }}</a>
+                        {% if can_manage_project %}<a class="btn btn-sm btn-link" href="{{ url('projects:project_edit', pk=task.project_id) }}">Редагувати проєкт</a>{% endif %}
                     </p>
+                    <div data-custom-section="task-description" data-custom-label="Опис задачі">
                     <p><strong>{{ _('Описание') }}:</strong></p>
-                    <div class="p-3 bg-light rounded mb-3">
-                        {% if task.description %}
-                            {{ task.description|linebreaks }}
-                        {% else %}
-                            {{ _('Нет описания') }}
-                        {% endif %}
+                    <div class="p-3 bg-light rounded mb-3" style="white-space:pre-wrap;overflow-wrap:anywhere;">{{ task.description or _('Нет описания') }}</div>
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-6" data-custom-section="task-time" data-custom-label="План і витрачений час">
                             <p><strong>{{ _('Оценка времени') }}:</strong> {{ task.estimated_time }} {{ _('ч') }}</p>
                             <p><strong>{{ _('Затрачено') }}:</strong> {{ task.actual_time }} {{ _('ч') }}</p>
+                            <p><strong>Ще робити:</strong> {% if task_report.risk %}Потрібна переоцінка{% elif task_report.unestimated %}Не оцінено{% else %}{{ '%g'|format(task_report.remaining_days) }} люд.-дн.{% endif %}</p>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-6" data-custom-section="task-people" data-custom-label="Виконавці">
                             <p><strong>{{ _('Исполнители') }}:</strong></p>
                             {% for u in task.u_users.all() %}
                                 <span class="badge bg-info text-dark">{{ u.username }}</span>
-                            {% endfor %}
+                            {% else %}<span class="text-muted">Не призначено</span>{% endfor %}
                         </div>
                     </div>
 
-                    {% if task.subtasks.all() %}
-                        <div class="mt-4">
-                            <h5>{{ _('Подзадачи') }}:</h5>
+                        <div class="mt-4" data-custom-section="task-subtasks" data-custom-label="Підзадачі">
+                            <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3"><h5 class="mb-0">{{ _('Подзадачи') }}:</h5><a class="btn btn-sm btn-primary" href="{{ url('tasks:subtask_create') }}?task={{ task.pk }}">+ Підзадача</a></div>
                             <ul class="list-group">
                                 {% for sub in task.subtasks.all() %}
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        {{ sub.title }}
+                                    <li class="list-group-item d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                                        <a href="{{ url('tasks:subtask_detail', pk=sub.pk) }}">{{ sub.title }}</a>
+                                        <a class="btn btn-sm btn-outline-primary" href="{{ url('tasks:subtask_edit', pk=sub.pk) }}">Змінити</a>
                                         <span class="badge {% if sub.status == 'done' %}bg-success{% else %}bg-secondary{% endif %}">
-                                        {{ sub.get_status_display() }}
+                                        {{ {'todo':'До виконання','in_progress':'В роботі','done':'Готово'}.get(sub.status, sub.get_status_display()) }}
                                     </span>
                                     </li>
-                                {% endfor %}
+                            {% else %}<li class="list-group-item text-muted">Підзадач ще немає. Додайте першу через «+».</li>{% endfor %}
                             </ul>
                         </div>
-                    {% endif %}
                 </div>
                 <div class="card-footer">
                     <a href="{{ url('projects:project_detail', pk=task.project.id) }}"

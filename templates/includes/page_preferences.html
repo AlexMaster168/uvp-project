@@ -1,0 +1,15 @@
+{% if user.is_authenticated and (user.is_superuser or user.is_admin()) %}
+<div class="page-personalization" data-user="{{ user.pk }}" data-route="{{ request.resolver_match.url_name }}">
+    <details id="pagePreferences"><summary><i class="bi bi-sliders"></i> Налаштувати сторінку</summary>
+        <div class="page-preferences-panel">
+            <strong>Персоналізація адміністратора</strong>
+            <label for="pageTheme">Тема сторінки</label><select id="pageTheme" class="form-select form-select-sm"><option value="default">Стандартна</option><option value="ocean">Океан</option><option value="forest">Ліс</option><option value="graphite">Графіт</option><option value="sand">Пісок</option></select>
+            <label for="pageDensity">Щільність</label><select id="pageDensity" class="form-select form-select-sm"><option value="comfortable">Звичайна</option><option value="compact">Компактна</option></select>
+            <label for="pageFont">Розмір тексту</label><select id="pageFont" class="form-select form-select-sm"><option value="normal">Стандартний</option><option value="large">Збільшений</option></select>
+            <div id="pageVisibilityControls"></div>
+            <button id="resetPagePreferences" class="btn btn-sm btn-outline-secondary w-100 mt-3" type="button">Скинути цю сторінку</button>
+            <p class="small text-muted mt-2 mb-0">Окремо для цього розділу та виду. Зберігається у вашому браузері.</p>
+        </div>
+    </details>
+</div>
+{% endif %}

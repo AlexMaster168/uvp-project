@@ -3,6 +3,8 @@ from .models import Project, Tag
 
 
 class ProjectForm(forms.ModelForm):
+    initial_task_title = forms.CharField(required=False, max_length=255, label='Перша задача')
+    initial_subtasks = forms.CharField(required=False, max_length=15000, label='Підзадачі першої задачі', widget=forms.Textarea(attrs={'rows': 3}))
     new_tags = forms.CharField(
         required=False,
         label='Создать новые теги',
@@ -47,3 +49,13 @@ class ProjectForm(forms.ModelForm):
                     tag, _ = Tag.objects.get_or_create(name=name)
                     instance.u_tags.add(tag)
         return instance
+
+    def clean(self):
+        data = super().clean()
+        titles = [line.strip() for line in data.get('initial_subtasks', '').splitlines() if line.strip()]
+        if titles and not data.get('initial_task_title'):
+            self.add_error('initial_task_title', 'Вкажіть назву задачі для цих підзадач.')
+        if len(titles) > 50 or any(len(title) > 255 for title in titles):
+            self.add_error('initial_subtasks', 'Не більше 50 підзадач, назва — до 255 символів.')
+        data['initial_subtask_titles'] = titles
+        return data

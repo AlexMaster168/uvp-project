@@ -10,13 +10,15 @@
                 <div class="card-body">
                     <form method="post">
                         <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-                        <div class="d-none">{{ form.project }}</div>
+                        <div class="mb-3"><label for="id_project" class="form-label">{{ _('Проект') }}</label>{{ form.project }}{{ form.project.errors }}</div>
                         {{ form.non_field_errors() }}
 
                         <div class="mb-3">
                             <label class="form-label">{{ _('Название задачи') }}</label>
                             {{ form.title }}
+                            {{ form.title.errors }}
                         </div>
+                        <div class="mb-3"><label for="id_description" class="form-label">{{ _('Описание') }}</label>{{ form.description }}{{ form.description.errors }}</div>
 
                         <div class="mb-3"><label for="id_time_unit" class="form-label">Одиниця часу</label>{{ form.time_unit }}<div class="form-text">1 люд.-дн. = 8 робочих годин. Дробові значення дозволені.</div>{{ form.time_unit.errors }}</div>
                         <div class="row mb-3">
@@ -39,12 +41,14 @@
                         <div class="mb-3">
                             <label class="form-label">{{ _('Исполнители') }}</label>
                             {{ form.u_users }}
+                            {{ form.u_users.errors }}
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">{{ _('Теги') }}</label>
                             {{ form.u_tags }}
                         </div>
+                        <div class="mb-3"><label for="id_initial_subtasks" class="form-label">Додати підзадачі</label>{{ form.initial_subtasks }}{{ form.initial_subtasks.errors }}<div class="form-text">Кожна підзадача з нового рядка. Їх можна редагувати після збереження задачі.</div></div>
 
                         <div class="d-flex justify-content-between mt-4">
                             <button type="button" class="btn btn-secondary"
@@ -75,6 +79,21 @@
             if (field.value !== '' && Number.isFinite(Number(field.value))) field.value = Number((Number(field.value) * factor).toFixed(6));
         });
         previous = unit.value; label();
+    });
+    const project = document.getElementById('id_project');
+    if (!project.disabled) project.addEventListener('change', async () => {
+        const field = document.getElementById('id_u_users');
+        const selected = new Set([...field.selectedOptions].map(option => option.value));
+        const value = project.value;
+        field.replaceChildren();
+        if (!value) return;
+        try {
+            const response = await fetch('{{ url("tasks:project_members") }}?project=' + encodeURIComponent(value), {headers: {'Accept':'application/json'}});
+            if (!response.ok || project.value !== value) return;
+            const data = await response.json();
+            if (project.value !== value) return;
+            data.users.forEach(user => field.add(new Option(user.name, String(user.id), false, selected.has(String(user.id)))));
+        } catch (_) { /* The project is still saved; assignees can be selected later. */ }
     });
 })();
 </script>

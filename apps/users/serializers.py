@@ -23,3 +23,13 @@ class UserSerializer(serializers.ModelSerializer):
             is_superuser=is_superuser
         )
         return user
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+        if 'is_superuser' in validated_data:
+            validated_data['is_staff'] = validated_data['is_superuser']
+        instance = super().update(instance, validated_data)
+        if password:
+            instance.set_password(password)
+            instance.save(update_fields=['password'])
+        return instance

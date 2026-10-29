@@ -4,7 +4,7 @@ from django.views.generic import ListView, CreateView, DetailView, View, UpdateV
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy, reverse
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, BasePermission, SAFE_METHODS
 from django.contrib.auth import get_user_model
 
 from .forms import CustomUserCreationForm, AddUserToProjectForm, GlobalSettingsForm, UserProfileForm, CustomLoginForm
@@ -15,10 +15,15 @@ from .models import GlobalSettings
 User = get_user_model()
 
 
+class UserAdministrationPermission(BasePermission):
+    def has_permission(self, request, view):
+        return request.method in SAFE_METHODS or request.user.is_superuser
+
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, UserAdministrationPermission]
 
 
 class UserLoginView(LoginView):

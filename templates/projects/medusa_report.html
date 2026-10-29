@@ -10,7 +10,7 @@
 <section class="portfolio-report medusa-dashboard">
     <div class="medusa-header">
         <div><div class="medusa-subtitle">ОГЛЯД ПРОЄКТУ #{{ project.id }}</div><h1>{{ project.name }}</h1><p class="medusa-subtitle">ВИКОНАВЦІ · РЕЗУЛЬТАТИ · НАВАНТАЖЕННЯ</p></div>
-        <div class="dropdown medusa-controls"><button class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" type="button">Вигляд</button>
+        {% if user.is_superuser or user.is_admin() %}<div class="dropdown medusa-controls"><button class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" type="button">Вигляд</button>
             <div class="dropdown-menu dropdown-menu-end p-3" style="min-width:260px">
                 <label for="medusaTheme" class="form-label small fw-bold">Тема цього режиму</label>
                 <select id="medusaTheme" class="form-select form-select-sm mb-3"><option value="default">Стандартна</option><option value="ocean">Океан</option><option value="forest">Ліс</option><option value="graphite">Графіт</option><option value="sand">Пісок</option></select>
@@ -21,6 +21,7 @@
                 <button id="medusaReset" type="button" class="btn btn-sm btn-outline-secondary w-100 mt-2">Скинути налаштування</button>
             </div>
         </div>
+        {% endif %}
     </div>
     <div class="medusa-summary">
         <div class="medusa-tile" data-medusa-section="progress"><span>Прогрес проєкту</span><strong class="medusa-positive">{{ report.progress }}%</strong><div class="medusa-track"><span style="width:{{ report.progress }}%"></span></div></div>

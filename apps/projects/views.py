@@ -1,4 +1,5 @@
 import json
+from django.db import transaction
 from django.db.models import Q, Count, Sum, Prefetch
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
@@ -30,7 +31,7 @@ class OwnerAdminMixin(UserPassesTestMixin):
             project = obj
         else:
             project = obj.project
-        return self.request.user.is_superuser or \
+        return self.request.user.is_superuser or project.u_creator_id == self.request.user.pk or \
             ProjectMembership.objects.filter(project=project, user=self.request.user, role='owner').exists()
 
 
@@ -59,8 +60,10 @@ class ProjectListView(LoginRequiredMixin, ListView):
             ('togglePhoto', 'Фото', '.project-photo', context['list_mode'] == '1'),
             ('toggleOwners', 'Участников', '.project-owners', True),
             ('toggleTasks', 'Список задач', '.task-preview-list', not report_mode),
-            ('toggleFinance', 'Финансы', '.project-finance', not report_mode),
+            ('toggleFinance', 'Финансы', '.project-finance', False),
         ]
+        if not report_mode:
+            context['list_controls'].append(('toggleExecution', 'Прогрес і трудозатрати', '.project-execution', True))
         if report_mode:
             context['list_controls'] += [
                 ('toggleProgress', 'Прогрес', '.portfolio-progress', True),
@@ -81,15 +84,20 @@ class ProjectListView(LoginRequiredMixin, ListView):
             context['previous_page_url'] = query_url(page=context['page_obj'].previous_page_number())
         if context['page_obj'].has_next():
             context['next_page_url'] = query_url(page=context['page_obj'].next_page_number())
+        from .reporting import management_report
+        for project in context['projects']:
+            project.execution_report = management_report(project, project.management_tasks)
+            project.can_view_tasks = self.request.user.is_superuser or project.u_creator_id == self.request.user.pk or any(
+                member.user_id == self.request.user.pk and member.role in ('owner','member') for member in project.members.all()
+            )
         if report_mode:
-            from .reporting import management_report
             finance_rows = Billing.objects.filter(project_id__in=[p.pk for p in context['projects']]).values('project_id').annotate(
                 income=Sum('amount', filter=Q(operation='income')),
                 expense=Sum('amount', filter=Q(operation='expense')),
             )
             finances = {row['project_id']: row for row in finance_rows}
             context['project_reports'] = [
-                {'project': project, 'report': management_report(project, project.management_tasks),
+                {'project': project, 'report': project.execution_report,
                  'owners': [m.user.username for m in project.members.all() if m.role == 'owner'],
                  'finance': finances.get(project.pk, {}),
                  'show_tasks': not any(m.user_id == self.request.user.pk and m.role == 'customer' for m in project.members.all())}
@@ -125,11 +133,10 @@ class ProjectListView(LoginRequiredMixin, ListView):
         if owner_id:
             qs = qs.filter(members__user_id=owner_id, members__role='owner')
 
-        if project_list_mode(self.request.GET.get('mode'))[2] != 'cards':
-            qs = qs.prefetch_related(
-                Prefetch('tasks', queryset=Task.objects.prefetch_related('subtasks', 'u_users').order_by('created_at', 'pk'), to_attr='management_tasks'),
-                'members__user',
-            )
+        qs = qs.prefetch_related(
+            Prefetch('tasks', queryset=Task.objects.prefetch_related('subtasks', 'u_users').order_by('created_at', 'pk'), to_attr='management_tasks'),
+            'members__user',
+        )
 
         return qs
 
@@ -184,10 +191,16 @@ class ProjectCreateView(LoginRequiredMixin, CreateView):
     form_class = ProjectForm
     template_name = 'projects/project_form.html'
 
+    @transaction.atomic
     def form_valid(self, form):
         form.instance.u_creator = self.request.user
         response = super().form_valid(form)
         ProjectMembership.objects.create(project=self.object, user=self.request.user, role='owner')
+        if form.cleaned_data.get('initial_task_title'):
+            task = Task.objects.create(project=self.object, title=form.cleaned_data['initial_task_title'])
+            SubTask.objects.bulk_create([
+                SubTask(task=task, title=title) for title in form.cleaned_data['initial_subtask_titles']
+            ])
         return response
 
     def get_success_url(self):
